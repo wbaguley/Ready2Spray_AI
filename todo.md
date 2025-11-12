@@ -165,3 +165,38 @@
 - [x] Implement product selection and data passing back to job form (via URL params or localStorage)
 - [x] Test complete workflow: job form → product lookup → select product → return to job form with data
 - [x] **VERIFIED WORKING**: EPA Registration Number (352-652) auto-populates when product is selected
+
+## Connect Real Agrian API Integration
+- [ ] Analyze Agrian Label Center website structure and search URL patterns
+- [ ] Update searchProducts() in server/agrian.ts to scrape real search results
+- [ ] Implement HTML parsing to extract product list (name, EPA #, distributor, registrant)
+- [ ] Update getProductDetails() to scrape actual product detail pages
+- [ ] Parse all EPA compliance fields (PPE, re-entry intervals, application rates, diluent info)
+- [ ] Test with "corn" search to verify 50+ results are returned
+- [ ] Verify all product detail fields are populated correctly
+- [ ] Update ProductLookup page to display all scraped fields
+- [ ] Expand auto-population logic to fill ALL EPA fields in job form (not just EPA Registration Number)
+
+## Build EPA Product Database (New Approach - Replace Agrian Scraping)
+- [ ] Design products database table schema with all EPA compliance fields
+- [ ] Add products table to drizzle/schema.ts
+- [ ] Run database migration (pnpm db:push)
+- [ ] Create seed script to populate database with 50-100 real EPA-registered products
+- [ ] Focus on common crops: corn, soybeans, wheat, cotton, almonds, grapes
+- [ ] Include all fields: EPA #, product name, active ingredients, PPE, re-entry intervals, application rates, etc.
+- [ ] Update server/agrian.ts or create new server/products.ts to query database
+- [ ] Update tRPC router to use database queries instead of web scraping
+- [ ] Test product search returns 50+ results for "corn"
+- [ ] Test product detail view shows all EPA compliance data
+- [ ] Verify auto-population fills ALL job form fields from selected product
+
+## Agrian Label Center Widget Integration (Embeddable Solution)
+- [x] Add Agrian widget script to ProductLookup page
+- [x] Create iframe or container for Agrian label search widget
+- [x] Test widget loads and displays Agrian search interface
+- [x] Implement message passing/event listeners to capture product selection from widget
+- [x] Extract EPA compliance data from selected product
+- [x] Pass product data back to job form via localStorage
+- [x] Update job form to populate ALL EPA fields from widget selection
+- [x] Test complete workflow: open widget → search → select → auto-populate job form
+- [x] Verify all EPA fields are correctly populated (EPA #, PPE, rates, intervals, etc.)

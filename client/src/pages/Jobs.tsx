@@ -35,6 +35,8 @@ export default function Jobs() {
           rate: product.rate || prev.rate,
           diluentAerial: product.diluentAerial || prev.diluentAerial,
           diluentGround: product.diluentGround || prev.diluentGround,
+          diluentChemigation: product.diluentChemigation || prev.diluentChemigation,
+          genericConditions: product.genericConditions || prev.genericConditions,
         }));
         // Clear the localStorage after using the data
         localStorage.removeItem("selectedAgrianProduct");
