@@ -118,3 +118,13 @@
 - [x] Replace logo throughout application
 - [x] Update theme colors in index.css
 - [x] Update button and component colors to match brand
+
+
+## Claude/Anthropic AI Integration
+- [x] Request ANTHROPIC_API_KEY via secrets management
+- [x] Integrate Claude AI with streaming support
+- [x] Add MCP tool calling support for 3rd party apps
+- [x] Implement rate limiting per user/organization
+- [x] Add usage tracking and throttling
+- [x] Update AI chat interface to use Claude
+- [x] Connect MCP tools (Stripe, Supabase, Jotform, Gmail, Calendar, Canva, tl;dv)

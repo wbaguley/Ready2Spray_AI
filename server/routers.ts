@@ -133,7 +133,7 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const { getOrCreateUserOrganization, createConversation } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
-        return await createConversation({ orgId: org.id, ...input });
+        return await createConversation({ orgId: org.id, userId: ctx.user.id, ...input });
       }),
     getMessages: protectedProcedure
       .input((raw: any) => raw)
@@ -144,8 +144,10 @@ export const appRouter = router({
     sendMessage: protectedProcedure
       .input((raw: any) => raw)
       .mutation(async ({ ctx, input }) => {
-        const { createMessage, getOrCreateUserOrganization } = await import("./db");
-        const { invokeLLM } = await import("./_core/llm");
+        const { createMessage, getOrCreateUserOrganization, getMessagesByConversationId } = await import("./db");
+        const { getClaudeResponse } = await import("./claude");
+        
+        const org = await getOrCreateUserOrganization(ctx.user.id);
         
         // Save user message
         const userMessage = await createMessage({
@@ -154,19 +156,33 @@ export const appRouter = router({
           content: input.content,
         });
 
+        // Get conversation history
+        const history = await getMessagesByConversationId(input.conversationId);
+        const messages = history.slice(-10).map((m: any) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }));
+
         // Get AI response
         try {
-          const response = await invokeLLM({
-            messages: [
-              {
-                role: "system",
-                content: "You are a helpful agricultural operations assistant for Ready2Spray. You help with job scheduling, weather conditions, EPA compliance, and agricultural operations. Be concise and practical.",
-              },
-              { role: "user", content: input.content },
-            ],
+          const response = await getClaudeResponse({
+            messages,
+            systemPrompt: "You are a helpful agricultural operations assistant for Ready2Spray. You help with job scheduling, weather conditions, EPA compliance, and agricultural operations. Be concise and practical.",
+            maxTokens: 2048,
           });
 
-          const assistantContent = response.choices[0]?.message?.content || "I apologize, but I couldn't generate a response. Please try again.";
+          let assistantContent = "";
+
+          // Process response content
+          for (const block of response.content) {
+            if (block.type === 'text') {
+              assistantContent += block.text;
+            }
+          }
+
+          if (!assistantContent) {
+            assistantContent = "I apologize, but I couldn't generate a response. Please try again.";
+          }
 
           // Save assistant message
           const assistantMessage = await createMessage({
@@ -175,13 +191,23 @@ export const appRouter = router({
             content: assistantContent,
           });
 
-          return { userMessage, assistantMessage };
-        } catch (error) {
+          return { 
+            userMessage, 
+            assistantMessage,
+            usage: response.usage,
+          };
+        } catch (error: any) {
+          console.error('[AI] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            cause: error.cause
+          });
           // Save error message
           const errorMessage = await createMessage({
             conversationId: input.conversationId,
             role: "assistant",
-            content: "I apologize, but I encountered an error processing your request. Please try again.",
+            content: `I apologize, but I encountered an error: ${error.message}. Please try again.`,
           });
           return { userMessage, assistantMessage: errorMessage };
         }
