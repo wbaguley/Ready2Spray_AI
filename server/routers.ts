@@ -251,6 +251,22 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // Agrian EPA Product Lookup router
+  agrian: router({
+    searchProducts: protectedProcedure
+      .input((raw: any) => raw)
+      .query(async ({ input }) => {
+        const { searchAgrianProducts } = await import("./agrian");
+        return await searchAgrianProducts(input);
+      }),
+    getProductDetail: protectedProcedure
+      .input((raw: any) => raw)
+      .query(async ({ input }) => {
+        const { getAgrianProductDetail } = await import("./agrian");
+        return await getAgrianProductDetail(input.url, input.state, input.commodity);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

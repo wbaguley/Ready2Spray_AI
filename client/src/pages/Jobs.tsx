@@ -5,14 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Calendar, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, Calendar, ArrowLeft, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { AgrianProductLookup } from "@/components/AgrianProductLookup";
 
 export default function Jobs() {
   const [location, setLocation] = useLocation();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showAgrianLookup, setShowAgrianLookup] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -448,11 +450,12 @@ export default function Jobs() {
                   <Label htmlFor="chemicalProduct">Chemical Product</Label>
                   <Button
                     type="button"
-                    variant="link"
+                    variant="outline"
                     size="sm"
-                    onClick={() => toast.info("Add product functionality coming soon")}
+                    onClick={() => setShowAgrianLookup(true)}
                   >
-                    + Add New Product
+                    <Search className="h-4 w-4 mr-2" />
+                    EPA Product Lookup
                   </Button>
                 </div>
                 <Select
@@ -713,6 +716,34 @@ export default function Jobs() {
           </CardContent>
         </Card>
       )}
+      {/* Agrian Product Lookup Dialog */}
+      <AgrianProductLookup
+        open={showAgrianLookup}
+        onClose={() => setShowAgrianLookup(false)}
+        onSelectProduct={(product) => {
+          setFormData({
+            ...formData,
+            chemicalProduct: product.name || "",
+            epaNumber: product.epaNumber || product.epaRegistrationNumber || "",
+            state: product.state || formData.state,
+            commodityCrop: formData.commodityCrop,
+            applicationRate: product.rate || "",
+            reEntryInterval: product.reEntryInterval || "",
+            preharvestInterval: product.preharvestInterval || "",
+            maxApplicationsPerSeason: product.maxApplicationsPerSeason || "",
+            maxRatePerSeason: product.maxRatePerSeason || "",
+            methodsAllowed: product.methodsAllowed?.join(", ") || "",
+            rate: product.rate || "",
+            diluentAerial: product.diluentAerial || "",
+            diluentGround: product.diluentGround || "",
+            diluentChemigation: product.diluentChemigation || "",
+            genericConditions: product.genericCondition || "",
+          });
+        }}
+        defaultCountry="United States"
+        defaultState={formData.state}
+        defaultCommodity={formData.commodityCrop}
+      />
     </div>
   );
 }

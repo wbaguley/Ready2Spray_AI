@@ -128,3 +128,15 @@
 - [x] Add usage tracking and throttling
 - [x] Update AI chat interface to use Claude
 - [x] Connect MCP tools (Stripe, Supabase, Jotform, Gmail, Calendar, Canva, tl;dv)
+
+## Agrian EPA Product Lookup Integration
+- [x] Analyze Agrian Label Center website structure and API
+- [x] Create backend scraping service for Agrian product search
+- [x] Implement product detail extraction (EPA #, PPE, rates, intervals)
+- [x] Build product search UI with country/state/crop filters
+- [x] Create product results list component
+- [x] Build product detail modal/dialog
+- [x] Integrate product lookup into job creation form
+- [x] Auto-populate job form fields from selected product
+- [ ] Debug dialog rendering issue (component built but not displaying)
+- [ ] Test complete workflow: search → select → populate job form
