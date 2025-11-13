@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, MapPin, User, Users, Loader2, Edit, Trash2, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, User, Users, Loader2, Edit, Trash2, Clock, Download } from "lucide-react";
+import { exportJobToPDF } from "@/lib/pdfExport";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { StatusHistory } from "@/components/StatusHistory";
@@ -118,6 +119,14 @@ export default function JobDetail() {
           </div>
 
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportJobToPDF(job)}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
             <Button
               variant="outline"
               size="sm"
