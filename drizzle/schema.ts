@@ -114,6 +114,20 @@ export const jobStatuses = pgTable("job_statuses", {
 export type JobStatus = typeof jobStatuses.$inferSelect;
 export type InsertJobStatus = typeof jobStatuses.$inferInsert;
 
+// Job Status History table (audit trail for status changes)
+export const jobStatusHistory = pgTable("job_status_history", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  jobId: integer("job_id").notNull().references(() => jobs.id, { onDelete: "cascade" }),
+  fromStatusId: integer("from_status_id").references(() => jobStatuses.id),
+  toStatusId: integer("to_status_id").notNull().references(() => jobStatuses.id),
+  changedByUserId: integer("changed_by_user_id").notNull().references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type JobStatusHistory = typeof jobStatusHistory.$inferSelect;
+export type InsertJobStatusHistory = typeof jobStatusHistory.$inferInsert;
+
 // Jobs table
 export const jobs = pgTable("jobs", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

@@ -91,8 +91,22 @@ export const appRouter = router({
       }),
     update: protectedProcedure
       .input((raw: any) => raw)
-      .mutation(async ({ input }) => {
-        const { updateJob } = await import("./db");
+      .mutation(async ({ ctx, input }) => {
+        const { updateJob, getJobById, createJobStatusHistory } = await import("./db");
+        
+        // If status is being changed, log it to history
+        if (input.statusId !== undefined) {
+          const currentJob = await getJobById(input.id);
+          if (currentJob && currentJob.statusId !== input.statusId) {
+            await createJobStatusHistory({
+              jobId: input.id,
+              fromStatusId: currentJob.statusId,
+              toStatusId: input.statusId,
+              changedByUserId: ctx.user.id,
+            });
+          }
+        }
+        
         return await updateJob(input.id, input);
       }),
     delete: protectedProcedure
@@ -101,6 +115,12 @@ export const appRouter = router({
         const { deleteJob } = await import("./db");
         await deleteJob(input.id);
         return { success: true };
+      }),
+    history: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ input }) => {
+        const { getJobStatusHistory } = await import("./db");
+        return await getJobStatusHistory(input.jobId);
       }),
   }),
 
@@ -147,6 +167,17 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { deleteJobStatus } = await import("./db");
         await deleteJobStatus(input.id);
+        return { success: true };
+      }),
+    reorder: protectedProcedure
+      .input(
+        z.object({
+          statusIds: z.array(z.number()),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { reorderJobStatuses } = await import("./db");
+        await reorderJobStatuses(input.statusIds);
         return { success: true };
       }),
   }),

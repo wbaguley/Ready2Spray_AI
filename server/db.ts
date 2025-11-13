@@ -264,6 +264,15 @@ export async function createJob(data: any) {
   return result[0];
 }
 
+export async function getJobById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { jobs } = await import("../drizzle/schema");
+  const result = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+  return result[0] || null;
+}
+
 export async function updateJob(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -317,6 +326,20 @@ export async function deleteJobStatus(id: number) {
   await db.delete(jobStatuses).where(eq(jobStatuses.id, id));
 }
 
+export async function reorderJobStatuses(statusIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  
+  // Update each status with its new display order
+  for (let i = 0; i < statusIds.length; i++) {
+    await db.update(jobStatuses)
+      .set({ displayOrder: i })
+      .where(eq(jobStatuses.id, statusIds[i]));
+  }
+}
+
 export async function getDefaultJobStatus(orgId: number) {
   const db = await getDb();
   if (!db) return null;
@@ -327,6 +350,53 @@ export async function getDefaultJobStatus(orgId: number) {
     and(eq(jobStatuses.orgId, orgId), eq(jobStatuses.isDefault, true))
   ).limit(1);
   return result[0] || null;
+}
+
+// Job Status History helpers
+export async function createJobStatusHistory(data: {
+  jobId: number;
+  fromStatusId: number | null;
+  toStatusId: number;
+  changedByUserId: number;
+  notes?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatusHistory } = await import("../drizzle/schema");
+  const result = await db.insert(jobStatusHistory).values(data).returning();
+  return result[0];
+}
+
+export async function getJobStatusHistory(jobId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobStatusHistory, jobStatuses, users } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  
+  // Join with job_statuses and users to get status names and user names
+  const result = await db
+    .select({
+      id: jobStatusHistory.id,
+      jobId: jobStatusHistory.jobId,
+      fromStatusId: jobStatusHistory.fromStatusId,
+      toStatusId: jobStatusHistory.toStatusId,
+      changedByUserId: jobStatusHistory.changedByUserId,
+      notes: jobStatusHistory.notes,
+      createdAt: jobStatusHistory.createdAt,
+      fromStatusName: jobStatuses.name,
+      toStatusName: jobStatuses.name,
+      changedByUserName: users.name,
+    })
+    .from(jobStatusHistory)
+    .leftJoin(jobStatuses, eq(jobStatusHistory.fromStatusId, jobStatuses.id))
+    .leftJoin(jobStatuses, eq(jobStatusHistory.toStatusId, jobStatuses.id))
+    .leftJoin(users, eq(jobStatusHistory.changedByUserId, users.id))
+    .where(eq(jobStatusHistory.jobId, jobId))
+    .orderBy(desc(jobStatusHistory.createdAt));
+    
+  return result;
 }
 
 // Personnel helpers

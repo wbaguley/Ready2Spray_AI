@@ -298,10 +298,18 @@
 - [x] Create Status Management section in Settings page
 - [x] Add color picker for status visualization
 - [x] Implement status CRUD in Settings (create, edit, delete)
-- [ ] Implement drag-and-drop status reordering (optional enhancement)
+- [x] Implement drag-and-drop status reordering
+  - [x] Install @dnd-kit library for drag-and-drop functionality
+  - [x] Add reorder mutation to jobStatus router
+  - [x] Update Settings Status Management with drag-and-drop UI
 - [x] Implement status transition workflow (buttons to move between stages)
 - [x] Add StatusTransitionButton component to job cards
 - [x] Smart status transitions (Pending→Active, Active→Completed)
-- [ ] Update Dashboard to dynamically group by custom statuses
-- [ ] Add status change history tracking (optional)
-- [ ] Test custom status system end-to-end
+- [x] Update Dashboard to dynamically group by custom statuses (already working with statusCategory)
+- [x] Add status change history tracking
+  - [x] Create job_status_history table for audit trail
+  - [x] Add backend procedures for logging status changes (createJobStatusHistory, getJobStatusHistory)
+  - [x] Add automatic history logging to jobs.update mutation
+  - [x] Build StatusHistory component to display timeline
+  - [x] Integrate status history into job cards with History button and dialog
+- [x] Test custom status system end-to-end

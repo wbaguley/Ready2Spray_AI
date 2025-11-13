@@ -10,12 +10,15 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { AgrianProductLookup } from "@/components/AgrianProductLookup";
+import { StatusHistory } from "@/components/StatusHistory";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Jobs() {
   const [location, setLocation] = useLocation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showAgrianLookup, setShowAgrianLookup] = useState(false);
   const [editingJob, setEditingJob] = useState<any>(null);
+  const [viewingHistoryJobId, setViewingHistoryJobId] = useState<number | null>(null);
 
   // Check for selected product data from ProductLookup page
   useEffect(() => {
@@ -823,6 +826,13 @@ export default function Jobs() {
                     Edit
                   </Button>
                   <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewingHistoryJobId(job.id)}
+                  >
+                    History
+                  </Button>
+                  <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => deleteMutation.mutate({ id: job.id })}
@@ -878,6 +888,16 @@ export default function Jobs() {
         defaultCommodity={formData.commodityCrop}
       />
       */}
+      
+      {/* Status History Dialog */}
+      <Dialog open={viewingHistoryJobId !== null} onOpenChange={(open) => !open && setViewingHistoryJobId(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Job Status History</DialogTitle>
+          </DialogHeader>
+          {viewingHistoryJobId && <StatusHistory jobId={viewingHistoryJobId} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

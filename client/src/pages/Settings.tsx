@@ -5,9 +5,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Building2, Save } from "lucide-react";
+import { Loader2, Building2, Save, GripVertical } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export default function Settings() {
   const [formData, setFormData] = useState({
@@ -223,6 +240,74 @@ export default function Settings() {
   );
 }
 
+// Sortable Status Item Component
+function SortableStatusItem({ status, onEdit, onDelete }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: status.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors bg-background"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div
+          className="w-4 h-4 rounded-full"
+          style={{ backgroundColor: status.color }}
+        />
+        <div>
+          <p className="font-medium">{status.name}</p>
+          <p className="text-sm text-muted-foreground capitalize">
+            {status.category.replace("_", " ")}
+          </p>
+        </div>
+        {status.isDefault && (
+          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+            Default
+          </span>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onEdit(status)}
+        >
+          Edit
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(status.id)}
+          disabled={status.isDefault}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // Job Statuses Management Component
 function JobStatusesSection() {
   const [isAddingStatus, setIsAddingStatus] = useState(false);
@@ -235,6 +320,22 @@ function JobStatusesSection() {
 
   const { data: jobStatuses, isLoading } = trpc.jobStatuses.list.useQuery();
   const utils = trpc.useUtils();
+
+  // Local state for drag-and-drop
+  const [localStatuses, setLocalStatuses] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (jobStatuses) {
+      setLocalStatuses(jobStatuses);
+    }
+  }, [jobStatuses]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const createMutation = trpc.jobStatuses.create.useMutation({
     onSuccess: () => {
@@ -265,6 +366,20 @@ function JobStatusesSection() {
     },
     onError: (error: any) => {
       toast.error(`Failed to delete status: ${error.message}`);
+    },
+  });
+
+  const reorderMutation = trpc.jobStatuses.reorder.useMutation({
+    onSuccess: () => {
+      utils.jobStatuses.list.invalidate();
+      toast.success("Status order updated!");
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to reorder statuses: ${error.message}`);
+      // Revert to original order on error
+      if (jobStatuses) {
+        setLocalStatuses(jobStatuses);
+      }
     },
   });
 
@@ -301,6 +416,24 @@ function JobStatusesSection() {
     }
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setLocalStatuses((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        
+        // Send reorder mutation with new order
+        const statusIds = newOrder.map(s => s.id);
+        reorderMutation.mutate({ statusIds });
+        
+        return newOrder;
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -308,7 +441,7 @@ function JobStatusesSection() {
           <div>
             <CardTitle>Job Statuses</CardTitle>
             <CardDescription>
-              Customize your job workflow stages
+              Customize your job workflow stages (drag to reorder)
             </CardDescription>
           </div>
           <Button
@@ -401,49 +534,27 @@ function JobStatusesSection() {
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : (
-          <div className="space-y-2">
-            {jobStatuses?.map((status) => (
-              <div
-                key={status.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: status.color }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={localStatuses.map(s => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {localStatuses.map((status) => (
+                  <SortableStatusItem
+                    key={status.id}
+                    status={status}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
                   />
-                  <div>
-                    <p className="font-medium">{status.name}</p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {status.category.replace("_", " ")}
-                    </p>
-                  </div>
-                  {status.isDefault && (
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(status)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(status.id)}
-                    disabled={status.isDefault}
-                  >
-                    Delete
-                  </Button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
       </CardContent>
     </Card>
