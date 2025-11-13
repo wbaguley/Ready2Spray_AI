@@ -614,3 +614,25 @@ export const maintenanceTasks = pgTable("maintenance_tasks", {
 
 export type MaintenanceTask = typeof maintenanceTasks.$inferSelect;
 export type InsertMaintenanceTask = typeof maintenanceTasks.$inferInsert;
+
+// Audit Log table for tracking all user actions
+export const auditActionEnum = pgEnum("audit_action", ["create", "update", "delete", "login", "logout", "role_change", "status_change", "export", "import", "view"]);
+export const auditEntityTypeEnum = pgEnum("audit_entity_type", ["user", "customer", "personnel", "job", "site", "equipment", "product", "service_plan", "maintenance_task", "organization", "integration", "job_status"]);
+
+export const auditLogs = pgTable("audit_logs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  action: auditActionEnum("action").notNull(),
+  entityType: auditEntityTypeEnum("entity_type").notNull(),
+  entityId: integer("entity_id"),
+  entityName: varchar("entity_name", { length: 255 }),
+  changes: json("changes"), // { before: {}, after: {} }
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  metadata: json("metadata"), // Additional context data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;

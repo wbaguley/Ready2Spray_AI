@@ -1,7 +1,7 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan } from "../drizzle/schema";
+import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -991,4 +991,209 @@ export async function updateUserRole(userId: number, userRole: string) {
   if (!db) throw new Error("Database not available");
   
   await db.update(users).set({ userRole }).where(eq(users.id, userId));
+}
+
+// ==================== Audit Log Functions ====================
+
+export async function createAuditLog(auditLog: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(auditLogs).values(auditLog).returning();
+  return result[0];
+}
+
+export async function getAuditLogs(
+  orgId: number,
+  filters?: {
+    userId?: number;
+    action?: string;
+    entityType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Build where conditions
+  const conditions = [eq(auditLogs.organizationId, orgId)];
+  
+  if (filters?.userId) {
+    conditions.push(eq(auditLogs.userId, filters.userId));
+  }
+  if (filters?.action) {
+    conditions.push(eq(auditLogs.action, filters.action as any));
+  }
+  if (filters?.entityType) {
+    conditions.push(eq(auditLogs.entityType, filters.entityType as any));
+  }
+  if (filters?.startDate) {
+    conditions.push(gte(auditLogs.createdAt, filters.startDate));
+  }
+  if (filters?.endDate) {
+    conditions.push(lte(auditLogs.createdAt, filters.endDate));
+  }
+  
+  const baseQuery = db
+    .select({
+      id: auditLogs.id,
+      organizationId: auditLogs.organizationId,
+      userId: auditLogs.userId,
+      userName: users.name,
+      userEmail: users.email,
+      action: auditLogs.action,
+      entityType: auditLogs.entityType,
+      entityId: auditLogs.entityId,
+      entityName: auditLogs.entityName,
+      changes: auditLogs.changes,
+      ipAddress: auditLogs.ipAddress,
+      userAgent: auditLogs.userAgent,
+      metadata: auditLogs.metadata,
+      createdAt: auditLogs.createdAt,
+    })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .where(and(...conditions))
+    .orderBy(desc(auditLogs.createdAt));
+  
+  // Apply pagination
+  const limit = filters?.limit || 100;
+  const offset = filters?.offset || 0;
+  
+  const result = await baseQuery.limit(limit).offset(offset);
+  return result;
+}
+
+export async function getAuditLogsByEntity(
+  orgId: number,
+  entityType: string,
+  entityId: number
+) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: auditLogs.id,
+      organizationId: auditLogs.organizationId,
+      userId: auditLogs.userId,
+      userName: users.name,
+      userEmail: users.email,
+      action: auditLogs.action,
+      entityType: auditLogs.entityType,
+      entityId: auditLogs.entityId,
+      entityName: auditLogs.entityName,
+      changes: auditLogs.changes,
+      ipAddress: auditLogs.ipAddress,
+      userAgent: auditLogs.userAgent,
+      metadata: auditLogs.metadata,
+      createdAt: auditLogs.createdAt,
+    })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .where(
+      sql`${auditLogs.organizationId} = ${orgId} AND ${auditLogs.entityType} = ${entityType} AND ${auditLogs.entityId} = ${entityId}`
+    )
+    .orderBy(desc(auditLogs.createdAt));
+  
+  return result;
+}
+
+// ==================== Bulk Job Import Functions ====================
+
+export async function bulkImportJobs(
+  orgId: number,
+  jobsData: Array<{
+    title: string;
+    description?: string;
+    jobType: 'crop_dusting' | 'pest_control' | 'fertilization' | 'herbicide';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    statusId?: number;
+    customerId?: number;
+    assignedPersonnelId?: number;
+    equipmentId?: number;
+    scheduledStart?: Date;
+    locationAddress?: string;
+    acres?: number;
+    chemicalProduct?: string;
+    epaNumber?: string;
+    targetPest?: string;
+    applicationRate?: string;
+    notes?: string;
+  }>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobs } = await import("../drizzle/schema");
+  
+  // Get default status for the organization if not provided
+  const defaultStatus = await getJobStatusesByOrgId(orgId);
+  const defaultStatusId = defaultStatus.find(s => s.isDefault)?.id || defaultStatus[0]?.id;
+  
+  const results: Array<{ success: boolean; job?: any; error?: string }> = [];
+  
+  for (const jobData of jobsData) {
+    try {
+      const jobToInsert = {
+        ...jobData,
+        orgId,
+        statusId: jobData.statusId || defaultStatusId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      const result = await db.insert(jobs).values(jobToInsert as any).returning();
+      results.push({ success: true, job: result[0] });
+    } catch (error: any) {
+      results.push({ success: false, error: error.message });
+    }
+  }
+  
+  return results;
+}
+
+export async function findCustomerByName(orgId: number, name: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { customers } = await import("../drizzle/schema");
+  const result = await db
+    .select()
+    .from(customers)
+    .where(sql`${customers.orgId} = ${orgId} AND LOWER(${customers.name}) = LOWER(${name})`)
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function findPersonnelByName(orgId: number, name: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { personnel } = await import("../drizzle/schema");
+  const result = await db
+    .select()
+    .from(personnel)
+    .where(sql`${personnel.orgId} = ${orgId} AND LOWER(${personnel.name}) = LOWER(${name})`)
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function findEquipmentByName(orgId: number, name: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { equipment } = await import("../drizzle/schema");
+  const result = await db
+    .select()
+    .from(equipment)
+    .where(sql`${equipment.orgId} = ${orgId} AND LOWER(${equipment.name}) = LOWER(${name})`)
+    .limit(1);
+  
+  return result[0] || null;
 }

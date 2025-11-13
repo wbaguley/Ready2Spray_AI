@@ -73,3 +73,64 @@
 - [x] Update permissions matrix so all non-admin roles can access all features
 - [x] Keep Settings and User Management restricted to admin only
 - [x] Test that non-admin users can see all menu items except Settings and User Management
+
+
+## Activity Audit Log System
+
+### Phase 1: Database Schema
+- [x] Create audit_logs table with fields: id, user_id, action, entity_type, entity_id, changes, ip_address, user_agent, timestamp
+- [x] Add indexes for efficient querying (user_id, entity_type, timestamp)
+- [x] Test database schema creation
+
+### Phase 2: Backend Implementation
+- [x] Create audit log database procedures (createAuditLog, getAuditLogs, getAuditLogsByEntity)
+- [x] Add Zod validation schemas for audit log operations
+- [x] Create auditLogs tRPC router with list and detail endpoints
+- [ ] Add audit logging to all CRUD operations (jobs, customers, personnel, equipment, etc.)
+- [ ] Test backend endpoints work correctly
+
+### Phase 3: Frontend UI
+- [x] Create AuditLog.tsx page component with filterable table
+- [x] Add filters for user, action type, entity type, date range
+- [x] Display changes in readable format (before/after comparison)
+- [x] Add Audit Log to sidebar navigation
+- [ ] Test UI displays audit logs correctly
+
+## Bulk Job Import System
+
+### Phase 1: Backend Implementation
+- [x] Create CSV parsing utility function
+- [x] Add bulkImportJobs tRPC mutation with validation
+- [x] Handle customer/personnel/equipment lookup by name or ID
+- [x] Generate detailed import report (success/failure counts, error messages)
+- [x] Test backend import logic with sample CSV
+
+### Phase 2: Frontend UI
+- [x] Create BulkImportJobs component with file upload
+- [x] Add CSV template download button
+- [x] Display import preview before confirmation
+- [x] Show import results with success/error details
+- [x] Add Bulk Import button to Jobs page
+- [ ] Test complete import workflow
+
+## Floating AI Chat Widget
+
+### Phase 1: Component Implementation
+- [x] Create FloatingChatWidget component as quick-access button
+- [x] Add tooltip for user guidance
+- [x] Integrate with existing AI chat page
+- [x] Add to DashboardLayout so it appears on all pages
+- [x] Test widget works across all pages
+- [x] Verify it doesn't show on chat page itself
+
+### Phase 2: Context Awareness
+- [ ] Pass current page context to AI chat
+- [ ] Add user role context to chat
+- [ ] Test AI responses are contextually relevant
+
+## Final Testing & Delivery
+- [ ] Test all three features work together
+- [ ] Verify authentication remains stable
+- [ ] Test on different screen sizes
+- [ ] Save checkpoint
+- [ ] Push to GitHub repository

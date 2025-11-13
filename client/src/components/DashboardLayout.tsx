@@ -22,11 +22,12 @@ import {
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { usePermissions, Permission } from "@/hooks/usePermissions";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Briefcase, UserCheck, Package, MessageSquare, MapPin, Settings as SettingsIcon, Building2, Plane, CalendarDays, Wrench, BarChart3, CalendarCheck, Mail, Shield } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Briefcase, UserCheck, Package, MessageSquare, MapPin, Settings as SettingsIcon, Building2, Plane, CalendarDays, Wrench, BarChart3, CalendarCheck, Mail, Shield, FileText } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { FloatingChatWidget } from "./FloatingChatWidget";
 
 const menuItems: Array<{ icon: any; label: string; path: string; permission?: Permission }> = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" }, // No permission required - accessible to all
@@ -42,6 +43,7 @@ const menuItems: Array<{ icon: any; label: string; path: string; permission?: Pe
   { icon: MessageSquare, label: "AI Chat", path: "/chat", permission: "view_ai_chat" },
   { icon: MapPin, label: "Maps", path: "/maps", permission: "view_maps" },
   { icon: SettingsIcon, label: "Settings", path: "/settings", permission: "view_settings" },
+  { icon: FileText, label: "Audit Log", path: "/audit-log", permission: "view_settings" },
   { icon: Mail, label: "Email Test", path: "/email-test" }, // No permission required for testing
 ];
 
@@ -309,6 +311,7 @@ function DashboardLayoutContent({
         )}
         <main className="flex-1 p-4">{children}</main>
       </SidebarInset>
+      <FloatingChatWidget />
     </>
   );
 }

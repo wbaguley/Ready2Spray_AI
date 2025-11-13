@@ -191,6 +191,128 @@ export const appRouter = router({
         const { getJobStatusHistory } = await import("./db");
         return await getJobStatusHistory(input.jobId);
       }),
+    bulkImport: protectedProcedure
+      .input(z.object({
+        csvContent: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, bulkImportJobs, findCustomerByName, findPersonnelByName, findEquipmentByName } = await import("./db");
+        const { parseCSV, validateJobRow, normalizeJobType, normalizePriority } = await import("./csvUtils");
+        
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
+        // Parse CSV
+        const parsed = parseCSV(input.csvContent);
+        
+        if (parsed.errors.length > 0) {
+          return {
+            success: false,
+            totalRows: 0,
+            successCount: 0,
+            errorCount: parsed.errors.length,
+            errors: parsed.errors.map((err: any) => ({
+              row: err.row || 0,
+              message: err.message,
+            })),
+            createdJobs: [],
+          };
+        }
+        
+        const jobsToImport = [];
+        const errors: Array<{ row: number; field?: string; message: string; data?: any }> = [];
+        
+        // Validate and prepare jobs
+        for (let i = 0; i < parsed.data.length; i++) {
+          const row = parsed.data[i];
+          const rowNum = i + 2; // +2 because row 1 is header, and we're 0-indexed
+          
+          const validation = validateJobRow(row, rowNum);
+          if (!validation.valid) {
+            validation.errors.forEach(err => {
+              errors.push({ row: rowNum, message: err, data: row });
+            });
+            continue;
+          }
+          
+          // Resolve customer, personnel, equipment by name
+          let customerId: number | undefined;
+          let assignedPersonnelId: number | undefined;
+          let equipmentId: number | undefined;
+          
+          if (row.customerName) {
+            const customer = await findCustomerByName(org.id, row.customerName);
+            if (customer) {
+              customerId = customer.id;
+            } else {
+              errors.push({ row: rowNum, field: 'customerName', message: `Customer not found: ${row.customerName}`, data: row });
+            }
+          }
+          
+          if (row.personnelName) {
+            const personnel = await findPersonnelByName(org.id, row.personnelName);
+            if (personnel) {
+              assignedPersonnelId = personnel.id;
+            } else {
+              errors.push({ row: rowNum, field: 'personnelName', message: `Personnel not found: ${row.personnelName}`, data: row });
+            }
+          }
+          
+          if (row.equipmentName) {
+            const equipment = await findEquipmentByName(org.id, row.equipmentName);
+            if (equipment) {
+              equipmentId = equipment.id;
+            } else {
+              errors.push({ row: rowNum, field: 'equipmentName', message: `Equipment not found: ${row.equipmentName}`, data: row });
+            }
+          }
+          
+          jobsToImport.push({
+            title: row.title,
+            description: row.description,
+            jobType: normalizeJobType(row.jobType || 'crop_dusting'),
+            priority: normalizePriority(row.priority),
+            customerId,
+            assignedPersonnelId,
+            equipmentId,
+            scheduledStart: row.scheduledDate ? new Date(row.scheduledDate) : undefined,
+            locationAddress: row.locationAddress,
+            acres: row.acres ? parseFloat(row.acres) : undefined,
+            chemicalProduct: row.chemicalProduct,
+            epaNumber: row.epaRegistrationNumber,
+            targetPest: row.targetPest,
+            applicationRate: row.applicationRate,
+            notes: row.notes,
+          });
+        }
+        
+        // Import jobs
+        const results = await bulkImportJobs(org.id, jobsToImport);
+        
+        const createdJobs = results
+          .filter(r => r.success && r.job)
+          .map(r => ({ id: r.job.id, title: r.job.title }));
+        
+        const importErrors = results
+          .map((r, idx) => {
+            if (!r.success) {
+              return {
+                row: idx + 2,
+                message: r.error || 'Unknown error',
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as Array<{ row: number; message: string }>;
+        
+        return {
+          success: errors.length === 0 && importErrors.length === 0,
+          totalRows: parsed.data.length,
+          successCount: createdJobs.length,
+          errorCount: errors.length + importErrors.length,
+          errors: [...errors, ...importErrors],
+          createdJobs,
+        };
+      }),
   }),
 
   // Job Statuses router
@@ -800,6 +922,74 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           throw new Error('Failed to send test email');
         }
         return { success: true, messageId: result.messageId };
+      }),
+  }),
+  
+  // Audit Log router
+  auditLogs: router({
+    list: protectedProcedure
+      .input(z.object({
+        userId: z.number().optional(),
+        action: z.enum(["create", "update", "delete", "login", "logout", "role_change", "status_change", "export", "import", "view"]).optional(),
+        entityType: z.enum(["user", "customer", "personnel", "job", "site", "equipment", "product", "service_plan", "maintenance_task", "organization", "integration", "job_status"]).optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, getAuditLogs } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
+        const filters = input ? {
+          ...input,
+          startDate: input.startDate ? new Date(input.startDate) : undefined,
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+        } : undefined;
+        
+        return await getAuditLogs(org.id, filters);
+      }),
+    
+    getByEntity: protectedProcedure
+      .input(z.object({
+        entityType: z.enum(["user", "customer", "personnel", "job", "site", "equipment", "product", "service_plan", "maintenance_task", "organization", "integration", "job_status"]),
+        entityId: z.number(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, getAuditLogsByEntity } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        return await getAuditLogsByEntity(org.id, input.entityType, input.entityId);
+      }),
+    
+    create: protectedProcedure
+      .input(z.object({
+        action: z.enum(["create", "update", "delete", "login", "logout", "role_change", "status_change", "export", "import", "view"]),
+        entityType: z.enum(["user", "customer", "personnel", "job", "site", "equipment", "product", "service_plan", "maintenance_task", "organization", "integration", "job_status"]),
+        entityId: z.number().optional(),
+        entityName: z.string().optional(),
+        changes: z.any().optional(),
+        metadata: z.any().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createAuditLog } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
+        // Get IP address and user agent from request
+        const ipAddress = ctx.req.ip || ctx.req.socket.remoteAddress || null;
+        const userAgent = ctx.req.headers['user-agent'] || null;
+        
+        return await createAuditLog({
+          organizationId: org.id,
+          userId: ctx.user.id,
+          action: input.action,
+          entityType: input.entityType,
+          entityId: input.entityId || null,
+          entityName: input.entityName || null,
+          changes: input.changes || null,
+          ipAddress,
+          userAgent,
+          metadata: input.metadata || null,
+        });
       }),
   }),
   

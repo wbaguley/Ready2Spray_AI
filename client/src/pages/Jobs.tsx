@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Calendar, ArrowLeft, Search, Eye, Edit, Trash2, History, Download } from "lucide-react";
+import { Loader2, Plus, Calendar, ArrowLeft, Search, Eye, Edit, Trash2, History, Download, Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -788,11 +788,18 @@ export default function Jobs() {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            onClick={() => setLocation("/bulk-import")}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Bulk Import
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => exportJobsToCSV(jobs || [])}
             disabled={!jobs || jobs.length === 0}
           >
             <Download className="mr-2 h-4 w-4" />
-            Export All to CSV
+            Export CSV
           </Button>
           <Button onClick={() => handleOpenForm()}>
             <Plus className="mr-2 h-4 w-4" />

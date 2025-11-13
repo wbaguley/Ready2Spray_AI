@@ -24,6 +24,8 @@ import ServicePlans from "./pages/ServicePlans";
 import EmailTest from "./pages/EmailTest";
 import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
+import AuditLog from "./pages/AuditLog";
+import BulkJobImport from "./pages/BulkJobImport";
 
 function Router() {
   return (
@@ -58,6 +60,12 @@ function Router() {
         <Route path="/customer-portal" component={CustomerPortal} />
         <Route path="/user-management">
           {() => <ProtectedRoute requiredPermission="view_user_management"><UserManagement /></ProtectedRoute>}
+        </Route>
+        <Route path="/audit-log">
+          {() => <ProtectedRoute requiredPermission="view_settings"><AuditLog /></ProtectedRoute>}
+        </Route>
+        <Route path="/bulk-import">
+          {() => <ProtectedRoute requiredPermission="create_jobs"><BulkJobImport /></ProtectedRoute>}
         </Route>
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
