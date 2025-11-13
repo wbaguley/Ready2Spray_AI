@@ -21,27 +21,28 @@ import {
 } from "@/components/ui/sidebar";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
+import { usePermissions, Permission } from "@/hooks/usePermissions";
 import { LayoutDashboard, LogOut, PanelLeft, Users, Briefcase, UserCheck, Package, MessageSquare, MapPin, Settings as SettingsIcon, Building2, Plane, CalendarDays, Wrench, BarChart3, CalendarCheck, Mail, Shield } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Briefcase, label: "Jobs", path: "/jobs" },
-  { icon: CalendarDays, label: "Calendar", path: "/calendar" },
-  { icon: Plane, label: "Flight Board", path: "/flight-board" },
-  { icon: Building2, label: "Sites", path: "/sites" },
-  { icon: CalendarCheck, label: "Service Plans", path: "/service-plans" },
-  { icon: Wrench, label: "Equipment", path: "/equipment" },
-  { icon: BarChart3, label: "Equipment Analytics", path: "/equipment-dashboard" },
-  { icon: Users, label: "Customers", path: "/customers" },
-  { icon: Shield, label: "User Management", path: "/user-management" },
-  { icon: MessageSquare, label: "AI Chat", path: "/chat" },
-  { icon: MapPin, label: "Maps", path: "/maps" },
-  { icon: SettingsIcon, label: "Settings", path: "/settings" },
-  { icon: Mail, label: "Email Test", path: "/email-test" },
+const menuItems: Array<{ icon: any; label: string; path: string; permission?: Permission }> = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/", permission: "view_dashboard" },
+  { icon: Briefcase, label: "Jobs", path: "/jobs", permission: "view_jobs" },
+  { icon: CalendarDays, label: "Calendar", path: "/calendar", permission: "view_calendar" },
+  { icon: Plane, label: "Flight Board", path: "/flight-board", permission: "view_flight_board" },
+  { icon: Building2, label: "Sites", path: "/sites", permission: "view_sites" },
+  { icon: CalendarCheck, label: "Service Plans", path: "/service-plans", permission: "view_service_plans" },
+  { icon: Wrench, label: "Equipment", path: "/equipment", permission: "view_equipment" },
+  { icon: BarChart3, label: "Equipment Analytics", path: "/equipment-dashboard", permission: "view_equipment_analytics" },
+  { icon: Users, label: "Customers", path: "/customers", permission: "view_customers" },
+  { icon: Shield, label: "User Management", path: "/user-management", permission: "view_user_management" },
+  { icon: MessageSquare, label: "AI Chat", path: "/chat", permission: "view_ai_chat" },
+  { icon: MapPin, label: "Maps", path: "/maps", permission: "view_maps" },
+  { icon: SettingsIcon, label: "Settings", path: "/settings", permission: "view_settings" },
+  { icon: Mail, label: "Email Test", path: "/email-test" }, // No permission required for testing
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -128,12 +129,20 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const { hasPermission } = usePermissions();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  
+  // Filter menu items based on user permissions
+  const visibleMenuItems = menuItems.filter(item => {
+    if (!item.permission) return true; // No permission required
+    return hasPermission(item.permission);
+  });
+  
+  const activeMenuItem = visibleMenuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -221,7 +230,7 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {visibleMenuItems.map(item => {
                 const isActive = location === item.path;
                 return (
                   <SidebarMenuItem key={item.path}>

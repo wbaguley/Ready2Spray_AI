@@ -5,6 +5,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import Customers from "./pages/Customers";
@@ -30,22 +31,34 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/jobs/:id" component={JobDetail} />
-      <Route path="/flight-board" component={FlightBoard} />
+      <Route path="/flight-board">
+        {() => <ProtectedRoute requiredPermission="view_flight_board"><FlightBoard /></ProtectedRoute>}
+      </Route>
       <Route path="/calendar" component={Calendar} />
       <Route path="/equipment" component={Equipment} />
-      <Route path="/equipment-dashboard" component={EquipmentDashboard} />
+      <Route path="/equipment-dashboard">
+        {() => <ProtectedRoute requiredPermission="view_equipment_analytics"><EquipmentDashboard /></ProtectedRoute>}
+      </Route>
         <Route path="/sites" component={Sites} />
-      <Route path="/service-plans" component={ServicePlans} />
+      <Route path="/service-plans">
+        {() => <ProtectedRoute requiredPermission="view_service_plans"><ServicePlans /></ProtectedRoute>}
+      </Route>
         <Route path="/jobs" component={Jobs} />
         <Route path="/customers" component={Customers} />
-        <Route path="/personnel" component={Personnel} />
+        <Route path="/personnel">
+          {() => <ProtectedRoute requiredPermission="view_personnel"><Personnel /></ProtectedRoute>}
+        </Route>
         <Route path="/chat" component={Chat} />
         <Route path="/maps" component={Maps} />
         <Route path="/product-lookup" component={ProductLookup} />
-        <Route path="/settings" component={Settings} />
+        <Route path="/settings">
+          {() => <ProtectedRoute requiredPermission="view_settings"><Settings /></ProtectedRoute>}
+        </Route>
         <Route path="/email-test" component={EmailTest} />
         <Route path="/customer-portal" component={CustomerPortal} />
-        <Route path="/user-management" component={UserManagement} />
+        <Route path="/user-management">
+          {() => <ProtectedRoute requiredPermission="view_user_management"><UserManagement /></ProtectedRoute>}
+        </Route>
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
