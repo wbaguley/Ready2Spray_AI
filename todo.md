@@ -154,3 +154,25 @@
 - [x] Position AI Chat modal in lower-right corner for desktop
 - [x] Ensure modal stays anchored to bottom-right
 - [x] Test responsive behavior on mobile
+
+
+## AI Chat Widget Enhancements
+
+### Minimize/Maximize Functionality
+- [x] Add minimize button to collapse chat to header bar only
+- [x] Add maximize button to expand chat back to full size
+- [x] Maintain chat position in corner when minimized
+- [x] Smooth transition animation between states
+
+### Persistent Chat State
+- [x] Save open/closed state to localStorage
+- [x] Save minimized/maximized state to localStorage
+- [x] Restore chat state on page load
+- [x] Clear state on logout
+
+### Unread Message Indicator
+- [x] Track last read message timestamp
+- [x] Count new AI responses since last read
+- [x] Display badge with count on chat button
+- [x] Clear badge when chat is opened
+- [x] Persist unread count across page refreshes
