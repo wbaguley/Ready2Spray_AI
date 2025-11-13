@@ -32,6 +32,7 @@ import { FloatingChatWidget } from "./FloatingChatWidget";
 const menuItems: Array<{ icon: any; label: string; path: string; permission?: Permission }> = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" }, // No permission required - accessible to all
   { icon: Briefcase, label: "Jobs", path: "/jobs", permission: "view_jobs" },
+  { icon: FileText, label: "Job Templates", path: "/job-templates", permission: "view_jobs" },
   { icon: CalendarDays, label: "Calendar", path: "/calendar", permission: "view_calendar" },
   { icon: Plane, label: "Flight Board", path: "/flight-board", permission: "view_flight_board" },
   { icon: Building2, label: "Sites", path: "/sites", permission: "view_sites" },

@@ -267,3 +267,44 @@
 - [x] Add bulkUpdate tRPC mutation
 - [x] Show success/error feedback for bulk updates
 - [x] Test bulk edit works correctly
+
+
+## Dashboard Analytics Widgets
+
+### Backend Analytics Endpoints
+- [x] Create analytics.jobCompletionByPersonnel endpoint
+- [x] Create analytics.revenueByCustomer endpoint  
+- [x] Create analytics.equipmentUtilization endpoint
+- [x] Add date range filtering to analytics endpoints
+- [x] Test analytics calculations are accurate
+
+### Frontend Dashboard Widgets
+- [x] Install chart library (recharts)
+- [x] Create JobCompletionChart component (bar chart by personnel)
+- [x] Create RevenueByCustomerChart component (pie chart)
+- [x] Create EquipmentUtilizationChart component (horizontal bar chart)
+- [x] Add analytics widgets to Dashboard page
+- [x] Add date range selector for analytics
+- [x] Test charts display correctly with data
+
+## Job Templates System
+
+### Database Schema
+- [x] Create job_templates table with template fields
+- [x] Add indexes for efficient querying
+- [x] Push schema changes to database
+
+### Backend Implementation
+- [x] Create saveJobTemplate database function
+- [x] Create getJobTemplates database function
+- [x] Create deleteJobTemplate database function
+- [x] Add jobTemplates tRPC router with CRUD endpoints
+- [x] Test template save and retrieval
+
+### Frontend Implementation
+- [x] Create JobTemplates management page
+- [x] Add Job Templates to navigation menu
+- [x] Add route for Job Templates page
+- [x] Create template creation dialog
+- [x] Implement template deletion
+- [x] Test template creation and deletion workflows

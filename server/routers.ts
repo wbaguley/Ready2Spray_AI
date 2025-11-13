@@ -19,6 +19,46 @@ export const appRouter = router({
     }),
   }),
 
+  // Analytics router
+  analytics: router({
+    jobCompletionByPersonnel: protectedProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, getJobCompletionByPersonnel } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        const startDate = input.startDate ? new Date(input.startDate) : undefined;
+        const endDate = input.endDate ? new Date(input.endDate) : undefined;
+        return await getJobCompletionByPersonnel(org.id, startDate, endDate);
+      }),
+    revenueByCustomer: protectedProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, getRevenueByCustomer } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        const startDate = input.startDate ? new Date(input.startDate) : undefined;
+        const endDate = input.endDate ? new Date(input.endDate) : undefined;
+        return await getRevenueByCustomer(org.id, startDate, endDate);
+      }),
+    equipmentUtilization: protectedProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, getEquipmentUtilization } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        const startDate = input.startDate ? new Date(input.startDate) : undefined;
+        const endDate = input.endDate ? new Date(input.endDate) : undefined;
+        return await getEquipmentUtilization(org.id, startDate, endDate);
+      }),
+  }),
+
   // Organization router
   organization: router({
     get: protectedProcedure.query(async ({ ctx }) => {
@@ -467,6 +507,55 @@ export const appRouter = router({
           results,
           errors,
         };
+      }),
+  }),
+
+  // Job Templates router
+  jobTemplates: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getJobTemplatesByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getJobTemplatesByOrgId(org.id);
+    }),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        jobType: z.enum(["crop_dusting", "pest_control", "weed_control", "fungicide", "fertilizer", "other"]),
+        priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+        state: z.string().optional(),
+        acres: z.string().optional(),
+        commodityCrop: z.string().optional(),
+        targetPest: z.string().optional(),
+        epaNumber: z.string().optional(),
+        applicationRate: z.string().optional(),
+        applicationMethod: z.enum(["aerial", "ground_boom", "backpack", "hand_wand", "ulv", "chemigation", "other"]).optional(),
+        chemicalProduct: z.string().optional(),
+        reEntryInterval: z.string().optional(),
+        preharvestInterval: z.string().optional(),
+        maxApplicationsPerSeason: z.string().optional(),
+        maxRatePerSeason: z.string().optional(),
+        methodsAllowed: z.string().optional(),
+        rate: z.string().optional(),
+        diluentAerial: z.string().optional(),
+        diluentGround: z.string().optional(),
+        diluentChemigation: z.string().optional(),
+        genericConditions: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createJobTemplate } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        return await createJobTemplate({
+          ...input,
+          orgId: org.id,
+        });
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteJobTemplate } = await import("./db");
+        await deleteJobTemplate(input.id);
+        return { success: true };
       }),
   }),
 

@@ -1203,3 +1203,127 @@ export async function findEquipmentByName(orgId: number, name: string) {
   
   return result[0] || null;
 }
+
+
+// Analytics functions
+export async function getJobCompletionByPersonnel(orgId: number, startDate?: Date, endDate?: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { jobs, jobStatuses, personnel } = await import("../drizzle/schema");
+  
+  let conditions = [eq(jobs.orgId, orgId)];
+  if (startDate) {
+    conditions.push(gte(jobs.createdAt, startDate));
+  }
+  if (endDate) {
+    conditions.push(lte(jobs.createdAt, endDate));
+  }
+
+  const result = await db
+    .select({
+      personnelId: personnel.id,
+      personnelName: personnel.name,
+      totalJobs: sql<number>`COUNT(${jobs.id})::int`,
+      completedJobs: sql<number>`SUM(CASE WHEN ${jobStatuses.category} = 'completed' THEN 1 ELSE 0 END)::int`,
+      completionRate: sql<number>`ROUND((SUM(CASE WHEN ${jobStatuses.category} = 'completed' THEN 1 ELSE 0 END)::numeric * 100.0) / NULLIF(COUNT(${jobs.id}), 0), 2)`,
+    })
+    .from(jobs)
+    .leftJoin(personnel, eq(jobs.assignedPersonnelId, personnel.id))
+    .leftJoin(jobStatuses, eq(jobs.statusId, jobStatuses.id))
+    .where(and(...conditions))
+    .groupBy(personnel.id, personnel.name)
+    .having(sql`COUNT(${jobs.id}) > 0`);
+
+  return result;
+}
+
+export async function getRevenueByCustomer(orgId: number, startDate?: Date, endDate?: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { jobs, customers } = await import("../drizzle/schema");
+  
+  let conditions = [eq(jobs.orgId, orgId)];
+  if (startDate) {
+    conditions.push(gte(jobs.createdAt, startDate));
+  }
+  if (endDate) {
+    conditions.push(lte(jobs.createdAt, endDate));
+  }
+
+  const result = await db
+    .select({
+      customerId: customers.id,
+      customerName: customers.name,
+      totalRevenue: sql<number>`0::numeric`, // TODO: Add revenue field to jobs table
+      jobCount: sql<number>`COUNT(${jobs.id})::int`,
+    })
+    .from(jobs)
+    .leftJoin(customers, eq(jobs.customerId, customers.id))
+    .where(and(...conditions))
+    .groupBy(customers.id, customers.name)
+    .having(sql`COUNT(${jobs.id}) > 0`);
+
+  return result;
+}
+
+export async function getEquipmentUtilization(orgId: number, startDate?: Date, endDate?: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { jobs, jobStatuses, equipment } = await import("../drizzle/schema");
+  
+  let jobConditions = [eq(jobs.orgId, orgId)];
+  if (startDate) {
+    jobConditions.push(gte(jobs.createdAt, startDate));
+  }
+  if (endDate) {
+    jobConditions.push(lte(jobs.createdAt, endDate));
+  }
+
+  const result = await db
+    .select({
+      equipmentId: equipment.id,
+      equipmentName: equipment.name,
+      equipmentType: equipment.equipmentType,
+      totalJobs: sql<number>`COUNT(${jobs.id})::int`,
+      activeJobs: sql<number>`SUM(CASE WHEN ${jobStatuses.category} = 'active' THEN 1 ELSE 0 END)::int`,
+      utilizationRate: sql<number>`ROUND((SUM(CASE WHEN ${jobStatuses.category} IN ('active', 'completed') THEN 1 ELSE 0 END)::numeric * 100.0) / NULLIF(COUNT(${jobs.id}), 0), 2)`,
+    })
+    .from(equipment)
+    .leftJoin(jobs, and(eq(jobs.equipmentId, equipment.id), ...jobConditions))
+    .leftJoin(jobStatuses, eq(jobs.statusId, jobStatuses.id))
+    .where(eq(equipment.orgId, orgId))
+    .groupBy(equipment.id, equipment.name, equipment.equipmentType);
+
+  return result;
+}
+
+
+// Job Template helpers
+export async function getJobTemplatesByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobTemplates } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  return await db.select().from(jobTemplates).where(eq(jobTemplates.orgId, orgId)).orderBy(desc(jobTemplates.createdAt));
+}
+
+export async function createJobTemplate(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobTemplates } = await import("../drizzle/schema");
+  const result = await db.insert(jobTemplates).values(data).returning();
+  return result[0];
+}
+
+export async function deleteJobTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobTemplates } = await import("../drizzle/schema");
+  await db.delete(jobTemplates).where(eq(jobTemplates.id, id));
+}

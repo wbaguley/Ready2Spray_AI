@@ -1,8 +1,27 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, Users, UserCheck, Package, Loader2 } from "lucide-react";
+import { Briefcase, Users, UserCheck, Package, Loader2, Calendar } from "lucide-react";
+import { JobCompletionChart } from "@/components/JobCompletionChart";
+import { RevenueByCustomerChart } from "@/components/RevenueByCustomerChart";
+import { EquipmentUtilizationChart } from "@/components/EquipmentUtilizationChart";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 export default function Dashboard() {
+  const [dateRange, setDateRange] = useState<string>("30");
+  
+  const getDateRange = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(dateRange));
+    return {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    };
+  };
+  
+  const { startDate, endDate } = getDateRange();
+  
   const { data: jobs, isLoading: jobsLoading } = trpc.jobs.list.useQuery();
   const { data: customers, isLoading: customersLoading } = trpc.customers.list.useQuery();
   const { data: personnel, isLoading: personnelLoading } = trpc.personnel.list.useQuery();
@@ -112,6 +131,37 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-green-600">{completedJobs}</div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
+            <p className="text-muted-foreground">Performance metrics and insights</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="365">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <JobCompletionChart startDate={startDate} endDate={endDate} />
+          <RevenueByCustomerChart startDate={startDate} endDate={endDate} />
+        </div>
+        
+        <EquipmentUtilizationChart startDate={startDate} endDate={endDate} />
       </div>
 
       {/* Recent Jobs */}

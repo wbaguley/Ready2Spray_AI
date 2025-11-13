@@ -1,0 +1,30 @@
+CREATE TABLE "job_templates" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "job_templates_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"org_id" integer NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"description" text,
+	"job_type" "job_type" NOT NULL,
+	"priority" "priority" DEFAULT 'medium',
+	"state" varchar(2),
+	"acres" numeric(10, 2),
+	"commodity_crop" varchar(255),
+	"target_pest" varchar(255),
+	"epa_number" varchar(50),
+	"application_rate" varchar(255),
+	"application_method" "application_method",
+	"chemical_product" varchar(255),
+	"re_entry_interval" varchar(100),
+	"preharvest_interval" varchar(100),
+	"max_applications_per_season" varchar(50),
+	"max_rate_per_season" varchar(100),
+	"methods_allowed" varchar(255),
+	"rate" varchar(100),
+	"diluent_aerial" varchar(100),
+	"diluent_ground" varchar(100),
+	"diluent_chemigation" varchar(100),
+	"generic_conditions" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "job_templates" ADD CONSTRAINT "job_templates_org_id_organizations_id_fk" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("id") ON DELETE no action ON UPDATE no action;

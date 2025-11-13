@@ -381,6 +381,42 @@ export const jobs = pgTable("jobs", {
 export type Job = typeof jobs.$inferSelect;
 export type InsertJob = typeof jobs.$inferInsert;
 
+// Job Templates table
+export const jobTemplates = pgTable("job_templates", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  orgId: integer("org_id").notNull().references(() => organizations.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  // Job configuration fields
+  jobType: jobTypeEnum("job_type").notNull(),
+  priority: priorityEnum("priority").default("medium"),
+  // EPA Compliance fields
+  state: varchar("state", { length: 2 }),
+  acres: numeric("acres", { precision: 10, scale: 2 }),
+  commodityCrop: varchar("commodity_crop", { length: 255 }),
+  targetPest: varchar("target_pest", { length: 255 }),
+  epaNumber: varchar("epa_number", { length: 50 }),
+  applicationRate: varchar("application_rate", { length: 255 }),
+  applicationMethod: applicationMethodEnum("application_method"),
+  chemicalProduct: varchar("chemical_product", { length: 255 }),
+  reEntryInterval: varchar("re_entry_interval", { length: 100 }),
+  preharvestInterval: varchar("preharvest_interval", { length: 100 }),
+  maxApplicationsPerSeason: varchar("max_applications_per_season", { length: 50 }),
+  maxRatePerSeason: varchar("max_rate_per_season", { length: 100 }),
+  methodsAllowed: varchar("methods_allowed", { length: 255 }),
+  rate: varchar("rate", { length: 100 }),
+  diluentAerial: varchar("diluent_aerial", { length: 100 }),
+  diluentGround: varchar("diluent_ground", { length: 100 }),
+  diluentChemigation: varchar("diluent_chemigation", { length: 100 }),
+  genericConditions: text("generic_conditions"),
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type JobTemplate = typeof jobTemplates.$inferSelect;
+export type InsertJobTemplate = typeof jobTemplates.$inferInsert;
+
 // Applications table (historical records)
 export const applications = pgTable("applications", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
