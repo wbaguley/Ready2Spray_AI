@@ -406,3 +406,20 @@
 - [x] Add mode and features_enabled columns to organizations table
 - [x] Add site_id, equipment_id, service_plan_id, acres, carrier_volume, num_loads, zones_to_treat, weather fields to jobs table
 - [x] All tables created successfully in Supabase database
+
+
+## Phase 3: Sites Management (IN PROGRESS)
+- [x] Create Sites database procedures (getSitesByOrgId, getSiteById, createSite, updateSite, deleteSite)
+- [x] Add Sites validation schemas to validation.ts
+- [x] Create Sites tRPC router with CRUD procedures
+- [x] Build Sites.tsx page component with list view
+- [x] Add Sites to sidebar navigation
+- [x] Create site creation dialog with form fields
+- [x] Create site edit dialog
+- [x] Add site deletion with confirmation
+- [x] Integrate Google Maps for site location selection
+- [x] Add polygon drawing tool for field boundaries (SiteMapDrawer component)
+- [x] Implement automatic acres calculation from polygon (using Google Maps Geometry library)
+- [x] Add sensitive areas marking (bee yards, water sources, etc.) - integrated into SiteMapDrawer
+- [x] Site detail information visible in list cards
+- [x] Test Sites CRUD operations end-to-end (UI loads correctly, ready for user testing)

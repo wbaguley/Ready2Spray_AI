@@ -218,3 +218,51 @@ export const updateOrganizationSchema = z.object({
   mode: z.enum(["ag_aerial", "residential_pest", "both"]).optional(),
   featuresEnabled: z.array(z.string()).optional(),
 });
+
+// Sites schemas
+export const createSiteSchema = z.object({
+  customerId: z.number().optional(),
+  name: z.string().min(1, "Site name is required"),
+  siteType: z.enum(["field", "orchard", "vineyard", "pivot", "property", "commercial_building"]),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  polygon: z.any().optional(), // GeoJSON polygon
+  centerLat: z.string().optional(),
+  centerLng: z.string().optional(),
+  acres: z.number().optional(),
+  crop: z.string().optional(),
+  variety: z.string().optional(),
+  growthStage: z.string().optional(),
+  sensitiveAreas: z.any().optional(), // JSON array
+  propertyType: z.enum(["residential", "commercial", "multi_family", "industrial"]).optional(),
+  units: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export const updateSiteSchema = z.object({
+  id: z.number(),
+  customerId: z.number().optional(),
+  name: z.string().min(1, "Site name is required").optional(),
+  siteType: z.enum(["field", "orchard", "vineyard", "pivot", "property", "commercial_building"]).optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  polygon: z.any().optional(),
+  centerLat: z.string().optional(),
+  centerLng: z.string().optional(),
+  acres: z.number().optional(),
+  crop: z.string().optional(),
+  variety: z.string().optional(),
+  growthStage: z.string().optional(),
+  sensitiveAreas: z.any().optional(),
+  propertyType: z.enum(["residential", "commercial", "multi_family", "industrial"]).optional(),
+  units: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export const deleteSiteSchema = z.object({
+  id: z.number(),
+});

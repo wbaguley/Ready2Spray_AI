@@ -3,7 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { updateOrganizationSchema } from "./validation";
+import { updateOrganizationSchema, createSiteSchema, updateSiteSchema, deleteSiteSchema } from "./validation";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -485,6 +485,42 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
   }),
 
   // Agrian EPA Product Lookup router
+  // Sites router
+  sites: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getSitesByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getSitesByOrgId(org.id);
+    }),
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getSiteById } = await import("./db");
+        return await getSiteById(input.id);
+      }),
+    create: protectedProcedure
+      .input(createSiteSchema)
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createSite } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        return await createSite({ ...input, orgId: org.id });
+      }),
+    update: protectedProcedure
+      .input(updateSiteSchema)
+      .mutation(async ({ input }) => {
+        const { updateSite } = await import("./db");
+        const { id, ...data } = input;
+        return await updateSite(id, data);
+      }),
+    delete: protectedProcedure
+      .input(deleteSiteSchema)
+      .mutation(async ({ input }) => {
+        const { deleteSite } = await import("./db");
+        await deleteSite(input.id);
+        return { success: true };
+      }),
+  }),
+
   agrian: router({
     searchProducts: protectedProcedure
       .input((raw: any) => raw)

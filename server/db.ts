@@ -507,3 +507,112 @@ export async function deleteMap(id: number) {
   const { maps } = await import("../drizzle/schema");
   await db.delete(maps).where(eq(maps.id, id));
 }
+
+// Sites functions
+export async function getSitesByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { sites, customers } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  
+  // Join with customers to get customer name
+  const result = await db
+    .select({
+      id: sites.id,
+      orgId: sites.orgId,
+      customerId: sites.customerId,
+      customerName: customers.name,
+      name: sites.name,
+      siteType: sites.siteType,
+      address: sites.address,
+      city: sites.city,
+      state: sites.state,
+      zipCode: sites.zipCode,
+      polygon: sites.polygon,
+      centerLat: sites.centerLat,
+      centerLng: sites.centerLng,
+      acres: sites.acres,
+      crop: sites.crop,
+      variety: sites.variety,
+      growthStage: sites.growthStage,
+      sensitiveAreas: sites.sensitiveAreas,
+      propertyType: sites.propertyType,
+      units: sites.units,
+      notes: sites.notes,
+      createdAt: sites.createdAt,
+      updatedAt: sites.updatedAt,
+    })
+    .from(sites)
+    .leftJoin(customers, eq(sites.customerId, customers.id))
+    .where(eq(sites.orgId, orgId))
+    .orderBy(desc(sites.createdAt));
+  
+  return result;
+}
+
+export async function getSiteById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { sites, customers } = await import("../drizzle/schema");
+  
+  const result = await db
+    .select({
+      id: sites.id,
+      orgId: sites.orgId,
+      customerId: sites.customerId,
+      customerName: customers.name,
+      name: sites.name,
+      siteType: sites.siteType,
+      address: sites.address,
+      city: sites.city,
+      state: sites.state,
+      zipCode: sites.zipCode,
+      polygon: sites.polygon,
+      centerLat: sites.centerLat,
+      centerLng: sites.centerLng,
+      acres: sites.acres,
+      crop: sites.crop,
+      variety: sites.variety,
+      growthStage: sites.growthStage,
+      sensitiveAreas: sites.sensitiveAreas,
+      propertyType: sites.propertyType,
+      units: sites.units,
+      notes: sites.notes,
+      createdAt: sites.createdAt,
+      updatedAt: sites.updatedAt,
+    })
+    .from(sites)
+    .leftJoin(customers, eq(sites.customerId, customers.id))
+    .where(eq(sites.id, id))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function createSite(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sites } = await import("../drizzle/schema");
+  const result = await db.insert(sites).values(data).returning();
+  return result[0];
+}
+
+export async function updateSite(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sites } = await import("../drizzle/schema");
+  const result = await db.update(sites).set(data).where(eq(sites.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteSite(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sites } = await import("../drizzle/schema");
+  await db.delete(sites).where(eq(sites.id, id));
+}
