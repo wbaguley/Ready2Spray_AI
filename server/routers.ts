@@ -54,9 +54,22 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createCustomer } = await import("./db");
+        const { getOrCreateUserOrganization, createCustomer, createAuditLog } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
-        return await createCustomer({ ...input, orgId: org.id });
+        const customer = await createCustomer({ ...input, orgId: org.id });
+        
+        await createAuditLog({
+          userId: ctx.user.id,
+          organizationId: org.id,
+          action: "create",
+          entityType: "customer",
+          entityId: customer.id,
+          changes: JSON.stringify({ created: input }),
+          ipAddress: ctx.req.ip || null,
+          userAgent: ctx.req.get("user-agent") || null,
+        });
+        
+        return customer;
       }),
     update: protectedProcedure
       .input(z.object({
@@ -70,15 +83,43 @@ export const appRouter = router({
         zipCode: z.string().optional(),
         notes: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
-        const { updateCustomer } = await import("./db");
-        return await updateCustomer(input.id, input);
+      .mutation(async ({ ctx, input }) => {
+        const { updateCustomer, getOrCreateUserOrganization, createAuditLog } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        const customer = await updateCustomer(input.id, input);
+        
+        await createAuditLog({
+          userId: ctx.user.id,
+          organizationId: org.id,
+          action: "update",
+          entityType: "customer",
+          entityId: input.id,
+          changes: JSON.stringify({ updated: input }),
+          ipAddress: ctx.req.ip || null,
+          userAgent: ctx.req.get("user-agent") || null,
+        });
+        
+        return customer;
       }),
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const { deleteCustomer } = await import("./db");
+      .mutation(async ({ ctx, input }) => {
+        const { deleteCustomer, getOrCreateUserOrganization, createAuditLog } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
         await deleteCustomer(input.id);
+        
+        await createAuditLog({
+          userId: ctx.user.id,
+          organizationId: org.id,
+          action: "delete",
+          entityType: "customer",
+          entityId: input.id,
+          changes: JSON.stringify({ deleted: true }),
+          ipAddress: ctx.req.ip || null,
+          userAgent: ctx.req.get("user-agent") || null,
+        });
+        
         return { success: true };
       }),
   }),
@@ -123,9 +164,23 @@ export const appRouter = router({
         genericConditions: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createJob } = await import("./db");
+        const { getOrCreateUserOrganization, createJob, createAuditLog } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
-        return await createJob({ ...input, orgId: org.id });
+        const job = await createJob({ ...input, orgId: org.id });
+        
+        // Create audit log
+        await createAuditLog({
+          userId: ctx.user.id,
+          organizationId: org.id,
+          action: "create",
+          entityType: "job",
+          entityId: job.id,
+          changes: JSON.stringify({ created: input }),
+          ipAddress: ctx.req.ip || null,
+          userAgent: ctx.req.get("user-agent") || null,
+        });
+        
+        return job;
       }),
     update: protectedProcedure
       .input(z.object({
@@ -161,11 +216,14 @@ export const appRouter = router({
         genericConditions: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { updateJob, getJobById, createJobStatusHistory } = await import("./db");
+        const { updateJob, getJobById, createJobStatusHistory, getOrCreateUserOrganization, createAuditLog } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
+        // Get current job state for audit log
+        const currentJob = await getJobById(input.id);
         
         // If status is being changed, log it to history
         if (input.statusId !== undefined) {
-          const currentJob = await getJobById(input.id);
           if (currentJob && currentJob.statusId !== input.statusId) {
             await createJobStatusHistory({
               jobId: input.id,
@@ -176,13 +234,47 @@ export const appRouter = router({
           }
         }
         
-        return await updateJob(input.id, input);
+        const updatedJob = await updateJob(input.id, input);
+        
+        // Create audit log
+        await createAuditLog({
+          userId: ctx.user.id,
+          organizationId: org.id,
+          action: "update",
+          entityType: "job",
+          entityId: input.id,
+          changes: JSON.stringify({ before: currentJob, after: input }),
+          ipAddress: ctx.req.ip || null,
+          userAgent: ctx.req.get("user-agent") || null,
+        });
+        
+        return updatedJob;
       }),
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const { deleteJob } = await import("./db");
+      .mutation(async ({ ctx, input }) => {
+        const { deleteJob, getJobById, getOrCreateUserOrganization, createAuditLog } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
+        // Get job before deletion for audit log
+        const job = await getJobById(input.id);
+        
         await deleteJob(input.id);
+        
+        // Create audit log
+        if (job) {
+          await createAuditLog({
+            userId: ctx.user.id,
+            organizationId: org.id,
+            action: "delete",
+            entityType: "job",
+            entityId: input.id,
+            changes: JSON.stringify({ deleted: job }),
+            ipAddress: ctx.req.ip || null,
+            userAgent: ctx.req.get("user-agent") || null,
+          });
+        }
+        
         return { success: true };
       }),
     history: protectedProcedure

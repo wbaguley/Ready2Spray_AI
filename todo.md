@@ -176,3 +176,31 @@
 - [x] Display badge with count on chat button
 - [x] Clear badge when chat is opened
 - [x] Persist unread count across page refreshes
+
+
+## Quick Action Shortcuts in Chat
+- [x] Add quick action buttons to chat widget
+- [x] Implement "Today's Schedule" shortcut
+- [x] Implement "Weather Check" shortcut
+- [x] Implement "Create New Job" shortcut
+- [x] Add visual styling for quick action buttons
+- [x] Test shortcuts populate chat input correctly
+
+## Automatic Audit Logging
+- [x] Add audit logging to job creation
+- [x] Add audit logging to job updates
+- [x] Add audit logging to job deletion
+- [x] Add audit logging to customer CRUD operations
+- [ ] Add audit logging to personnel CRUD operations
+- [ ] Add audit logging to equipment CRUD operations
+- [ ] Add audit logging to site CRUD operations
+- [x] Capture IP address and user agent for audit logs
+- [ ] Test audit logs are created automatically
+
+## CSV Export for Bulk Import
+- [x] Add "Export to CSV" button to Jobs page
+- [x] Implement CSV export functionality with all job fields
+- [x] Include related data (customer names, personnel names, etc.)
+- [x] Format CSV to match bulk import template
+- [x] Add download functionality
+- [ ] Test exported CSV can be re-imported

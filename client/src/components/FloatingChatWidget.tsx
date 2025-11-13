@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, X, Send, Loader2, Minus, Maximize2 } from "lucide-react";
+import { MessageSquare, X, Send, Loader2, Minus, Maximize2, Calendar, Briefcase, Cloud, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -257,6 +257,44 @@ font-semibold"
                     <p className="text-sm text-muted-foreground max-w-md">
                       I can help you with job scheduling, weather conditions, EPA compliance, and agricultural operations. What would you like assistance with today?
                     </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 w-full max-w-sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Show me today's schedule")}
+                      className="flex items-center gap-2"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Today's Schedule
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("What's the weather forecast for spraying?")}
+                      className="flex items-center gap-2"
+                    >
+                      <Cloud className="h-4 w-4" />
+                      Weather Check
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Help me create a new spray job")}
+                      className="flex items-center gap-2"
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      Create New Job
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Show me quick stats")}
+                      className="flex items-center gap-2"
+                    >
+                      <Zap className="h-4 w-4" />
+                      Quick Stats
+                    </Button>
                   </div>
                 </div>
               ) : (
