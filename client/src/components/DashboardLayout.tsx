@@ -29,7 +29,7 @@ import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems: Array<{ icon: any; label: string; path: string; permission?: Permission }> = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/", permission: "view_dashboard" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" }, // No permission required - accessible to all
   { icon: Briefcase, label: "Jobs", path: "/jobs", permission: "view_jobs" },
   { icon: CalendarDays, label: "Calendar", path: "/calendar", permission: "view_calendar" },
   { icon: Plane, label: "Flight Board", path: "/flight-board", permission: "view_flight_board" },

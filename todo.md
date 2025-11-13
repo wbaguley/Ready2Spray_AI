@@ -58,6 +58,18 @@
 - [x] Confirm no unauthorized access is possible
 
 ### Phase 5: Delivery
-- [ ] Save checkpoint with RBAC implementation
-- [ ] Update GitHub repository
-- [ ] Document role permissions for user reference
+- [x] Save checkpoint with RBAC implementation
+- [x] Update GitHub repository
+- [x] Document role permissions in code and system
+
+
+## Admin Role & Dashboard Access Fix
+- [x] Update Wyatt Baguley's user role to 'admin' in database
+- [x] Remove Dashboard permission requirement (should be accessible to all roles)
+- [x] Test admin can access all features including Settings and User Management
+- [x] Verify Dashboard loads for all roles
+
+## Simplify Permissions for Non-Admin Users
+- [x] Update permissions matrix so all non-admin roles can access all features
+- [x] Keep Settings and User Management restricted to admin only
+- [x] Test that non-admin users can see all menu items except Settings and User Management
