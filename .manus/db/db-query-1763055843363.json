@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM personnel ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT id, name FROM personnel ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "John Smith"
+    },
+    {
+      "id": "2",
+      "name": "Maria Garcia"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tJohn Smith\n2\tMaria Garcia\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

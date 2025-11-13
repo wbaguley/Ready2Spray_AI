@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, name FROM customers WHERE name IN ('Green Valley Farms', 'Riverside Orchards', 'Mountain View Agriculture') ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT id, name FROM customers WHERE name IN ('Green Valley Farms', 'Riverside Orchards', 'Mountain View Agriculture') ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Green Valley Farms"
+    },
+    {
+      "id": "2",
+      "name": "Riverside Orchards"
+    },
+    {
+      "id": "3",
+      "name": "Mountain View Agriculture"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tGreen Valley Farms\n2\tRiverside Orchards\n3\tMountain View Agriculture\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO personnel (org_id, name, email, phone, role, license_number, license_expiry, certifications, notes) VALUES\n(1, 'John Smith', 'john.smith@ready2spray.com', '(555) 111-2222', 'pilot', 'CA-PILOT-12345', '2025-12-31', 'Commercial Pilot License, Ag Aviation Certification', 'Senior pilot with 15 years experience'),\n(1, 'Maria Garcia', 'maria.garcia@ready2spray.com', '(555) 222-3333', 'ground_crew', 'CA-APPLICATOR-67890', '2025-06-30', 'Certified Pest Control Applicator', 'Ground application specialist');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute INSERT INTO personnel (org_id, name, email, phone, role, license_number, license_expiry, certifications, notes) VALUES\n(1, 'John Smith', 'john.smith@ready2spray.com', '(555) 111-2222', 'pilot', 'CA-PILOT-12345', '2025-12-31', 'Commercial Pilot License, Ag Aviation Certification', 'Senior pilot with 15 years experience'),\n(1, 'Maria Garcia', 'maria.garcia@ready2spray.com', '(555) 222-3333', 'ground_crew', 'CA-APPLICATOR-67890', '2025-06-30', 'Certified Pest Control Applicator', 'Ground application specialist');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'license_number' in 'field list'"
+  ]
+}

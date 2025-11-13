@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO customers (org_id, name, email, phone, address, city, state, zip_code, notes) VALUES\n(1, 'Green Valley Farms', 'contact@greenvalleyfarms.com', '(555) 123-4567', '1234 Farm Road', 'Bakersfield', 'CA', '93301', 'Large-scale cotton and almond operation. Prefers early morning applications.'),\n(1, 'Riverside Orchards', 'info@riversideorchards.com', '(555) 234-5678', '5678 Orchard Lane', 'Fresno', 'CA', '93650', 'Citrus and stone fruit grower. Organic certification required for some fields.'),\n(1, 'Mountain View Agriculture', 'admin@mountainviewag.com', '(555) 345-6789', '9012 Valley Drive', 'Visalia', 'CA', '93277', 'Diversified crops including grapes, almonds, and pistachios.');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute INSERT INTO customers (org_id, name, email, phone, address, city, state, zip_code, notes) VALUES\n(1, 'Green Valley Farms', 'contact@greenvalleyfarms.com', '(555) 123-4567', '1234 Farm Road', 'Bakersfield', 'CA', '93301', 'Large-scale cotton and almond operation. Prefers early morning applications.'),\n(1, 'Riverside Orchards', 'info@riversideorchards.com', '(555) 234-5678', '5678 Orchard Lane', 'Fresno', 'CA', '93650', 'Citrus and stone fruit grower. Organic certification required for some fields.'),\n(1, 'Mountain View Agriculture', 'admin@mountainviewag.com', '(555) 345-6789', '9012 Valley Drive', 'Visalia', 'CA', '93277', 'Diversified crops including grapes, almonds, and pistachios.');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 63
+}

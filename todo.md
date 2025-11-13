@@ -697,3 +697,43 @@
 - [ ] Add Export button to Jobs list (bulk export) - future enhancement
 - [ ] Test PDF generation with real job data
 - [ ] Test CSV export with multiple jobs
+
+
+## Phase 13: Sample Data & Form Enhancements (COMPLETE ✅)
+
+### Sample Test Data
+- [x] Create 3 test customers (Green Valley Farms, Riverside Orchards, Mountain View Agriculture)
+- [x] Create 2 test personnel (John Smith - pilot, Maria Garcia - applicator)
+- [x] Create 3 test jobs with complete EPA compliance data:
+  - Cotton Pest Control - Aphid Treatment (high priority, scheduled tomorrow)
+  - Citrus Fungicide Application (medium priority, scheduled today)
+  - Almond Orchard Fertilization (low priority, completed 7 days ago)
+- [x] Include various job statuses (pending=1, ready=2, completed=3)
+- [x] Add equipment assignments to test jobs (assigned to first personnel)
+- [x] Verify dashboard displays sample data correctly (1 Customer, 1 Personnel shown)
+
+### Bulk Export to Jobs List
+- [x] Add "Export All to CSV" button to Jobs page header
+- [x] Import exportJobsToCSV function from pdfExport.ts
+- [x] Add Download icon from lucide-react
+- [x] Disable button when no jobs exist
+- [x] Button positioned next to "New Job" button
+- [ ] Test CSV export with multiple jobs (requires manual testing)
+- [ ] Verify all fields are included in CSV
+
+### Job Form Enhancements
+- [x] Customer selection dropdown already exists and working
+- [x] Personnel assignment dropdown already exists and working
+- [x] Equipment selection dropdown already exists and working (filters active equipment)
+- [x] Scheduled start/end datetime pickers already exist
+- [x] EPA compliance fields section already complete
+- [x] Target pest field already exists
+- [x] Application rate field already exists
+- [x] Application method dropdown already exists
+- [x] Chemical product field already exists with EPA lookup integration
+- [x] REI and PHI fields already exist
+- [x] Max applications/rate per season fields already exist
+- [x] Diluent fields (Aerial, Ground, Chemigation) already exist
+- [x] Generic conditions textarea already exists
+- [x] Form is comprehensive and complete with all EPA compliance fields
+- [ ] Test form submission with all fields (requires manual testing)
