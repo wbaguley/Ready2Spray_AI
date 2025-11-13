@@ -497,3 +497,37 @@
 - [x] Show job details dialog on click
 - [x] Add route to App.tsx and sidebar navigation
 - [ ] Test calendar functionality (needs manual testing)interactions
+
+
+## Phase 8: Equipment Management (IN PROGRESS)
+
+### Equipment Backend
+- [x] Create equipment database procedures (getEquipmentByOrgId, getEquipmentById, createEquipment, updateEquipment, deleteEquipment)
+- [x] Add equipment validation schemas to validation.ts
+- [x] Create equipment tRPC router with CRUD procedures
+
+### Equipment UI
+- [x] Create Equipment.tsx page component with list view
+- [x] Add Equipment to sidebar navigation
+- [x] Create equipment creation dialog with form fields (name, type, registration, capacity, status)
+- [x] Create equipment edit dialog
+- [x] Add equipment deletion with confirmation
+- [x] Add equipment type filtering (plane, truck, rig, helicopter, backpack, etc.)
+
+### Maintenance Tracking
+- [ ] Add maintenance log table to UI
+- [ ] Create maintenance record dialog
+- [ ] Add maintenance due date alerts
+- [ ] Show maintenance history timeline
+
+### Job Integration
+- [ ] Add equipment dropdown to Jobs creation/edit form
+- [ ] Show assigned equipment on job cards
+- [ ] Add equipment availability calendar
+- [ ] Prevent double-booking equipment
+
+### Testing
+- [ ] Test equipment CRUD operations
+- [ ] Test maintenance tracking
+- [ ] Test job assignment integration
+- [ ] Save checkpoint

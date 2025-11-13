@@ -3,7 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { updateOrganizationSchema, createSiteSchema, updateSiteSchema, deleteSiteSchema } from "./validation";
+import { updateOrganizationSchema, createSiteSchema, updateSiteSchema, deleteSiteSchema, createEquipmentSchema, updateEquipmentSchema, deleteEquipmentSchema } from "./validation";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -486,6 +486,41 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
 
   // Agrian EPA Product Lookup router
   // Sites router
+  equipment: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getEquipmentByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getEquipmentByOrgId(org.id);
+    }),
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getEquipmentById } = await import("./db");
+        return await getEquipmentById(input.id);
+      }),
+    create: protectedProcedure
+      .input(createEquipmentSchema)
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createEquipment } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        return await createEquipment({ ...input, orgId: org.id });
+      }),
+    update: protectedProcedure
+      .input(updateEquipmentSchema)
+      .mutation(async ({ input }) => {
+        const { updateEquipment } = await import("./db");
+        const { id, ...data } = input;
+        return await updateEquipment(id, data);
+      }),
+    delete: protectedProcedure
+      .input(deleteEquipmentSchema)
+      .mutation(async ({ input }) => {
+        const { deleteEquipment } = await import("./db");
+        await deleteEquipment(input.id);
+        return { success: true };
+      }),
+  }),
+
   sites: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       const { getOrCreateUserOrganization, getSitesByOrgId } = await import("./db");

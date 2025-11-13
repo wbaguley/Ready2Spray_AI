@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, equipment, InsertEquipment } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -739,4 +739,46 @@ export async function createEntityMapping(data: any) {
     }).returning();
     return result[0];
   }
+}
+
+
+// ============================================================================
+// Equipment Functions
+// ============================================================================
+
+export async function getEquipmentByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(equipment).where(eq(equipment.orgId, orgId));
+  return result;
+}
+
+export async function getEquipmentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(equipment).where(eq(equipment.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createEquipment(data: InsertEquipment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(equipment).values(data);
+}
+
+export async function updateEquipment(id: number, data: Partial<InsertEquipment>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(equipment).set(data).where(eq(equipment.id, id));
+}
+
+export async function deleteEquipment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(equipment).where(eq(equipment.id, id));
 }

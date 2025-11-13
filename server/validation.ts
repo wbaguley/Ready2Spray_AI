@@ -299,3 +299,41 @@ export const deleteIntegrationConnectionSchema = z.object({
 export const testFieldPulseSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
 });
+
+// Equipment Schemas
+export const createEquipmentSchema = z.object({
+  name: z.string().min(1, "Equipment name is required"),
+  equipmentType: z.enum(["plane", "helicopter", "ground_rig", "truck", "backpack", "hand_sprayer", "ulv", "other"]),
+  tailNumber: z.string().optional(),
+  licensePlate: z.string().optional(),
+  serialNumber: z.string().optional(),
+  tankCapacity: z.string().optional(),
+  swathWidth: z.string().optional(),
+  maxSpeed: z.string().optional(),
+  status: z.enum(["active", "maintenance", "inactive"]).optional(),
+  lastMaintenanceDate: z.string().optional(),
+  nextMaintenanceDate: z.string().optional(),
+  maintenanceNotes: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const updateEquipmentSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1).optional(),
+  equipmentType: z.enum(["plane", "helicopter", "ground_rig", "truck", "backpack", "hand_sprayer", "ulv", "other"]).optional(),
+  tailNumber: z.string().optional(),
+  licensePlate: z.string().optional(),
+  serialNumber: z.string().optional(),
+  tankCapacity: z.string().optional(),
+  swathWidth: z.string().optional(),
+  maxSpeed: z.string().optional(),
+  status: z.enum(["active", "maintenance", "inactive"]).optional(),
+  lastMaintenanceDate: z.string().optional(),
+  nextMaintenanceDate: z.string().optional(),
+  maintenanceNotes: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const deleteEquipmentSchema = z.object({
+  id: z.number(),
+});
