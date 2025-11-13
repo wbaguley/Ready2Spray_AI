@@ -802,6 +802,29 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         return { success: true, messageId: result.messageId };
       }),
   }),
+  
+  // User Management router
+  users: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getUsersByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getUsersByOrgId(org.id);
+    }),
+    updateRole: protectedProcedure
+      .input(z.object({
+        userId: z.number(),
+        userRole: z.enum(["admin", "manager", "technician", "pilot", "sales"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admins can update roles
+        if (ctx.user.role !== 'admin') {
+          throw new Error('Only administrators can update user roles');
+        }
+        const { updateUserRole } = await import("./db");
+        await updateUserRole(input.userId, input.userRole);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
