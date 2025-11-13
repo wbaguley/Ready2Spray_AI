@@ -616,3 +616,127 @@ export async function deleteSite(id: number) {
   const { sites } = await import("../drizzle/schema");
   await db.delete(sites).where(eq(sites.id, id));
 }
+
+
+// ============================================
+// Integration Procedures
+// ============================================
+
+export async function getIntegrationConnections(organizationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  return await db.select().from(integrationConnections).where(eq(integrationConnections.organizationId, organizationId));
+}
+
+export async function getIntegrationConnection(organizationId: number, integrationType: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  const result = await db.select().from(integrationConnections).where(
+    and(
+      eq(integrationConnections.organizationId, organizationId),
+      eq(integrationConnections.integrationType, integrationType)
+    )
+  ).limit(1);
+  return result[0] || null;
+}
+
+export async function createIntegrationConnection(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  const result = await db.insert(integrationConnections).values(data).returning();
+  return result[0];
+}
+
+export async function updateIntegrationConnection(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  const result = await db.update(integrationConnections).set(data).where(eq(integrationConnections.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteIntegrationConnection(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  await db.delete(integrationConnections).where(eq(integrationConnections.id, id));
+}
+
+export async function createSyncLog(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationSyncLogs } = await import("../drizzle/schema");
+  const result = await db.insert(integrationSyncLogs).values(data).returning();
+  return result[0];
+}
+
+export async function getSyncLogs(connectionId: number, limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { integrationSyncLogs } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  return await db.select().from(integrationSyncLogs)
+    .where(eq(integrationSyncLogs.connectionId, connectionId))
+    .orderBy(desc(integrationSyncLogs.syncedAt))
+    .limit(limit);
+}
+
+export async function getEntityMapping(connectionId: number, entityType: string, ready2sprayId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { integrationEntityMappings } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  const result = await db.select().from(integrationEntityMappings).where(
+    and(
+      eq(integrationEntityMappings.connectionId, connectionId),
+      eq(integrationEntityMappings.entityType, entityType),
+      eq(integrationEntityMappings.ready2sprayId, ready2sprayId)
+    )
+  ).limit(1);
+  return result[0] || null;
+}
+
+export async function createEntityMapping(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationEntityMappings } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  
+  // Check if mapping already exists
+  const existing = await db.select().from(integrationEntityMappings).where(
+    and(
+      eq(integrationEntityMappings.connectionId, data.connectionId),
+      eq(integrationEntityMappings.entityType, data.entityType),
+      eq(integrationEntityMappings.ready2sprayId, data.ready2sprayId)
+    )
+  ).limit(1);
+  
+  if (existing.length > 0) {
+    // Update existing mapping
+    const result = await db.update(integrationEntityMappings)
+      .set({ externalId: data.externalId, lastSyncedAt: new Date() })
+      .where(eq(integrationEntityMappings.id, existing[0].id))
+      .returning();
+    return result[0];
+  } else {
+    // Create new mapping
+    const result = await db.insert(integrationEntityMappings).values({
+      ...data,
+      lastSyncedAt: new Date()
+    }).returning();
+    return result[0];
+  }
+}

@@ -436,7 +436,12 @@
 - [ ] Implement customer sync (Zoho CRM → Ready2Spray)
 - [ ] Implement job/deal sync bidirectionally
 - [ ] Add webhook handler for Zoho CRM updates
-- [ ] Build integration settings UI in Settings page
+- [ ] Build integration settings UI in Settings page (IN PROGRESS)
+  - [ ] Add Integrations card to Settings page
+  - [ ] Create Zoho CRM connection UI with OAuth button
+  - [ ] Create FieldPulse connection UI with API key input
+  - [ ] Add sync settings toggles (customers, jobs, interval)
+  - [ ] Show connection status and last sync time
 - [ ] Test Zoho CRM integration end-to-end
 
 ### FieldPulse Integration
@@ -451,9 +456,15 @@
 - [ ] Build FieldPulse settings UI
 - [ ] Test FieldPulse integration end-to-end
 
-### Integration Management
-- [ ] Create integration status dashboard
-- [ ] Add sync logs and error tracking
-- [ ] Implement manual sync triggers
-- [ ] Add conflict resolution UI for duplicate records
+### Integration Management (IN PROGRESS)
+- [x] Create integration database procedures (getConnections, createConnection, updateConnection, getSyncLogs, createEntityMapping)
+- [ ] Create integration tRPC router
+- [ ] Implement Zoho CRM OAuth callback handler
+- [ ] Implement Zoho CRM API client with token refresh
+- [ ] Implement FieldPulse API client
+- [ ] Build customer sync procedures (bidirectional)
+- [ ] Add conflict resolution logic (timestamp-based)
+- [ ] Create Sync Dashboard page
+- [ ] Add sync logs table with filtering
+- [ ] Add manual sync triggers
 - [ ] Test both integrations working together
