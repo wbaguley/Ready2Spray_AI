@@ -148,3 +148,9 @@
 - [x] Fix userRole assignment for owner in upsertUser
 - [x] Ensure Settings menu item appears for admin users
 - [x] Verify all menu items are visible and accessible
+
+
+### AI Chat Modal Positioning
+- [x] Position AI Chat modal in lower-right corner for desktop
+- [x] Ensure modal stays anchored to bottom-right
+- [x] Test responsive behavior on mobile

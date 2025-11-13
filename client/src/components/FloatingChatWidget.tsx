@@ -105,7 +105,7 @@ export function FloatingChatWidget() {
 
       {/* Chat Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl h-[600px] p-0 flex flex-col">
+        <DialogContent className="max-w-md h-[600px] p-0 flex flex-col fixed bottom-6 right-6 top-auto left-auto translate-x-0 translate-y-0 m-0 data-[state=open]:slide-in-from-bottom-2 data-[state=open]:slide-in-from-right-2">
           <DialogHeader className="px-6 py-4 border-b">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2">
