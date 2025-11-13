@@ -204,3 +204,66 @@
 - [x] Format CSV to match bulk import template
 - [x] Add download functionality
 - [ ] Test exported CSV can be re-imported
+
+
+## Extended Audit Logging
+- [x] Add audit logging to personnel create operation
+- [x] Add audit logging to personnel update operation
+- [x] Add audit logging to personnel delete operation
+- [x] Add audit logging to equipment create operation
+- [x] Add audit logging to equipment update operation
+- [x] Add audit logging to equipment delete operation
+- [x] Add audit logging to site create operation
+- [x] Add audit logging to site update operation
+- [x] Add audit logging to site delete operation
+- [x] Test all audit logs are created correctly
+
+## Audit Log Export
+- [x] Add CSV export button to Audit Log page
+- [x] Implement exportAuditLogsToCSV function
+- [x] Add PDF export button to Audit Log page
+- [x] Implement exportAuditLogsToPDF function
+- [x] Include all audit log fields in exports
+- [x] Format changes JSON for readability
+- [x] Test exports work correctly
+
+## Bulk Edit Mode for Jobs
+- [ ] Add "Bulk Edit" toggle button to Jobs page
+- [ ] Add checkbox column to jobs table
+- [ ] Implement select all/none functionality
+- [ ] Create bulk edit panel with common fields (status, priority, personnel)
+- [ ] Add "Save All Changes" button
+- [ ] Implement batch update mutation
+- [ ] Show success/error feedback for bulk updates
+- [ ] Test bulk edit works correctly
+
+
+## Extended Audit Logging
+- [x] Add audit logging to personnel create operation
+- [x] Add audit logging to personnel update operation
+- [x] Add audit logging to personnel delete operation
+- [x] Add audit logging to equipment create operation
+- [x] Add audit logging to equipment update operation
+- [x] Add audit logging to equipment delete operation
+- [x] Add audit logging to site create operation
+- [x] Add audit logging to site update operation
+- [x] Add audit logging to site delete operation
+- [x] Test all audit logs are created correctly
+
+## Audit Log Export
+- [x] Add CSV export button to Audit Log page
+- [x] Implement exportAuditLogsToCSV function
+- [x] Add PDF export button to Audit Log page
+- [x] Implement exportAuditLogsToPDF function
+- [x] Include all audit log fields in exports
+- [x] Format changes JSON for readability
+- [x] Test exports work correctly
+
+## Bulk Edit Mode for Jobs
+- [x] Add "Bulk Edit" button to Jobs page
+- [x] Create BulkEditJobs dialog component with table and checkboxes
+- [x] Implement select all functionality
+- [x] Create bulk update panel with status, priority, personnel fields
+- [x] Add bulkUpdate tRPC mutation
+- [x] Show success/error feedback for bulk updates
+- [x] Test bulk edit works correctly
