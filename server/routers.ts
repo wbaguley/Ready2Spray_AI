@@ -104,6 +104,53 @@ export const appRouter = router({
       }),
   }),
 
+  // Job Statuses router
+  jobStatuses: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getJobStatusesByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getJobStatusesByOrgId(org.id);
+    }),
+    create: protectedProcedure
+      .input(
+        z.object({
+          name: z.string(),
+          color: z.string(),
+          displayOrder: z.number(),
+          category: z.string(),
+          isDefault: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createJobStatus } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        return await createJobStatus({ ...input, orgId: org.id });
+      }),
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          color: z.string().optional(),
+          displayOrder: z.number().optional(),
+          category: z.string().optional(),
+          isDefault: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { updateJobStatus } = await import("./db");
+        const { id, ...data } = input;
+        return await updateJobStatus(id, data);
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteJobStatus } = await import("./db");
+        await deleteJobStatus(input.id);
+        return { success: true };
+      }),
+  }),
+
   // Personnel router
   personnel: router({
     list: protectedProcedure.query(async ({ ctx }) => {

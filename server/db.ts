@@ -202,8 +202,57 @@ export async function getJobsByOrgId(orgId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const { jobs } = await import("../drizzle/schema");
-  return await db.select().from(jobs).where(eq(jobs.orgId, orgId));
+  const { jobs, jobStatuses } = await import("../drizzle/schema");
+  
+  // Join jobs with job_statuses to get status name and color
+  const result = await db
+    .select({
+      id: jobs.id,
+      orgId: jobs.orgId,
+      customerId: jobs.customerId,
+      assignedPersonnelId: jobs.assignedPersonnelId,
+      title: jobs.title,
+      description: jobs.description,
+      jobType: jobs.jobType,
+      statusId: jobs.statusId,
+      priority: jobs.priority,
+      locationAddress: jobs.locationAddress,
+      locationLat: jobs.locationLat,
+      locationLng: jobs.locationLng,
+      scheduledStart: jobs.scheduledStart,
+      scheduledEnd: jobs.scheduledEnd,
+      actualStart: jobs.actualStart,
+      actualEnd: jobs.actualEnd,
+      notes: jobs.notes,
+      state: jobs.state,
+      commodityCrop: jobs.commodityCrop,
+      targetPest: jobs.targetPest,
+      epaNumber: jobs.epaNumber,
+      applicationRate: jobs.applicationRate,
+      applicationMethod: jobs.applicationMethod,
+      chemicalProduct: jobs.chemicalProduct,
+      reEntryInterval: jobs.reEntryInterval,
+      preharvestInterval: jobs.preharvestInterval,
+      maxApplicationsPerSeason: jobs.maxApplicationsPerSeason,
+      maxRatePerSeason: jobs.maxRatePerSeason,
+      methodsAllowed: jobs.methodsAllowed,
+      rate: jobs.rate,
+      diluentAerial: jobs.diluentAerial,
+      diluentGround: jobs.diluentGround,
+      diluentChemigation: jobs.diluentChemigation,
+      genericConditions: jobs.genericConditions,
+      createdAt: jobs.createdAt,
+      updatedAt: jobs.updatedAt,
+      // Status fields from jobStatuses table
+      statusName: jobStatuses.name,
+      statusColor: jobStatuses.color,
+      statusCategory: jobStatuses.category,
+    })
+    .from(jobs)
+    .leftJoin(jobStatuses, eq(jobs.statusId, jobStatuses.id))
+    .where(eq(jobs.orgId, orgId));
+  
+  return result;
 }
 
 export async function createJob(data: any) {
@@ -230,6 +279,54 @@ export async function deleteJob(id: number) {
   
   const { jobs } = await import("../drizzle/schema");
   await db.delete(jobs).where(eq(jobs.id, id));
+}
+
+// Job Status helpers
+export async function getJobStatusesByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const { asc } = await import("drizzle-orm");
+  return await db.select().from(jobStatuses).where(eq(jobStatuses.orgId, orgId)).orderBy(asc(jobStatuses.displayOrder));
+}
+
+export async function createJobStatus(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const result = await db.insert(jobStatuses).values(data).returning();
+  return result[0];
+}
+
+export async function updateJobStatus(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const result = await db.update(jobStatuses).set(data).where(eq(jobStatuses.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteJobStatus(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  await db.delete(jobStatuses).where(eq(jobStatuses.id, id));
+}
+
+export async function getDefaultJobStatus(orgId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  const result = await db.select().from(jobStatuses).where(
+    and(eq(jobStatuses.orgId, orgId), eq(jobStatuses.isDefault, true))
+  ).limit(1);
+  return result[0] || null;
 }
 
 // Personnel helpers

@@ -1,0 +1,19 @@
+{
+  "query": "-- Get the organization ID (assuming there's only one org for now)\nWITH org AS (\n  SELECT id FROM organizations LIMIT 1\n)\nINSERT INTO job_statuses (org_id, name, color, display_order, category, is_default)\nSELECT \n  org.id,\n  status_data.name,\n  status_data.color,\n  status_data.display_order,\n  status_data.category,\n  status_data.is_default\nFROM org, (VALUES\n  ('Pending', '#f59e0b', 1, 'pending', true),\n  ('Ready', '#3b82f6', 2, 'pending', false),\n  ('In Progress', '#8b5cf6', 3, 'active', false),\n  ('Completed', '#10b981', 4, 'completed', false),\n  ('Cancelled', '#ef4444', 5, 'completed', false)\n) AS status_data(name, color, display_order, category, is_default)\nON CONFLICT DO NOTHING\nRETURNING *;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute -- Get the organization ID (assuming there's only one org for now)\nWITH org AS (\n  SELECT id FROM organizations LIMIT 1\n)\nINSERT INTO job_statuses (org_id, name, color, display_order, category, is_default)\nSELECT \n  org.id,\n  status_data.name,\n  status_data.color,\n  status_data.display_order,\n  status_data.category,\n  status_data.is_default\nFROM org, (VALUES\n  ('Pending', '#f59e0b', 1, 'pending', true),\n  ('Ready', '#3b82f6', 2, 'pending', false),\n  ('In Progress', '#8b5cf6', 3, 'active', false),\n  ('Completed', '#10b981', 4, 'completed', false),\n  ('Cancelled', '#ef4444', 5, 'completed', false)\n) AS status_data(name, color, display_order, category, is_default)\nON CONFLICT DO NOTHING\nRETURNING *;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 2: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 4 column 7 near \"INSERT INTO job_statuses (org_id, name, color, display_order, category, is_default)",
+    "SELECT ",
+    "  org.id,",
+    "  status_data.name,",
+    "  status_data.color,",
+    "  status_data.display_order,",
+    "  status_data.category,",
+    "  status_data.is_default",
+    "FROM org, (VALUES",
+    "  ('Pending', '#f59e0b', 1, 'pending', true),",
+    "  ('Ready', '#3b82f6', 2, 'pending', false),",
+    "  ('In Progress', '#8b5cf6', 3, 'activ"
+  ]
+}

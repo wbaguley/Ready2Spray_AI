@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgEnum, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
@@ -98,6 +98,22 @@ export const personnel = pgTable("personnel", {
 export type Personnel = typeof personnel.$inferSelect;
 export type InsertPersonnel = typeof personnel.$inferInsert;
 
+// Job Statuses table - customizable per organization
+export const jobStatuses = pgTable("job_statuses", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  orgId: integer("org_id").notNull().references(() => organizations.id),
+  name: varchar("name", { length: 50 }).notNull(),
+  color: varchar("color", { length: 7 }).notNull(), // Hex color code
+  displayOrder: integer("display_order").notNull(), // For sorting
+  category: varchar("category", { length: 20 }).notNull(), // 'pending', 'active', 'completed' for dashboard grouping
+  isDefault: boolean("is_default").default(false).notNull(), // Default status for new jobs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type JobStatus = typeof jobStatuses.$inferSelect;
+export type InsertJobStatus = typeof jobStatuses.$inferInsert;
+
 // Jobs table
 export const jobs = pgTable("jobs", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -107,7 +123,7 @@ export const jobs = pgTable("jobs", {
   title: text("title").notNull(),
   description: text("description"),
   jobType: jobTypeEnum("job_type").notNull(),
-  status: jobStatusEnum("status").default("pending").notNull(),
+  statusId: integer("status_id").references(() => jobStatuses.id), // References custom job status
   priority: priorityEnum("priority").default("medium").notNull(),
   locationAddress: text("location_address"),
   locationLat: varchar("location_lat", { length: 50 }),

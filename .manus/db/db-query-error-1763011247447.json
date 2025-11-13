@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO job_statuses (org_id, name, color, display_order, category, is_default) VALUES\n(1, 'Pending', '#f59e0b', 1, 'pending', true),\n(1, 'Ready', '#3b82f6', 2, 'pending', false),\n(1, 'In Progress', '#8b5cf6', 3, 'active', false),\n(1, 'Completed', '#10b981', 4, 'completed', false),\n(1, 'Cancelled', '#ef4444', 5, 'completed', false)\nON CONFLICT DO NOTHING;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute INSERT INTO job_statuses (org_id, name, color, display_order, category, is_default) VALUES\n(1, 'Pending', '#f59e0b', 1, 'pending', true),\n(1, 'Ready', '#3b82f6', 2, 'pending', false),\n(1, 'In Progress', '#8b5cf6', 3, 'active', false),\n(1, 'Completed', '#10b981', 4, 'completed', false),\n(1, 'Cancelled', '#ef4444', 5, 'completed', false)\nON CONFLICT DO NOTHING;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 7 column 12 near \"CONFLICT DO NOTHING\""
+  ]
+}

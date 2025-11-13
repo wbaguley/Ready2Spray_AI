@@ -285,3 +285,20 @@
 - [x] Add context-aware prompts for agricultural queries
 - [x] Integrate tool calling into sendMessage procedure
 - [ ] Test AI Chat with real agricultural scenarios
+
+## Customizable Job Status System
+- [x] Design database schema for job_statuses table (name, color, displayOrder, category, isDefault, orgId)
+- [x] Add migration to create job_statuses table
+- [x] Create default statuses for existing organizations (Pending, Ready, In Progress, Completed, Cancelled)
+- [x] Add CRUD procedures for job statuses in backend (getJobStatusesByOrgId, createJobStatus, updateJobStatus, deleteJobStatus)
+- [x] Add tRPC jobStatuses router with list/create/update/delete procedures
+- [x] Update getJobsByOrgId to join with job_statuses and return statusName, statusColor, statusCategory
+- [ ] Fix frontend TypeScript errors (Dashboard.tsx and Jobs.tsx use old status enum)
+- [ ] Create Status Management section in Settings page
+- [ ] Implement drag-and-drop status reordering
+- [ ] Add color picker for status visualization
+- [ ] Update Jobs page to use custom statuses dropdown
+- [ ] Implement status transition workflow (buttons to move between stages)
+- [ ] Update Dashboard to dynamically group by custom statuses
+- [ ] Add status change history tracking (optional)
+- [ ] Test custom status system end-to-end
