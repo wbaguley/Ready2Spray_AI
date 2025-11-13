@@ -60,12 +60,14 @@ export default function FlightBoard() {
     }
   };
 
-  const getStatusColor = (statusId: number) => {
+  const getStatusColor = (statusId: number | null) => {
+    if (!statusId) return "#gray";
     const status = jobStatuses?.find(s => s.id === statusId);
     return status?.color || "#gray";
   };
 
-  const getStatusName = (statusId: number) => {
+  const getStatusName = (statusId: number | null) => {
+    if (!statusId) return "Unknown";
     const status = jobStatuses?.find(s => s.id === statusId);
     return status?.name || "Unknown";
   };

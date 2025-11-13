@@ -577,8 +577,27 @@
 - [ ] Add customer and zone assignment
 - [ ] Test service plans workflow
 
-### GitHub Repository Update
-- [ ] Push all new code to wbaguley/Ready2Spray_AI repository ] Create service plan dashboard
+### TypeScript Error Fixes (IN PROGRESS - 32→12 errors fixed)
+- [x] Fix integration entity mappings enum type errors (used sql template)
+- [x] Add sql import to db.ts
+- [x] Fix boolean null type errors in Settings.tsx
+- [x] Add equipmentId to Jobs formData and database query
+- [x] Fix FlightBoard null type errors for statusId
+- [ ] Fix FlightBoard missing fields (commodity, personnelName, customerName) - need database joins
+- [ ] Verify all TypeScript compilation passes
+
+### Service Plans UI (IN PROGRESS)
+- [ ] Add service plans validation schemas
+- [ ] Create service plans tRPC router
+- [ ] Build ServicePlans.tsx page with CRUD interface
+- [ ] Add recurring service agreement creation form
+- [ ] Implement automated job generation logic
+- [ ] Add customer and zone assignment
+- [ ] Test service plans workflow
+
+### GitHub Repository Update (IN PROGRESS)
+- [ ] Commit all new features to repository
+- [ ] Push all new code to wbaguley/Ready2Spray_AI repository
 - [ ] Add route to sidebar navigation
 
 ### Application Records Export

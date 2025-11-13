@@ -618,7 +618,7 @@ function IntegrationsSection() {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={zohoConnection.syncCustomers}
+                    checked={zohoConnection.syncCustomers ?? false}
                     onChange={(e) => updateMutation.mutate({ id: zohoConnection.id, syncCustomers: e.target.checked })}
                   />
                   Sync Customers
@@ -626,7 +626,7 @@ function IntegrationsSection() {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={zohoConnection.syncJobs}
+                    checked={zohoConnection.syncJobs ?? false}
                     onChange={(e) => updateMutation.mutate({ id: zohoConnection.id, syncJobs: e.target.checked })}
                   />
                   Sync Jobs
@@ -702,7 +702,7 @@ function IntegrationsSection() {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={fieldPulseConnection.syncCustomers}
+                    checked={fieldPulseConnection.syncCustomers ?? false}
                     onChange={(e) => updateMutation.mutate({ id: fieldPulseConnection.id, syncCustomers: e.target.checked })}
                   />
                   Sync Customers
@@ -710,7 +710,7 @@ function IntegrationsSection() {
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={fieldPulseConnection.syncJobs}
+                    checked={fieldPulseConnection.syncJobs ?? false}
                     onChange={(e) => updateMutation.mutate({ id: fieldPulseConnection.id, syncJobs: e.target.checked })}
                   />
                   Sync Jobs

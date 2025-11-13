@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan } from "../drizzle/schema";
@@ -211,6 +211,7 @@ export async function getJobsByOrgId(orgId: number) {
       orgId: jobs.orgId,
       customerId: jobs.customerId,
       assignedPersonnelId: jobs.assignedPersonnelId,
+      equipmentId: jobs.equipmentId,
       title: jobs.title,
       description: jobs.description,
       jobType: jobs.jobType,
@@ -639,7 +640,7 @@ export async function getIntegrationConnection(organizationId: number, integrati
   const result = await db.select().from(integrationConnections).where(
     and(
       eq(integrationConnections.organizationId, organizationId),
-      eq(integrationConnections.integrationType, integrationType)
+      sql`${integrationConnections.integrationType} = ${integrationType}`
     )
   ).limit(1);
   return result[0] || null;
@@ -701,7 +702,7 @@ export async function getEntityMapping(connectionId: number, entityType: string,
   const result = await db.select().from(integrationEntityMappings).where(
     and(
       eq(integrationEntityMappings.connectionId, connectionId),
-      eq(integrationEntityMappings.entityType, entityType),
+      sql`${integrationEntityMappings.entityType} = ${entityType}`,
       eq(integrationEntityMappings.ready2sprayId, ready2sprayId)
     )
   ).limit(1);
@@ -719,7 +720,7 @@ export async function createEntityMapping(data: any) {
   const existing = await db.select().from(integrationEntityMappings).where(
     and(
       eq(integrationEntityMappings.connectionId, data.connectionId),
-      eq(integrationEntityMappings.entityType, data.entityType),
+      sql`${integrationEntityMappings.entityType} = ${data.entityType}`,
       eq(integrationEntityMappings.ready2sprayId, data.ready2sprayId)
     )
   ).limit(1);

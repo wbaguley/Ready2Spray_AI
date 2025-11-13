@@ -123,6 +123,7 @@ export default function Jobs() {
       diluentGround: "",
       diluentChemigation: "",
       genericConditions: "",
+      equipmentId: "",
     });
     setEditingJob(null);
   };
@@ -158,6 +159,7 @@ export default function Jobs() {
         diluentGround: job.diluentGround || "",
         diluentChemigation: job.diluentChemigation || "",
         genericConditions: job.genericConditions || "",
+        equipmentId: job.equipmentId?.toString() || "",
       });
     } else {
       resetForm();
