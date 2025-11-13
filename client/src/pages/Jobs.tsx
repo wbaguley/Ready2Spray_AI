@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Calendar, ArrowLeft, Search } from "lucide-react";
+import { Loader2, Plus, Calendar, ArrowLeft, Search, Eye, Edit, Trash2, History } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -821,8 +821,18 @@ export default function Jobs() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
+                    onClick={() => setLocation(`/jobs/${job.id}`)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
                     onClick={() => handleOpenForm(job)}
                   >
+                    <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
                   <Button
@@ -935,7 +945,7 @@ function StatusTransitionButton({ job, jobStatuses }: { job: any; jobStatuses: a
   const handleTransition = () => {
     updateMutation.mutate({
       id: job.id,
-      status: nextStatus.id.toString(),
+      statusId: nextStatus.id,
     });
   };
 

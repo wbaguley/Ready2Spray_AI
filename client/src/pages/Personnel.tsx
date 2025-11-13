@@ -39,7 +39,7 @@ export default function Personnel() {
     name: "",
     email: "",
     phone: "",
-    role: "technician" as "applicator" | "technician" | "driver" | "pilot",
+    role: "technician" as "pilot" | "ground_crew" | "manager" | "technician",
     status: "active" as "active" | "on_leave" | "inactive",
     certifications: "",
     notes: "",
@@ -217,10 +217,10 @@ export default function Personnel() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="technician">Technician</SelectItem>
-                        <SelectItem value="applicator">Applicator</SelectItem>
-                        <SelectItem value="driver">Driver</SelectItem>
                         <SelectItem value="pilot">Pilot</SelectItem>
+                        <SelectItem value="ground_crew">Ground Crew</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="technician">Technician</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -330,10 +330,10 @@ export default function Personnel() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>
-              <SelectItem value="applicator">Applicator</SelectItem>
-              <SelectItem value="technician">Technician</SelectItem>
-              <SelectItem value="driver">Driver</SelectItem>
               <SelectItem value="pilot">Pilot</SelectItem>
+              <SelectItem value="ground_crew">Ground Crew</SelectItem>
+              <SelectItem value="manager">Manager</SelectItem>
+              <SelectItem value="technician">Technician</SelectItem>
             </SelectContent>
           </Select>
         </div>

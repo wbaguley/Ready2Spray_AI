@@ -13,12 +13,14 @@ import Chat from "./pages/Chat";
 import Maps from "./pages/Maps";
 import ProductLookup from "./pages/ProductLookup";
 import Settings from "./pages/Settings";
+import JobDetail from "./pages/JobDetail";
 
 function Router() {
   return (
     <DashboardLayout>
       <Switch>
-        <Route path={"/"} component={Dashboard} />
+         <Route path="/" component={Dashboard} />
+        <Route path="/jobs/:id" component={JobDetail} />
         <Route path="/jobs" component={Jobs} />
         <Route path="/customers" component={Customers} />
         <Route path="/personnel" component={Personnel} />

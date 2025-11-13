@@ -54,20 +54,39 @@ export const appRouter = router({
       return await getCustomersByOrgId(org.id);
     }),
     create: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({
+        name: z.string().min(1, "Customer name is required"),
+        email: z.string().email("Invalid email format").optional().or(z.literal("")),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        zipCode: z.string().optional(),
+        notes: z.string().optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
         const { getOrCreateUserOrganization, createCustomer } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
         return await createCustomer({ ...input, orgId: org.id });
       }),
     update: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1, "Customer name is required").optional(),
+        email: z.string().email("Invalid email format").optional().or(z.literal("")),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        zipCode: z.string().optional(),
+        notes: z.string().optional(),
+      }))
       .mutation(async ({ input }) => {
         const { updateCustomer } = await import("./db");
         return await updateCustomer(input.id, input);
       }),
     delete: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         const { deleteCustomer } = await import("./db");
         await deleteCustomer(input.id);
@@ -83,14 +102,75 @@ export const appRouter = router({
       return await getJobsByOrgId(org.id);
     }),
     create: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({
+        title: z.string().min(1, "Job title is required"),
+        description: z.string().optional(),
+        jobType: z.enum(["crop_dusting", "pest_control", "fertilization", "herbicide"]),
+        statusId: z.number().optional(),
+        priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+        locationAddress: z.string().optional(),
+        locationLat: z.string().optional(),
+        locationLng: z.string().optional(),
+        customerId: z.number().optional(),
+        assignedPersonnelId: z.number().optional(),
+        scheduledStart: z.string().optional(),
+        scheduledEnd: z.string().optional(),
+        state: z.string().optional(),
+        commodityCrop: z.string().optional(),
+        targetPest: z.string().optional(),
+        epaNumber: z.string().optional(),
+        applicationRate: z.string().optional(),
+        applicationMethod: z.string().optional(),
+        chemicalProduct: z.string().optional(),
+        reEntryInterval: z.string().optional(),
+        preharvestInterval: z.string().optional(),
+        maxApplicationsPerSeason: z.string().optional(),
+        maxRatePerSeason: z.string().optional(),
+        methodsAllowed: z.string().optional(),
+        rate: z.string().optional(),
+        diluentAerial: z.string().optional(),
+        diluentGround: z.string().optional(),
+        diluentChemigation: z.string().optional(),
+        genericConditions: z.string().optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
         const { getOrCreateUserOrganization, createJob } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
         return await createJob({ ...input, orgId: org.id });
       }),
     update: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1, "Job title is required").optional(),
+        description: z.string().optional(),
+        jobType: z.enum(["crop_dusting", "pest_control", "fertilization", "herbicide"]).optional(),
+        statusId: z.number().optional(),
+        priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+        locationAddress: z.string().optional(),
+        locationLat: z.string().optional(),
+        locationLng: z.string().optional(),
+        customerId: z.number().optional(),
+        assignedPersonnelId: z.number().optional(),
+        scheduledStart: z.string().optional(),
+        scheduledEnd: z.string().optional(),
+        state: z.string().optional(),
+        commodityCrop: z.string().optional(),
+        targetPest: z.string().optional(),
+        epaNumber: z.string().optional(),
+        applicationRate: z.string().optional(),
+        applicationMethod: z.string().optional(),
+        chemicalProduct: z.string().optional(),
+        reEntryInterval: z.string().optional(),
+        preharvestInterval: z.string().optional(),
+        maxApplicationsPerSeason: z.string().optional(),
+        maxRatePerSeason: z.string().optional(),
+        methodsAllowed: z.string().optional(),
+        rate: z.string().optional(),
+        diluentAerial: z.string().optional(),
+        diluentGround: z.string().optional(),
+        diluentChemigation: z.string().optional(),
+        genericConditions: z.string().optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
         const { updateJob, getJobById, createJobStatusHistory } = await import("./db");
         
@@ -110,7 +190,7 @@ export const appRouter = router({
         return await updateJob(input.id, input);
       }),
     delete: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         const { deleteJob } = await import("./db");
         await deleteJob(input.id);
@@ -190,20 +270,39 @@ export const appRouter = router({
       return await getPersonnelByOrgId(org.id);
     }),
     create: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({
+        name: z.string().min(1, "Personnel name is required"),
+        role: z.enum(["pilot", "ground_crew", "manager", "technician"]),
+        email: z.string().email("Invalid email format").optional().or(z.literal("")),
+        phone: z.string().optional(),
+        status: z.enum(["active", "inactive", "on_leave"]).default("active"),
+        pilotLicense: z.string().optional(),
+        applicatorLicense: z.string().optional(),
+        notes: z.string().optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
         const { getOrCreateUserOrganization, createPersonnel } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
         return await createPersonnel({ ...input, orgId: org.id });
       }),
     update: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1, "Personnel name is required").optional(),
+        role: z.enum(["pilot", "ground_crew", "manager", "technician"]).optional(),
+        email: z.string().email("Invalid email format").optional().or(z.literal("")),
+        phone: z.string().optional(),
+        status: z.enum(["active", "inactive", "on_leave"]).optional(),
+        pilotLicense: z.string().optional(),
+        applicatorLicense: z.string().optional(),
+        notes: z.string().optional(),
+      }))
       .mutation(async ({ input }) => {
         const { updatePersonnel } = await import("./db");
         return await updatePersonnel(input.id, input);
       }),
     delete: protectedProcedure
-      .input((raw: any) => raw)
+      .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         const { deletePersonnel } = await import("./db");
         await deletePersonnel(input.id);

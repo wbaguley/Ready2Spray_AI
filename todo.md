@@ -313,3 +313,49 @@
   - [x] Build StatusHistory component to display timeline
   - [x] Integrate status history into job cards with History button and dialog
 - [x] Test custom status system end-to-end
+
+
+## Phase 5: Critical Production Readiness Tasks
+- [x] Complete job form with all EPA compliance fields (ALREADY COMPLETE)
+  - [x] Add customer selection dropdown
+  - [x] Add personnel assignment dropdown
+  - [x] Add scheduled start/end date pickers
+  - [x] Add job location field with coordinates
+  - [x] Add state field
+  - [x] Add commodity/crop field
+  - [x] Add target pest field
+  - [x] Add EPA registration number field
+  - [x] Add application rate field
+  - [x] Add application method dropdown
+  - [x] Add chemical product field
+  - [x] Add re-entry interval field
+  - [x] Add pre-harvest interval field
+  - [x] Add max applications per season field
+  - [x] Add max rate per season field
+  - [x] Add methods allowed field
+  - [x] Add rate field
+  - [x] Add diluent aerial field
+  - [x] Add diluent ground field
+  - [x] Add diluent chemigation field
+  - [x] Add generic conditions/notes textarea
+  - [ ] Test job creation with all fields
+  - [ ] Test job editing with all fields
+- [x] Add comprehensive data validation
+  - [x] Add Zod schemas for all tRPC inputs (customers, personnel, jobs, jobStatuses)
+  - [x] Add frontend form validation (required fields, type checking)
+  - [x] Add email format validation (Zod email schema)
+  - [x] Add phone format validation (regex pattern)
+  - [x] Add date range validation (scheduledEnd > scheduledStart)
+- [x] Create job detail page
+  - [x] Build JobDetail.tsx component
+  - [x] Add route for /jobs/:id
+  - [x] Display all job fields (organized in cards by category)
+  - [x] Show status history (dialog with StatusHistory component)
+  - [x] Add edit/delete actions (with confirmation dialog)
+  - [x] Add View button to job cards in Jobs list
+- [ ] Perform comprehensive CRUD testing
+  - [ ] Test all customer operations
+  - [ ] Test all personnel operations
+  - [ ] Test all job operations
+  - [ ] Test organization operations
+  - [ ] Document all bugs found
