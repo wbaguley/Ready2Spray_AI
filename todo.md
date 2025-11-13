@@ -219,3 +219,12 @@
 - [ ] Implement AI PDF label extraction service
 - [ ] Create tRPC procedures for EPA product search
 - [ ] Update ProductLookup page to search Supabase EPA database
+
+## Login and Preview Issues (URGENT)
+- [x] Debug why login is not working after Supabase migration
+- [x] Check OAuth callback handler and session management
+- [x] Verify database user upsert functionality works with Supabase
+- [x] Fix SSL configuration (changed from 'require' to { rejectUnauthorized: false })
+- [x] Fix server binding (added '0.0.0.0' to listen call)
+- [x] Fix preview display issues in Management UI
+- [ ] Test complete authentication flow end-to-end with actual login

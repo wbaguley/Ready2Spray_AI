@@ -13,7 +13,7 @@ export async function getDb() {
   if (!_db && connectionString) {
     try {
       const client = postgres(connectionString, {
-        ssl: 'require',
+        ssl: { rejectUnauthorized: false },
         max: 10,
         idle_timeout: 20,
         connect_timeout: 10,
