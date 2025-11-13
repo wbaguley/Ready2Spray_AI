@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE organizations \nADD COLUMN IF NOT EXISTS address TEXT,\nADD COLUMN IF NOT EXISTS city VARCHAR(100),\nADD COLUMN IF NOT EXISTS state VARCHAR(2),\nADD COLUMN IF NOT EXISTS zip_code VARCHAR(10),\nADD COLUMN IF NOT EXISTS phone VARCHAR(20),\nADD COLUMN IF NOT EXISTS email VARCHAR(320),\nADD COLUMN IF NOT EXISTS website VARCHAR(255),\nADD COLUMN IF NOT EXISTS notes TEXT;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute ALTER TABLE organizations \nADD COLUMN IF NOT EXISTS address TEXT,\nADD COLUMN IF NOT EXISTS city VARCHAR(100),\nADD COLUMN IF NOT EXISTS state VARCHAR(2),\nADD COLUMN IF NOT EXISTS zip_code VARCHAR(10),\nADD COLUMN IF NOT EXISTS phone VARCHAR(20),\nADD COLUMN IF NOT EXISTS email VARCHAR(320),\nADD COLUMN IF NOT EXISTS website VARCHAR(255),\nADD COLUMN IF NOT EXISTS notes TEXT;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 4573
+}

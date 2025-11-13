@@ -12,6 +12,7 @@ import Personnel from "./pages/Personnel";
 import Chat from "./pages/Chat";
 import Maps from "./pages/Maps";
 import ProductLookup from "./pages/ProductLookup";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/chat" component={Chat} />
       <Route path="/maps" component={Maps} />
       <Route path="/product-lookup" component={ProductLookup} />
+      <Route path="/settings" component={Settings} />
         <Route path={"/ 404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

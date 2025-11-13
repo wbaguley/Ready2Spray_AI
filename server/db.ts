@@ -129,6 +129,30 @@ export async function getOrCreateUserOrganization(userId: number) {
   return result[0];
 }
 
+export async function updateOrganization(orgId: number, data: Partial<{
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  phone: string;
+  email: string;
+  website: string;
+  notes: string;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { organizations } = await import("../drizzle/schema");
+  
+  const result = await db.update(organizations)
+    .set(data)
+    .where(eq(organizations.id, orgId))
+    .returning();
+  
+  return result[0];
+}
+
 export async function getOrganizationById(orgId: number) {
   const db = await getDb();
   if (!db) return null;

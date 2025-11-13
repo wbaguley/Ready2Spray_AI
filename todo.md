@@ -269,3 +269,19 @@
 - [x] Job READ - Working
 - [x] Job UPDATE - Edit functionality implemented
 - [x] Job DELETE - Working
+
+## Settings Page Implementation
+- [x] Create Settings.tsx page component
+- [x] Add Settings to sidebar navigation
+- [x] Implement Organization profile form (name, address, contact info)
+- [x] Add organization update mutation
+- [x] Add organization schema fields to database
+- [ ] Test organization CRUD operations
+
+## AI Chat MCP Enhancement
+- [x] Analyze current AI Chat implementation
+- [x] Design MCP integration for agricultural context
+- [x] Implement MCP tools for spray operations (jobs, customers, personnel, weather, EPA)
+- [x] Add context-aware prompts for agricultural queries
+- [x] Integrate tool calling into sendMessage procedure
+- [ ] Test AI Chat with real agricultural scenarios
