@@ -134,3 +134,17 @@
 - [ ] Test on different screen sizes
 - [ ] Save checkpoint
 - [ ] Push to GitHub repository
+
+
+## Bug Fixes and Improvements
+
+### AI Chat Widget Enhancement
+- [x] Convert floating chat button to popup modal dialog
+- [x] Embed full chat functionality in the modal
+- [x] Allow users to chat while viewing current page
+- [x] Add close/minimize functionality to modal
+
+### Navigation Fixes
+- [x] Fix userRole assignment for owner in upsertUser
+- [x] Ensure Settings menu item appears for admin users
+- [x] Verify all menu items are visible and accessible

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, \"openId\", name, email, role, \"userRole\" FROM users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT id, \"openId\", name, email, role, \"userRole\" FROM users LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "openId",
+      "name": "Wyatt Baguley",
+      "email": "wyatt@gtmplanetary.com",
+      "role": "admin",
+      "userRole": "userRole"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\tuserRole\n1\topenId\tWyatt Baguley\twyatt@gtmplanetary.com\tadmin\tuserRole\n",
+  "stderr": "",
+  "execution_time_ms": 150
+}

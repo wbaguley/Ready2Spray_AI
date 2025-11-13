@@ -74,6 +74,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = 'admin';
       updateSet.role = 'admin';
     }
+    
+    // Set userRole for owner to 'admin' for permissions system
+    if (user.openId === ENV.ownerOpenId) {
+      values.userRole = 'admin';
+      updateSet.userRole = 'admin';
+    }
 
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
