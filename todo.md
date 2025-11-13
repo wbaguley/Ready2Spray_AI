@@ -596,12 +596,20 @@
 - [x] Add customer and site assignment
 - [x] Add Service Plans to sidebar navigation
 - [x] Add Service Plans route to App.tsx
-- [ ] Implement automated job generation logic (deferred - requires cron/scheduler)
-- [ ] Test service plans workflow end-to-end
+- [x] Implement automated job generation logic
+  - [x] Create servicePlanScheduler.ts with job generation logic
+  - [x] Add calculateNextServiceDate function for plan types
+  - [x] Add generateJobFromServicePlan function
+  - [x] Add processServicePlans function for batch processing
+  - [x] Add processNow endpoint to servicePlans router (admin-only)
+  - [x] Add "Process Now" button to Service Plans UI
+  - [x] Test manual job generation trigger
+- [x] Test service plans workflow end-to-end (10/10 tests passed)
 
-### GitHub Repository Update (IN PROGRESS)
-- [ ] Commit all new features to repository
-- [ ] Push all new code to wbaguley/Ready2Spray_AI repository
+### GitHub Repository Update (COMPLETE ✅)
+- [x] Add GitHub remote for wbaguley/Ready2Spray_AI
+- [x] Push all new code to GitHub repository (544 objects, 1.84 MB)
+- [x] Verify repository updated successfully
 - [ ] Add route to sidebar navigation
 
 ### Application Records Export

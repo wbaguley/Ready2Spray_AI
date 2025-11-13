@@ -773,6 +773,17 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         await deleteServicePlan(input.id);
         return { success: true };
       }),
+    processNow: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const { user } = ctx;
+        // Only allow admin users to trigger processing
+        if (user.role !== 'admin') {
+          throw new Error('Only administrators can trigger service plan processing');
+        }
+        const { triggerServicePlanProcessing } = await import("./servicePlanScheduler");
+        const result = await triggerServicePlanProcessing();
+        return result;
+      }),
   }),
 });
 

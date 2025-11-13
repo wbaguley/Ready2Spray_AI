@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Loader2, Calendar, DollarSign, User, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Calendar, DollarSign, User, MapPin, Play } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -99,6 +99,23 @@ export default function ServicePlans() {
     },
   });
 
+  const processNowMutation = trpc.servicePlans.processNow.useMutation({
+    onSuccess: (result) => {
+      utils.servicePlans.list.invalidate();
+      utils.jobs.list.invalidate();
+      toast.success(`Generated ${result.generated} jobs from ${result.processed} service plans!`);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to process service plans: ${error.message}`);
+    },
+  });
+
+  const handleProcessNow = () => {
+    if (confirm("This will generate jobs for all active service plans that are due. Continue?")) {
+      processNowMutation.mutate();
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -179,13 +196,26 @@ export default function ServicePlans() {
             Manage recurring service agreements for pest control customers
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setEditingPlan(null); setFormData(initialFormData); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Service Plan
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleProcessNow}
+            disabled={processNowMutation.isPending}
+          >
+            {processNowMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="mr-2 h-4 w-4" />
+            )}
+            Process Now
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { setEditingPlan(null); setFormData(initialFormData); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Service Plan
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingPlan ? "Edit Service Plan" : "Create New Service Plan"}</DialogTitle>
@@ -359,7 +389,8 @@ export default function ServicePlans() {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {!servicePlans || servicePlans.length === 0 ? (
