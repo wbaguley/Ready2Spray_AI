@@ -283,3 +283,8 @@
 - [x] Check existing tables in Supabase
 - [x] Run Drizzle migrations to create all missing tables (personnel, sites, equipment, job_statuses, jobs)
 - [x] Verify all tables exist and queries work
+
+## Remove Crop Specifics from Job Form
+- [x] Remove entire "Crop Specifics" section from job creation form
+- [x] Keep only Agricultural Details (state, crop, target pest, application rate/method, chemical product)
+- [x] EPA compliance fields (REI, PHI, max applications, etc.) come only from linked products
