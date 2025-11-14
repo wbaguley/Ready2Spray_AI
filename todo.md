@@ -297,3 +297,9 @@
 ## Fix Jobs Table Schema Mismatch
 - [x] Add missing agricultural/EPA columns to jobs table (state, commodity_crop, target_pest, epa_number, application_rate, application_method, chemical_product, re_entry_interval, preharvest_interval, max_applications_per_season, max_rate_per_season, methods_allowed, rate, diluent_aerial, diluent_ground, diluent_chemigation, generic_conditions)
 - [x] Test job creation works after adding columns
+
+## URGENT: Fix Job Creation - Remove Agricultural Fields from INSERT
+- [x] Update backend job creation to NOT insert agricultural/EPA fields (those come from linked products)
+- [x] Update frontend to not send agricultural/EPA fields during job creation
+- [x] Only insert: title, description, job_type, priority, customer_id, site_id, assigned_personnel_id, equipment_id, location_address, scheduled_start, scheduled_end, notes
+- [x] Test job creation works

@@ -21,63 +21,7 @@ export default function Jobs() {
   const [editingJob, setEditingJob] = useState<any>(null);
   const [viewingHistoryJobId, setViewingHistoryJobId] = useState<number | null>(null);
 
-  // Check for selected product data from ProductLookup page (URL params or localStorage)
-  useEffect(() => {
-    // First check URL params (new method)
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('productId');
-    
-    if (productId) {
-      // Product data from URL params (new Product Lookup flow)
-      setFormData((prev) => ({
-        ...prev,
-        productId: productId,
-        epaNumber: urlParams.get('epaNumber') || prev.epaNumber,
-        chemicalProduct: urlParams.get('productName') || prev.chemicalProduct,
-        reEntryInterval: urlParams.get('reEntryInterval') || prev.reEntryInterval,
-        preharvestInterval: urlParams.get('preharvestInterval') || prev.preharvestInterval,
-        maxApplicationsPerSeason: urlParams.get('maxApplicationsPerSeason') || prev.maxApplicationsPerSeason,
-        maxRatePerSeason: urlParams.get('maxRatePerSeason') || prev.maxRatePerSeason,
-        methodsAllowed: urlParams.get('methodsAllowed') || prev.methodsAllowed,
-        rate: urlParams.get('rate') || prev.rate,
-        diluentAerial: urlParams.get('diluentAerial') || prev.diluentAerial,
-        diluentGround: urlParams.get('diluentGround') || prev.diluentGround,
-        diluentChemigation: urlParams.get('diluentChemigation') || prev.diluentChemigation,
-        genericConditions: urlParams.get('genericConditions') || prev.genericConditions,
-      }));
-      setShowCreateForm(true);
-      toast.success("Product data loaded from EPA lookup!");
-      // Clear URL params
-      window.history.replaceState({}, '', '/jobs/new');
-    } else {
-      // Fallback to localStorage (old method)
-      const selectedProductData = localStorage.getItem("selectedAgrianProduct");
-      if (selectedProductData) {
-        try {
-          const product = JSON.parse(selectedProductData);
-          setFormData((prev) => ({
-            ...prev,
-            epaNumber: product.epaNumber || prev.epaNumber,
-            chemicalProduct: product.name || prev.chemicalProduct,
-            reEntryInterval: product.reEntryInterval || prev.reEntryInterval,
-            preharvestInterval: product.preharvestInterval || prev.preharvestInterval,
-            maxApplicationsPerSeason: product.maxApplicationsPerSeason || prev.maxApplicationsPerSeason,
-            maxRatePerSeason: product.maxRatePerSeason || prev.maxRatePerSeason,
-            methodsAllowed: product.methodsAllowed || prev.methodsAllowed,
-            rate: product.rate || prev.rate,
-            diluentAerial: product.diluentAerial || prev.diluentAerial,
-            diluentGround: product.diluentGround || prev.diluentGround,
-            diluentChemigation: product.diluentChemigation || prev.diluentChemigation,
-            genericConditions: product.genericConditions || prev.genericConditions,
-          }));
-          localStorage.removeItem("selectedAgrianProduct");
-          toast.success("Product data loaded from EPA lookup!");
-        } catch (error) {
-          console.error("Failed to parse selected product data:", error);
-        }
-      }
-    }
-  }, [location]); // Re-run when location changes (i.e., when returning from product-lookup)
+  // Products are now linked AFTER job creation via the job detail page
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -86,30 +30,12 @@ export default function Jobs() {
     priority: "medium" as const,
     locationAddress: "",
     customerId: "",
+    siteId: "",
     assignedPersonnelId: "",
     equipmentId: "",
-    productId: "",
     scheduledStart: "",
     scheduledEnd: "",
-    // Agricultural details
-    state: "",
-    commodityCrop: "",
-    targetPest: "",
-    epaNumber: "",
-    applicationRate: "",
-    applicationMethod: "",
-    chemicalProduct: "",
-    // Crop specifics
-    reEntryInterval: "",
-    preharvestInterval: "",
-    maxApplicationsPerSeason: "",
-    maxRatePerSeason: "",
-    methodsAllowed: "",
-    rate: "",
-    diluentAerial: "",
-    diluentGround: "",
-    diluentChemigation: "",
-    genericConditions: "",
+    notes: "",
   });
 
   const { data: jobs, isLoading } = trpc.jobs.list.useQuery();
@@ -132,28 +58,12 @@ export default function Jobs() {
       priority: "medium",
       locationAddress: "",
       customerId: "",
+      siteId: "",
       assignedPersonnelId: "",
       equipmentId: "",
-      productId: "",
       scheduledStart: "",
       scheduledEnd: "",
-      state: "",
-      commodityCrop: "",
-      targetPest: "",
-      epaNumber: "",
-      applicationRate: "",
-      applicationMethod: "",
-      chemicalProduct: "",
-      reEntryInterval: "",
-      preharvestInterval: "",
-      maxApplicationsPerSeason: "",
-      maxRatePerSeason: "",
-      methodsAllowed: "",
-      rate: "",
-      diluentAerial: "",
-      diluentGround: "",
-      diluentChemigation: "",
-      genericConditions: "",
+      notes: "",
     });
     setEditingJob(null);
   };
@@ -169,28 +79,12 @@ export default function Jobs() {
         priority: job.priority || "medium",
         locationAddress: job.locationAddress || "",
         customerId: job.customerId?.toString() || "",
+        siteId: job.siteId?.toString() || "",
         assignedPersonnelId: job.assignedPersonnelId?.toString() || "",
         equipmentId: job.equipmentId?.toString() || "",
-        productId: job.productId?.toString() || "",
         scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
         scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
-        state: job.state || "",
-        commodityCrop: job.commodityCrop || "",
-        targetPest: job.targetPest || "",
-        epaNumber: job.epaNumber || "",
-        applicationRate: job.applicationRate || "",
-        applicationMethod: job.applicationMethod || "",
-        chemicalProduct: job.chemicalProduct || "",
-        reEntryInterval: job.reEntryInterval || "",
-        preharvestInterval: job.preharvestInterval || "",
-        maxApplicationsPerSeason: job.maxApplicationsPerSeason || "",
-        maxRatePerSeason: job.maxRatePerSeason || "",
-        methodsAllowed: job.methodsAllowed || "",
-        rate: job.rate || "",
-        diluentAerial: job.diluentAerial || "",
-        diluentGround: job.diluentGround || "",
-        diluentChemigation: job.diluentChemigation || "",
-        genericConditions: job.genericConditions || "",
+        notes: job.notes || "",
       });
     } else {
       resetForm();
@@ -252,10 +146,10 @@ export default function Jobs() {
       delete submitData.equipmentId;
     }
     
-    if (submitData.productId) {
-      submitData.productId = parseInt(submitData.productId);
+    if (submitData.siteId) {
+      submitData.siteId = parseInt(submitData.siteId);
     } else {
-      delete submitData.productId;
+      delete submitData.siteId;
     }
     
     // Convert date strings to Date objects if they exist
