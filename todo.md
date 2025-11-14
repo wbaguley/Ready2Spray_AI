@@ -262,3 +262,9 @@
 ## Bug Fixes - Product Creation
 - [x] Fix product creation error - missing org_id in INSERT query
 - [x] Fix SQL parameter count mismatch (18 columns but 17 values)
+
+## Bug Fixes - Product Data Flow
+- [x] Fix product fields not being saved to database (created products_complete table)
+- [x] Increase PPE textarea size for long text (8 rows, resizable)
+- [x] Add EPA fields display to job creation form (green badge shows linked product)
+- [x] Ensure extracted data flows through save → job form → job detail

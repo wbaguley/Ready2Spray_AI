@@ -1,0 +1,9 @@
+{
+  "query": "SELECT \n  column_name, \n  data_type, \n  character_maximum_length,\n  is_nullable,\n  column_default\nFROM information_schema.columns \nWHERE table_name = 'products_complete' \n  AND table_schema = 'public'\nORDER BY ordinal_position;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT \n  column_name, \n  data_type, \n  character_maximum_length,\n  is_nullable,\n  column_default\nFROM information_schema.columns \nWHERE table_name = 'products_complete' \n  AND table_schema = 'public'\nORDER BY ordinal_position;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 974
+}

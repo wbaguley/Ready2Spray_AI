@@ -436,13 +436,15 @@ export default function ProductLookup() {
                     onChange={(e) => handleInputChange("labelSignalWord", e.target.value)}
                   />
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <Label htmlFor="ppeInformation">PPE Requirements</Label>
-                  <Input
+                  <Textarea
                     id="ppeInformation"
-                    placeholder="e.g., Long pants, long-sleeved shirt, gloves"
+                    placeholder="e.g., Long pants, long-sleeved shirt, gloves, protective eyewear..."
                     value={productData.ppeInformation}
                     onChange={(e) => handleInputChange("ppeInformation", e.target.value)}
+                    rows={8}
+                    className="resize-y"
                   />
                 </div>
               </div>
@@ -458,7 +460,8 @@ export default function ProductLookup() {
                   placeholder="Enter any additional notes, restrictions, or special instructions..."
                   value={productData.genericConditions}
                   onChange={(e) => handleInputChange("genericConditions", e.target.value)}
-                  rows={4}
+                  rows={8}
+                  className="resize-y"
                 />
               </div>
             </div>
