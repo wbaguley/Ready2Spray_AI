@@ -242,3 +242,19 @@
 - [x] Implement iframe screenshot capture using html2canvas
 - [x] Support capturing multiple screenshots from iframe (different tabs)
 - [x] Test both upload and iframe capture workflows
+
+
+## Product Lookup Bug Fixes
+- [x] Fix missing "Extract from Files" button after file upload
+- [x] Remove Agrian iframe embedding (blocked by CORS)
+- [x] Keep "Open Agrian" button to open in new window
+- [x] Test complete upload → extract workflow
+
+## Complete Product Workflow Integration
+- [ ] Implement backend API to save products to products_complete table
+- [ ] Update ProductLookup to save product and navigate back to job form
+- [ ] Pass product data from ProductLookup back to job form
+- [ ] Update job form to receive and display product data
+- [ ] Link saved product to job in database
+- [ ] Display product details on job view page
+- [ ] Test complete workflow: extract → save → return to job → view job

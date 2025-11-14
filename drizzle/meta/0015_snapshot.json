@@ -1,6 +1,6 @@
 {
-  "id": "29bf7d22-575f-46c3-923a-28f78052faaf",
-  "prevId": "e66e393c-4ca0-4f9a-8c47-0a9d3fbc4141",
+  "id": "8216384f-b13a-4243-b47d-05777949dcfa",
+  "prevId": "29bf7d22-575f-46c3-923a-28f78052faaf",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1706,6 +1706,12 @@
         },
         "service_plan_id": {
           "name": "service_plan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "product_id": {
+          "name": "product_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false

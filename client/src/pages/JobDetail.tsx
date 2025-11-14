@@ -35,6 +35,12 @@ export default function JobDetail() {
   const job = jobs?.find((j) => j.id === jobId);
   const customer = customers?.find((c) => c.id === job?.customerId);
   const assignedPerson = personnel?.find((p) => p.id === job?.assignedPersonnelId);
+  
+  // Fetch product data if job has productId
+  const { data: product } = trpc.products.getById.useQuery(
+    { id: job?.productId || 0 },
+    { enabled: !!job?.productId }
+  ) as { data: any };
 
   useEffect(() => {
     if (!isLoading && !job) {
@@ -389,6 +395,154 @@ export default function JobDetail() {
                         </div>
                       )}
                     </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Product Information */}
+        {product && (
+          <Card>
+            <CardHeader>
+              <CardTitle>EPA Product Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Product Name</h3>
+                  <p className="text-sm font-semibold">{product.product_name}</p>
+                </div>
+                {product.epa_number && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">EPA Registration #</h3>
+                    <p className="text-sm">{product.epa_number}</p>
+                  </div>
+                )}
+                {product.registrant && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Registrant</h3>
+                    <p className="text-sm">{product.registrant}</p>
+                  </div>
+                )}
+                {product.active_ingredients && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Ingredients</h3>
+                    <p className="text-sm">{product.active_ingredients}</p>
+                  </div>
+                )}
+              </div>
+
+              {(product.re_entry_interval || product.preharvest_interval || product.label_signal_word) && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Safety Information</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      {product.re_entry_interval && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Re-Entry Interval (REI)</p>
+                          <p className="text-sm">{product.re_entry_interval}</p>
+                        </div>
+                      )}
+                      {product.preharvest_interval && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Pre-Harvest Interval (PHI)</p>
+                          <p className="text-sm">{product.preharvest_interval}</p>
+                        </div>
+                      )}
+                      {product.label_signal_word && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Signal Word</p>
+                          <p className="text-sm font-semibold">{product.label_signal_word}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {product.ppe_information && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">PPE Requirements</h3>
+                    <p className="text-sm whitespace-pre-wrap">{product.ppe_information}</p>
+                  </div>
+                </>
+              )}
+
+              {(product.max_applications_per_season || product.max_rate_per_season || product.methods_allowed || product.rate) && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Application Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {product.max_applications_per_season && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Max Applications/Season</p>
+                          <p className="text-sm">{product.max_applications_per_season}</p>
+                        </div>
+                      )}
+                      {product.max_rate_per_season && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Max Rate/Season</p>
+                          <p className="text-sm">{product.max_rate_per_season}</p>
+                        </div>
+                      )}
+                      {product.methods_allowed && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Methods Allowed</p>
+                          <p className="text-sm">{product.methods_allowed}</p>
+                        </div>
+                      )}
+                      {product.rate && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Application Rate</p>
+                          <p className="text-sm">{product.rate}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {(product.diluent_aerial || product.diluent_ground || product.diluent_chemigation) && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Diluent Information</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      {product.diluent_aerial && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Aerial</p>
+                          <p className="text-sm">{product.diluent_aerial}</p>
+                        </div>
+                      )}
+                      {product.diluent_ground && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Ground</p>
+                          <p className="text-sm">{product.diluent_ground}</p>
+                        </div>
+                      )}
+                      {product.diluent_chemigation && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Chemigation</p>
+                          <p className="text-sm">{product.diluent_chemigation}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {product.generic_conditions && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Generic Conditions</h3>
+                    <p className="text-sm whitespace-pre-wrap">{product.generic_conditions}</p>
                   </div>
                 </>
               )}

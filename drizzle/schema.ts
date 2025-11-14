@@ -332,6 +332,7 @@ export const jobs = pgTable("jobs", {
   assignedPersonnelId: integer("assigned_personnel_id").references(() => personnel.id),
   equipmentId: integer("equipment_id").references(() => equipment.id), // NEW: Link to equipment
   servicePlanId: integer("service_plan_id").references(() => servicePlans.id), // NEW: Link to service plan
+  productId: integer("product_id"), // Link to products_complete table (no FK constraint since it's a raw SQL table)
   title: text("title").notNull(),
   description: text("description"),
   jobType: jobTypeEnum("job_type").notNull(),

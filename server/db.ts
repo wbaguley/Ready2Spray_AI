@@ -218,6 +218,7 @@ export async function getJobsByOrgId(orgId: number) {
       customerId: jobs.customerId,
       assignedPersonnelId: jobs.assignedPersonnelId,
       equipmentId: jobs.equipmentId,
+      productId: jobs.productId,
       siteId: jobs.siteId,
       title: jobs.title,
       description: jobs.description,
@@ -1221,4 +1222,64 @@ export async function findEquipmentByName(orgId: number, name: string) {
     .limit(1);
   
   return result[0] || null;
+}
+
+
+// Product functions
+export async function createProduct(productData: any) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db.execute(sql`
+    INSERT INTO products_complete (
+      product_name, epa_number, registrant, active_ingredients,
+      re_entry_interval, preharvest_interval, max_applications_per_season,
+      max_rate_per_season, methods_allowed, rate,
+      diluent_aerial, diluent_ground, diluent_chemigation,
+      ppe_information, label_signal_word, generic_conditions,
+      created_at, updated_at
+    ) VALUES (
+      ${productData.productName}, ${productData.epaNumber}, ${productData.registrant}, ${productData.activeIngredients},
+      ${productData.reEntryInterval}, ${productData.preharvestInterval}, ${productData.maxApplicationsPerSeason},
+      ${productData.maxRatePerSeason}, ${productData.methodsAllowed}, ${productData.rate},
+      ${productData.diluentAerial}, ${productData.diluentGround}, ${productData.diluentChemigation},
+      ${productData.ppeInformation}, ${productData.labelSignalWord}, ${productData.genericConditions},
+      NOW(), NOW()
+    ) RETURNING *
+  `);
+
+  return result[0];
+}
+
+export async function getProductById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db.execute(sql`SELECT * FROM products_complete WHERE id = ${id}`);
+
+  return result[0];
+}
+
+export async function searchProducts(searchTerm: string) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const searchPattern = `%${searchTerm}%`;
+  const result = await db.execute(sql`
+    SELECT id, product_name, epa_number, registrant, active_ingredients 
+    FROM products_complete 
+    WHERE product_name ILIKE ${searchPattern} 
+       OR epa_number ILIKE ${searchPattern} 
+       OR registrant ILIKE ${searchPattern}
+    ORDER BY product_name
+    LIMIT 50
+  `);
+
+  return result;
 }

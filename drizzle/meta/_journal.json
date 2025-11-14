@@ -106,6 +106,13 @@
       "when": 1763093624358,
       "tag": "0015_warm_talon",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1763097069230,
+      "tag": "0015_right_maddog",
+      "breakpoints": true
     }
   ]
 }

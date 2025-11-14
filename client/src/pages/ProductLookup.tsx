@@ -5,19 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Save, AlertCircle, Camera, Upload, Loader2, X, Sparkles, FileText } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, ExternalLink, Upload, Loader2, X, Sparkles, FileText } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import html2canvas from "html2canvas";
 
 export default function ProductLookup() {
   const [, navigate] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<Array<{file: File, preview: string, type: 'image' | 'pdf'}>>([]);
-  const [showIframe, setShowIframe] = useState(false);
   
   // Product data form fields
   const [productData, setProductData] = useState({
@@ -69,46 +66,9 @@ export default function ProductLookup() {
     setProductData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleToggleIframe = () => {
-    setShowIframe(!showIframe);
-    if (!showIframe) {
-      toast.info("Agrian embedded. Search for your product, then click 'Capture This Page'.");
-    }
-  };
-
-  const handleCaptureIframe = async () => {
-    if (!iframeRef.current) {
-      toast.error("Iframe not found");
-      return;
-    }
-
-    try {
-      toast.info("Capturing iframe content...");
-      
-      // Capture the iframe content using html2canvas
-      const canvas = await html2canvas(iframeRef.current, {
-        allowTaint: true,
-        useCORS: true,
-        logging: false,
-      });
-
-      // Convert to base64
-      const base64Image = canvas.toDataURL("image/png");
-      
-      // Add to uploaded files
-      const blob = await (await fetch(base64Image)).blob();
-      const file = new File([blob], `agrian-capture-${Date.now()}.png`, { type: "image/png" });
-      
-      setUploadedFiles(prev => [...prev, {
-        file,
-        preview: base64Image,
-        type: 'image'
-      }]);
-      
-      toast.success(`Screenshot captured! You can capture more or extract data now.`);
-    } catch (error: any) {
-      toast.error("Failed to capture iframe: " + error.message);
-    }
+  const handleOpenAgrian = () => {
+    window.open("https://www.agrian.com/labelcenter/results.cfm", "_blank");
+    toast.info("Agrian opened in new window. Take screenshots and upload them here.");
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,7 +143,7 @@ export default function ProductLookup() {
     }
 
     setIsExtracting(true);
-    toast.info(`Analyzing ${uploadedFiles.length} file(s)...`);
+    toast.info(`Analyzing ${uploadedFiles.length} file(s) with AI...`);
 
     try {
       // Process each file
@@ -218,6 +178,31 @@ export default function ProductLookup() {
     }
   };
 
+  const createProductMutation = trpc.products.create.useMutation({
+    onSuccess: (product: any) => {
+      toast.success("Product saved successfully!");
+      // Navigate to job form with product data in URL params
+      const params = new URLSearchParams();
+      params.set('productId', String(product.id || ''));
+      params.set('productName', String(product.product_name || ''));
+      params.set('epaNumber', String(product.epa_number || ''));
+      params.set('reEntryInterval', String(product.re_entry_interval || ''));
+      params.set('preharvestInterval', String(product.preharvest_interval || ''));
+      params.set('maxApplicationsPerSeason', String(product.max_applications_per_season || ''));
+      params.set('maxRatePerSeason', String(product.max_rate_per_season || ''));
+      params.set('methodsAllowed', String(product.methods_allowed || ''));
+      params.set('rate', String(product.rate || ''));
+      params.set('diluentAerial', String(product.diluent_aerial || ''));
+      params.set('diluentGround', String(product.diluent_ground || ''));
+      params.set('diluentChemigation', String(product.diluent_chemigation || ''));
+      params.set('genericConditions', String(product.generic_conditions || ''));
+      navigate(`/jobs/new?${params.toString()}`);
+    },
+    onError: (error) => {
+      toast.error("Failed to save product: " + error.message);
+    },
+  });
+
   const handleSave = () => {
     // Validate required fields
     if (!productData.productName || !productData.epaNumber) {
@@ -225,9 +210,8 @@ export default function ProductLookup() {
       return;
     }
 
-    // TODO: Save to database and return to job form
-    toast.success("Product saved successfully!");
-    navigate("/jobs");
+    // Save to database
+    createProductMutation.mutate(productData);
   };
 
   const handleClear = () => {
@@ -261,7 +245,7 @@ export default function ProductLookup() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold">EPA Product Lookup</h1>
-          <p className="text-muted-foreground">Search Agrian Label Center and capture product details with AI</p>
+          <p className="text-muted-foreground">Search Agrian Label Center and extract product details with AI</p>
         </div>
       </div>
 
@@ -270,17 +254,17 @@ export default function ProductLookup() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5" />
+              <Upload className="h-5 w-5" />
               Quick Actions
             </CardTitle>
             <CardDescription>
-              Browse Agrian and capture screenshots, or upload images/PDFs of product labels
+              Open Agrian to search products, take screenshots, then upload them here for AI extraction
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Button onClick={handleToggleIframe} variant={showIframe ? "secondary" : "default"}>
-              <Camera className="h-4 w-4 mr-2" />
-              {showIframe ? "Hide" : "Show"} Agrian Browser
+            <Button onClick={handleOpenAgrian} variant="default">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open Agrian Label Center
             </Button>
             <Button 
               onClick={() => fileInputRef.current?.click()} 
@@ -288,7 +272,7 @@ export default function ProductLookup() {
               disabled={isExtracting}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Upload Files
+              Upload Screenshots/PDFs
             </Button>
             {uploadedFiles.length > 0 && (
               <Button 
@@ -300,7 +284,7 @@ export default function ProductLookup() {
                 {isExtracting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Extracting...
+                    Extracting with AI...
                   </>
                 ) : (
                   <>
@@ -321,44 +305,13 @@ export default function ProductLookup() {
           </CardContent>
         </Card>
 
-        {/* Embedded Agrian iframe */}
-        {showIframe && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Agrian Label Center</CardTitle>
-              <CardDescription>
-                Search for products, then click "Capture This Page" to capture the visible content
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <iframe
-                  ref={iframeRef}
-                  src="https://www.agrian.com/labelcenter/results.cfm"
-                  className="w-full h-[600px] border-2 border-border rounded-lg"
-                  title="Agrian Label Center"
-                />
-                <Button
-                  onClick={handleCaptureIframe}
-                  className="absolute top-4 right-4 shadow-lg"
-                  size="lg"
-                  disabled={isExtracting}
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Capture This Page
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Uploaded Files Preview Gallery */}
         {uploadedFiles.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Uploaded Files ({uploadedFiles.length})</CardTitle>
               <CardDescription>
-                Review your uploads. You can upload multiple screenshots or PDF labels.
+                Review your uploads. Click "Extract from Files" to analyze with AI.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -404,9 +357,9 @@ export default function ProductLookup() {
           <AlertDescription>
             <strong>How to use:</strong>
             <ol className="list-decimal list-inside mt-2 space-y-1">
-              <li><strong>Option 1:</strong> Click "Show Agrian Browser" to search products, then click "Capture This Page" button</li>
-              <li><strong>Option 2:</strong> Take screenshots manually (using your OS tool) and click "Upload Files" to upload them</li>
-              <li>Upload multiple images or PDF labels (up to 10MB each)</li>
+              <li>Click "Open Agrian Label Center" to search for products in a new window</li>
+              <li>Take screenshots of product details (General, Safety, Crop Specific tabs)</li>
+              <li>Click "Upload Screenshots/PDFs" to upload your screenshots or PDF labels</li>
               <li>Click "Extract from Files" to automatically extract product details using AI</li>
               <li>Review and edit the extracted information as needed</li>
               <li>Click "Save & Return to Job Form" to add this product to your database</li>

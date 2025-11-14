@@ -143,6 +143,8 @@ export const appRouter = router({
         locationLng: z.string().optional(),
         customerId: z.number().optional(),
         assignedPersonnelId: z.number().optional(),
+        equipmentId: z.number().optional(),
+        productId: z.number().optional(),
         scheduledStart: z.string().optional(),
         scheduledEnd: z.string().optional(),
         state: z.string().optional(),
@@ -195,6 +197,8 @@ export const appRouter = router({
         locationLng: z.string().optional(),
         customerId: z.number().optional(),
         assignedPersonnelId: z.number().optional(),
+        equipmentId: z.number().optional(),
+        productId: z.number().optional(),
         scheduledStart: z.string().optional(),
         scheduledEnd: z.string().optional(),
         state: z.string().optional(),
@@ -635,6 +639,41 @@ If a field is not visible in the screenshot, set it to an empty string. Be preci
             error: error.message || "Failed to extract product data",
           };
         }
+      }),
+    create: protectedProcedure
+      .input(z.object({
+        productName: z.string(),
+        epaNumber: z.string(),
+        registrant: z.string().optional(),
+        activeIngredients: z.string().optional(),
+        reEntryInterval: z.string().optional(),
+        preharvestInterval: z.string().optional(),
+        maxApplicationsPerSeason: z.string().optional(),
+        maxRatePerSeason: z.string().optional(),
+        methodsAllowed: z.string().optional(),
+        rate: z.string().optional(),
+        diluentAerial: z.string().optional(),
+        diluentGround: z.string().optional(),
+        diluentChemigation: z.string().optional(),
+        ppeInformation: z.string().optional(),
+        labelSignalWord: z.string().optional(),
+        genericConditions: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {        const { createProduct } = await import("./db");
+        const product = await createProduct(input);
+        return product;
+      }),
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getProductById } = await import("./db");
+        return await getProductById(input.id);
+      }),
+    search: protectedProcedure
+      .input(z.object({ searchTerm: z.string() }))
+      .query(async ({ input }) => {
+        const { searchProducts } = await import("./db");
+        return await searchProducts(input.searchTerm);
       }),
   }),
 

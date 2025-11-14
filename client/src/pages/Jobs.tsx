@@ -21,33 +21,60 @@ export default function Jobs() {
   const [editingJob, setEditingJob] = useState<any>(null);
   const [viewingHistoryJobId, setViewingHistoryJobId] = useState<number | null>(null);
 
-  // Check for selected product data from ProductLookup page
+  // Check for selected product data from ProductLookup page (URL params or localStorage)
   useEffect(() => {
-    const selectedProductData = localStorage.getItem("selectedAgrianProduct");
-    if (selectedProductData) {
-      try {
-        const product = JSON.parse(selectedProductData);
-        // Auto-populate form fields from selected product
-        setFormData((prev) => ({
-          ...prev,
-          epaNumber: product.epaNumber || prev.epaNumber,
-          chemicalProduct: product.name || prev.chemicalProduct,
-          reEntryInterval: product.reEntryInterval || prev.reEntryInterval,
-          preharvestInterval: product.preharvestInterval || prev.preharvestInterval,
-          maxApplicationsPerSeason: product.maxApplicationsPerSeason || prev.maxApplicationsPerSeason,
-          maxRatePerSeason: product.maxRatePerSeason || prev.maxRatePerSeason,
-          methodsAllowed: product.methodsAllowed || prev.methodsAllowed,
-          rate: product.rate || prev.rate,
-          diluentAerial: product.diluentAerial || prev.diluentAerial,
-          diluentGround: product.diluentGround || prev.diluentGround,
-          diluentChemigation: product.diluentChemigation || prev.diluentChemigation,
-          genericConditions: product.genericConditions || prev.genericConditions,
-        }));
-        // Clear the localStorage after using the data
-        localStorage.removeItem("selectedAgrianProduct");
-        toast.success("Product data loaded from EPA lookup!");
-      } catch (error) {
-        console.error("Failed to parse selected product data:", error);
+    // First check URL params (new method)
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('productId');
+    
+    if (productId) {
+      // Product data from URL params (new Product Lookup flow)
+      setFormData((prev) => ({
+        ...prev,
+        productId: productId,
+        epaNumber: urlParams.get('epaNumber') || prev.epaNumber,
+        chemicalProduct: urlParams.get('productName') || prev.chemicalProduct,
+        reEntryInterval: urlParams.get('reEntryInterval') || prev.reEntryInterval,
+        preharvestInterval: urlParams.get('preharvestInterval') || prev.preharvestInterval,
+        maxApplicationsPerSeason: urlParams.get('maxApplicationsPerSeason') || prev.maxApplicationsPerSeason,
+        maxRatePerSeason: urlParams.get('maxRatePerSeason') || prev.maxRatePerSeason,
+        methodsAllowed: urlParams.get('methodsAllowed') || prev.methodsAllowed,
+        rate: urlParams.get('rate') || prev.rate,
+        diluentAerial: urlParams.get('diluentAerial') || prev.diluentAerial,
+        diluentGround: urlParams.get('diluentGround') || prev.diluentGround,
+        diluentChemigation: urlParams.get('diluentChemigation') || prev.diluentChemigation,
+        genericConditions: urlParams.get('genericConditions') || prev.genericConditions,
+      }));
+      setShowCreateForm(true);
+      toast.success("Product data loaded from EPA lookup!");
+      // Clear URL params
+      window.history.replaceState({}, '', '/jobs/new');
+    } else {
+      // Fallback to localStorage (old method)
+      const selectedProductData = localStorage.getItem("selectedAgrianProduct");
+      if (selectedProductData) {
+        try {
+          const product = JSON.parse(selectedProductData);
+          setFormData((prev) => ({
+            ...prev,
+            epaNumber: product.epaNumber || prev.epaNumber,
+            chemicalProduct: product.name || prev.chemicalProduct,
+            reEntryInterval: product.reEntryInterval || prev.reEntryInterval,
+            preharvestInterval: product.preharvestInterval || prev.preharvestInterval,
+            maxApplicationsPerSeason: product.maxApplicationsPerSeason || prev.maxApplicationsPerSeason,
+            maxRatePerSeason: product.maxRatePerSeason || prev.maxRatePerSeason,
+            methodsAllowed: product.methodsAllowed || prev.methodsAllowed,
+            rate: product.rate || prev.rate,
+            diluentAerial: product.diluentAerial || prev.diluentAerial,
+            diluentGround: product.diluentGround || prev.diluentGround,
+            diluentChemigation: product.diluentChemigation || prev.diluentChemigation,
+            genericConditions: product.genericConditions || prev.genericConditions,
+          }));
+          localStorage.removeItem("selectedAgrianProduct");
+          toast.success("Product data loaded from EPA lookup!");
+        } catch (error) {
+          console.error("Failed to parse selected product data:", error);
+        }
       }
     }
   }, [location]); // Re-run when location changes (i.e., when returning from product-lookup)
@@ -61,6 +88,7 @@ export default function Jobs() {
     customerId: "",
     assignedPersonnelId: "",
     equipmentId: "",
+    productId: "",
     scheduledStart: "",
     scheduledEnd: "",
     // Agricultural details
@@ -105,6 +133,8 @@ export default function Jobs() {
       locationAddress: "",
       customerId: "",
       assignedPersonnelId: "",
+      equipmentId: "",
+      productId: "",
       scheduledStart: "",
       scheduledEnd: "",
       state: "",
@@ -124,7 +154,6 @@ export default function Jobs() {
       diluentGround: "",
       diluentChemigation: "",
       genericConditions: "",
-      equipmentId: "",
     });
     setEditingJob(null);
   };
@@ -141,6 +170,8 @@ export default function Jobs() {
         locationAddress: job.locationAddress || "",
         customerId: job.customerId?.toString() || "",
         assignedPersonnelId: job.assignedPersonnelId?.toString() || "",
+        equipmentId: job.equipmentId?.toString() || "",
+        productId: job.productId?.toString() || "",
         scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
         scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
         state: job.state || "",
@@ -160,7 +191,6 @@ export default function Jobs() {
         diluentGround: job.diluentGround || "",
         diluentChemigation: job.diluentChemigation || "",
         genericConditions: job.genericConditions || "",
-        equipmentId: job.equipmentId?.toString() || "",
       });
     } else {
       resetForm();
@@ -214,6 +244,18 @@ export default function Jobs() {
       submitData.assignedPersonnelId = parseInt(submitData.assignedPersonnelId);
     } else {
       delete submitData.assignedPersonnelId;
+    }
+    
+    if (submitData.equipmentId) {
+      submitData.equipmentId = parseInt(submitData.equipmentId);
+    } else {
+      delete submitData.equipmentId;
+    }
+    
+    if (submitData.productId) {
+      submitData.productId = parseInt(submitData.productId);
+    } else {
+      delete submitData.productId;
     }
     
     // Convert date strings to Date objects if they exist
