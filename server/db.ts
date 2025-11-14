@@ -988,8 +988,27 @@ export async function getUsersByOrgId(orgId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const result = await db.select().from(users).where(eq(users.id, orgId));
+  // Return all users for now (organization association will be added in future)
+  const result = await db.select().from(users);
   return result;
+}
+
+export async function createUser(user: { name: string; email: string; userRole: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Create a placeholder openId based on email until they sign in
+  const placeholderOpenId = `placeholder_${user.email}_${Date.now()}`;
+  
+  const result = await db.insert(users).values({
+    openId: placeholderOpenId,
+    name: user.name,
+    email: user.email,
+    userRole: user.userRole,
+    role: 'user',
+  }).returning();
+  
+  return result[0];
 }
 
 export async function updateUserRole(userId: number, userRole: string) {

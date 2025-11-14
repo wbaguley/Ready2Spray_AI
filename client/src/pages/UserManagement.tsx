@@ -16,8 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users } from "lucide-react";
+import { Shield, Users, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 const USER_ROLES = [
@@ -50,7 +61,27 @@ const USER_ROLES = [
 
 export default function UserManagement() {
   const utils = trpc.useUtils();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    userRole: "technician" as "admin" | "manager" | "technician" | "pilot" | "sales",
+  });
+
   const { data: users, isLoading } = trpc.users.list.useQuery();
+  
+  const createUser = trpc.users.create.useMutation({
+    onSuccess: () => {
+      toast.success("User added successfully");
+      utils.users.list.invalidate();
+      setIsAddDialogOpen(false);
+      setNewUser({ name: "", email: "", userRole: "technician" });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add user");
+    },
+  });
+
   const updateRole = trpc.users.updateRole.useMutation({
     onSuccess: () => {
       toast.success("User role updated successfully");
@@ -68,6 +99,14 @@ export default function UserManagement() {
     });
   };
 
+  const handleAddUser = () => {
+    if (!newUser.name || !newUser.email) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    createUser.mutate(newUser);
+  };
+
   if (isLoading) {
     return (
       <div className="container py-8">
@@ -82,9 +121,74 @@ export default function UserManagement() {
 
   return (
     <div className="container py-8">
-      <div className="flex items-center gap-2 mb-6">
-        <Shield className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">User Management</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Shield className="h-8 w-8" />
+          <h1 className="text-3xl font-bold">User Management</h1>
+        </div>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account and assign a role. Users will be able to sign in with their email.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="John Doe"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select
+                  value={newUser.userRole}
+                  onValueChange={(value) => setNewUser({ ...newUser, userRole: value as any })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {USER_ROLES.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddUser} disabled={createUser.isPending}>
+                {createUser.isPending ? "Adding..." : "Add User"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-6 mb-8">
@@ -142,7 +246,7 @@ export default function UserManagement() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No users found
+                      No users found. Click "Add User" to create your first user.
                     </TableCell>
                   </TableRow>
                 )}

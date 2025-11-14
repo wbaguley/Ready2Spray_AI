@@ -1092,6 +1092,21 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
       const org = await getOrCreateUserOrganization(ctx.user.id);
       return await getUsersByOrgId(org.id);
     }),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email format"),
+        userRole: z.enum(["admin", "manager", "technician", "pilot", "sales"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admins can create users
+        if (ctx.user.userRole !== 'admin') {
+          throw new Error('Only administrators can create users');
+        }
+        const { createUser } = await import("./db");
+        const user = await createUser(input);
+        return user;
+      }),
     updateRole: protectedProcedure
       .input(z.object({
         userId: z.number(),
@@ -1099,7 +1114,7 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
       }))
       .mutation(async ({ input, ctx }) => {
         // Only admins can update roles
-        if (ctx.user.role !== 'admin') {
+        if (ctx.user.userRole !== 'admin') {
           throw new Error('Only administrators can update user roles');
         }
         const { updateUserRole } = await import("./db");

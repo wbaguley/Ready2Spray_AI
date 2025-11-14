@@ -204,3 +204,10 @@
 - [x] Format CSV to match bulk import template
 - [x] Add download functionality
 - [ ] Test exported CSV can be re-imported
+
+
+## User Invitation and Manual User Creation
+- [x] Add "Invite User" button to User Management page
+- [x] Create manual user creation form with name, email, and role selection
+- [x] Implement backend endpoint for creating users manually
+- [x] Test user creation workflow
