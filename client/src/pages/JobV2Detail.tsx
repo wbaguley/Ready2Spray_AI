@@ -14,14 +14,11 @@ export default function JobV2Detail() {
   const params = useParams();
   const [, setLocation] = useLocation();
   const jobId = params.id ? parseInt(params.id) : 0;
-  const [showProductLookup, setShowProductLookup] = useState(false);
-
   const { data: job, isLoading, refetch } = trpc.jobsV2.getById.useQuery({ id: jobId });
 
-  const handleProductLinked = (productId: number) => {
-    setShowProductLookup(false);
-    refetch();
-    toast.success("Product linked successfully!");
+  const handleLinkProduct = () => {
+    // Navigate to ProductLookup page with jobV2Id parameter
+    setLocation(`/product-lookup?jobV2Id=${jobId}`);
   };
 
   if (isLoading) {
@@ -109,7 +106,7 @@ export default function JobV2Detail() {
                 </CardDescription>
               </div>
               <Button
-                onClick={() => setShowProductLookup(true)}
+                onClick={handleLinkProduct}
                 variant={job.product ? "outline" : "default"}
               >
                 <LinkIcon className="w-4 h-4 mr-2" />

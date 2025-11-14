@@ -16,9 +16,10 @@ export default function ProductLookup() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<Array<{file: File, preview: string, type: 'image' | 'pdf'}>>([]);
   
-  // Get jobId from URL params if linking to existing job
+  // Get jobId or jobV2Id from URL params if linking to existing job
   const urlParams = new URLSearchParams(window.location.search);
   const jobId = urlParams.get('jobId') ? parseInt(urlParams.get('jobId')!) : null;
+  const jobV2Id = urlParams.get('jobV2Id') ? parseInt(urlParams.get('jobV2Id')!) : null;
   
   // Product data form fields
   const [productData, setProductData] = useState({
@@ -176,13 +177,14 @@ export default function ProductLookup() {
   };
 
   const updateJobMutation = trpc.jobs.update.useMutation();
+  const linkProductV2Mutation = trpc.jobsV2.linkProduct.useMutation();
   
   const createProductMutation = trpc.products.create.useMutation({
     onSuccess: (product: any) => {
       toast.success("Product saved successfully!");
       
       if (jobId) {
-        // If we have a jobId, update the job with this product
+        // If we have a jobId (legacy), update the job with this product
         updateJobMutation.mutate(
           { id: jobId, productId: product.id },
           {
@@ -193,6 +195,21 @@ export default function ProductLookup() {
             onError: (error) => {
               toast.error(`Failed to link product: ${error.message}`);
               navigate(`/jobs/${jobId}`);
+            }
+          }
+        );
+      } else if (jobV2Id) {
+        // If we have a jobV2Id, link product to Jobs V2
+        linkProductV2Mutation.mutate(
+          { jobId: jobV2Id, productId: product.id },
+          {
+            onSuccess: () => {
+              toast.success("Product linked to job!");
+              navigate(`/jobs-v2/${jobV2Id}`);
+            },
+            onError: (error) => {
+              toast.error(`Failed to link product: ${error.message}`);
+              navigate(`/jobs-v2/${jobV2Id}`);
             }
           }
         );
@@ -494,12 +511,12 @@ export default function ProductLookup() {
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSave} className="flex-1">
                 <Save className="h-4 w-4 mr-2" />
-                {jobId ? 'Save & Link to Job' : 'Save & Return to Job Form'}
+                {(jobId || jobV2Id) ? 'Save & Link to Job' : 'Save & Return to Job Form'}
               </Button>
               <Button onClick={handleClear} variant="outline">
                 Clear Form
               </Button>
-              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : "/jobs")} variant="ghost">
+              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs-v2/${jobV2Id}` : "/jobs")} variant="ghost">
                 Cancel
               </Button>
             </div>

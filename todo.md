@@ -339,3 +339,13 @@
 - [x] Make job cards clickable to navigate to detail page
 - [ ] Integrate ProductLookup component with Jobs V2
 - [ ] Test complete workflow: create job → view → link product → see details
+
+
+## Jobs V2 - ProductLookup Integration
+- [x] Examine existing ProductLookup component interface and props
+- [x] Update ProductLookup to accept jobV2Id parameter
+- [x] Modify ProductLookup to call jobsV2.linkProduct when used with Jobs V2
+- [x] Update JobV2Detail to navigate to ProductLookup page
+- [x] Test: Click "Link Product" → Opens ProductLookup page
+- [x] Test: Save product → Links to Jobs V2 job
+- [x] Test: Product details display on job detail page after linking
