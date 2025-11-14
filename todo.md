@@ -231,3 +231,14 @@
 - [x] Add "Extract from Screenshots" button to process multiple screenshots
 - [x] Implement batch AI extraction that merges data from multiple screenshots
 - [x] Test complete multi-capture workflow
+
+
+## Multi-File Upload & Embedded Agrian Capture
+- [x] Update file upload to accept multiple files (images + PDFs)
+- [x] Support PNG, JPG, WebP, and PDF file formats
+- [x] Show preview gallery for uploaded files with remove option
+- [x] Embed Agrian Label Center in iframe on Product Lookup page
+- [x] Add floating "Capture This Page" button overlay on iframe
+- [x] Implement iframe screenshot capture using html2canvas
+- [x] Support capturing multiple screenshots from iframe (different tabs)
+- [x] Test both upload and iframe capture workflows

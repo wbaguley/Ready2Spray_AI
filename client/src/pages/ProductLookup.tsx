@@ -5,16 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ExternalLink, Save, AlertCircle, Camera, Upload, Loader2, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Camera, Upload, Loader2, X, Sparkles, FileText } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import html2canvas from "html2canvas";
 
 export default function ProductLookup() {
   const [, navigate] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isExtracting, setIsExtracting] = useState(false);
-  const [capturedScreenshots, setCapturedScreenshots] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{file: File, preview: string, type: 'image' | 'pdf'}>>([]);
+  const [showIframe, setShowIframe] = useState(false);
   
   // Product data form fields
   const [productData, setProductData] = useState({
@@ -41,7 +44,6 @@ export default function ProductLookup() {
 
   const extractProductMutation = trpc.products.extractFromScreenshot.useMutation({
     onSuccess: (data) => {
-      setIsExtracting(false);
       if (data.success && data.extractedData) {
         // Merge extracted data with existing data (don't overwrite non-empty fields)
         setProductData(prev => {
@@ -53,13 +55,12 @@ export default function ProductLookup() {
           });
           return merged;
         });
-        toast.success("Product details extracted successfully! Please review and edit as needed.");
+        toast.success("Product details extracted! Review and edit as needed.");
       } else {
         toast.error(data.error || "Failed to extract product details");
       }
     },
     onError: (error) => {
-      setIsExtracting(false);
       toast.error("Error extracting product details: " + error.message);
     },
   });
@@ -68,115 +69,153 @@ export default function ProductLookup() {
     setProductData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleOpenAgrian = () => {
-    window.open("https://www.agrian.com/labelcenter/results.cfm", "_blank", "width=1200,height=800");
-    toast.info("Agrian Label Center opened in new window. Search for your product, then use 'Capture Screenshot' button.");
+  const handleToggleIframe = () => {
+    setShowIframe(!showIframe);
+    if (!showIframe) {
+      toast.info("Agrian embedded. Search for your product, then click 'Capture This Page'.");
+    }
   };
 
-  const handleCaptureScreenshot = async () => {
+  const handleCaptureIframe = async () => {
+    if (!iframeRef.current) {
+      toast.error("Iframe not found");
+      return;
+    }
+
     try {
-      // Check if browser supports screen capture
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        toast.error("Screen capture is not supported in your browser. Please use the Upload Screenshot option instead.");
-        return;
-      }
-
-      // Request screen capture
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { mediaSource: "screen" } as any,
+      toast.info("Capturing iframe content...");
+      
+      // Capture the iframe content using html2canvas
+      const canvas = await html2canvas(iframeRef.current, {
+        allowTaint: true,
+        useCORS: true,
+        logging: false,
       });
-
-      // Create video element to capture frame
-      const video = document.createElement("video");
-      video.srcObject = stream;
-      video.play();
-
-      // Wait for video to be ready
-      await new Promise((resolve) => {
-        video.onloadedmetadata = resolve;
-      });
-
-      // Create canvas and capture frame
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(video, 0, 0);
-
-      // Stop the stream
-      stream.getTracks().forEach(track => track.stop());
 
       // Convert to base64
       const base64Image = canvas.toDataURL("image/png");
       
-      // Add to captured screenshots
-      setCapturedScreenshots(prev => [...prev, base64Image]);
-      toast.success(`Screenshot ${capturedScreenshots.length + 1} captured! You can capture more or extract data now.`);
+      // Add to uploaded files
+      const blob = await (await fetch(base64Image)).blob();
+      const file = new File([blob], `agrian-capture-${Date.now()}.png`, { type: "image/png" });
+      
+      setUploadedFiles(prev => [...prev, {
+        file,
+        preview: base64Image,
+        type: 'image'
+      }]);
+      
+      toast.success(`Screenshot captured! You can capture more or extract data now.`);
     } catch (error: any) {
-      if (error.name === "NotAllowedError") {
-        toast.error("Screen capture permission denied");
+      toast.error("Failed to capture iframe: " + error.message);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate file types
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith("image/");
+      const isPDF = file.type === "application/pdf";
+      return isImage || isPDF;
+    });
+
+    if (validFiles.length === 0) {
+      toast.error("Please upload image files (PNG, JPG, WebP) or PDF files");
+      return;
+    }
+
+    // Validate file sizes (max 10MB each)
+    const oversizedFiles = validFiles.filter(file => file.size > 10 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast.error(`${oversizedFiles.length} file(s) exceed 10MB limit`);
+      return;
+    }
+
+    // Process files
+    const newFiles: Array<{file: File, preview: string, type: 'image' | 'pdf'}> = [];
+    
+    for (const file of validFiles) {
+      const isPDF = file.type === "application/pdf";
+      
+      if (isPDF) {
+        // For PDFs, just show a placeholder preview
+        newFiles.push({
+          file,
+          preview: "", // No preview for PDF
+          type: 'pdf'
+        });
       } else {
-        toast.error("Failed to capture screenshot: " + error.message);
+        // For images, create preview
+        const reader = new FileReader();
+        const preview = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        newFiles.push({
+          file,
+          preview,
+          type: 'image'
+        });
       }
+    }
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    toast.success(`${validFiles.length} file(s) uploaded successfully`);
+    
+    // Clear the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-  const handleRemoveScreenshot = (index: number) => {
-    setCapturedScreenshots(prev => prev.filter((_, i) => i !== index));
-    toast.info("Screenshot removed");
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    toast.info("File removed");
   };
 
-  const handleExtractFromCaptures = async () => {
-    if (capturedScreenshots.length === 0) {
-      toast.error("Please capture at least one screenshot first");
+  const handleExtractFromFiles = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.error("Please upload at least one file first");
       return;
     }
 
     setIsExtracting(true);
-    toast.info(`Analyzing ${capturedScreenshots.length} screenshot(s)...`);
+    toast.info(`Analyzing ${uploadedFiles.length} file(s)...`);
 
-    // Process each screenshot and merge results
-    for (let i = 0; i < capturedScreenshots.length; i++) {
-      await extractProductMutation.mutateAsync({ imageData: capturedScreenshots[i] });
-      if (i < capturedScreenshots.length - 1) {
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Process each file
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const {file, preview, type} = uploadedFiles[i];
+        
+        if (type === 'pdf') {
+          // For PDFs, convert to base64
+          const reader = new FileReader();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          await extractProductMutation.mutateAsync({ imageData: base64 });
+        } else {
+          // For images, use the preview
+          await extractProductMutation.mutateAsync({ imageData: preview });
+        }
+        
+        if (i < uploadedFiles.length - 1) {
+          // Small delay between requests
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
-    }
-
-    setIsExtracting(false);
-  };
-
-  const handleScreenshotUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file");
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image file is too large. Maximum size is 10MB.");
-      return;
-    }
-
-    setIsExtracting(true);
-    toast.info("Analyzing screenshot...");
-
-    // Convert file to base64
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      extractProductMutation.mutate({ imageData: base64String });
-    };
-    reader.onerror = () => {
+      
+      toast.success("Extraction complete! Review the extracted data below.");
+    } catch (error: any) {
+      toast.error("Error during extraction: " + error.message);
+    } finally {
       setIsExtracting(false);
-      toast.error("Failed to read image file");
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = () => {
@@ -210,12 +249,12 @@ export default function ProductLookup() {
       labelSignalWord: "",
       genericConditions: "",
     });
-    setCapturedScreenshots([]);
+    setUploadedFiles([]);
     toast.info("Form cleared");
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
+    <div className="container mx-auto py-6 max-w-7xl">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon" onClick={() => navigate("/jobs")}>
           <ArrowLeft className="h-5 w-5" />
@@ -235,17 +274,13 @@ export default function ProductLookup() {
               Quick Actions
             </CardTitle>
             <CardDescription>
-              Open Agrian, capture screenshots of product details, then extract data with AI
+              Browse Agrian and capture screenshots, or upload images/PDFs of product labels
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Button onClick={handleOpenAgrian} variant="outline">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open Agrian
-            </Button>
-            <Button onClick={handleCaptureScreenshot} variant="default" disabled={isExtracting}>
+            <Button onClick={handleToggleIframe} variant={showIframe ? "secondary" : "default"}>
               <Camera className="h-4 w-4 mr-2" />
-              Capture Screenshot
+              {showIframe ? "Hide" : "Show"} Agrian Browser
             </Button>
             <Button 
               onClick={() => fileInputRef.current?.click()} 
@@ -253,11 +288,11 @@ export default function ProductLookup() {
               disabled={isExtracting}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Upload Screenshot
+              Upload Files
             </Button>
-            {capturedScreenshots.length > 0 && (
+            {uploadedFiles.length > 0 && (
               <Button 
-                onClick={handleExtractFromCaptures} 
+                onClick={handleExtractFromFiles} 
                 variant="default"
                 className="bg-gradient-to-r from-purple-600 to-blue-600"
                 disabled={isExtracting}
@@ -270,7 +305,7 @@ export default function ProductLookup() {
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Extract from {capturedScreenshots.length} Screenshot{capturedScreenshots.length > 1 ? 's' : ''}
+                    Extract from {uploadedFiles.length} File{uploadedFiles.length > 1 ? 's' : ''}
                   </>
                 )}
               </Button>
@@ -278,41 +313,83 @@ export default function ProductLookup() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
-              onChange={handleScreenshotUpload}
+              accept="image/*,application/pdf"
+              multiple
+              onChange={handleFileUpload}
               className="hidden"
             />
           </CardContent>
         </Card>
 
-        {/* Screenshot Preview Gallery */}
-        {capturedScreenshots.length > 0 && (
+        {/* Embedded Agrian iframe */}
+        {showIframe && (
           <Card>
             <CardHeader>
-              <CardTitle>Captured Screenshots ({capturedScreenshots.length}/3)</CardTitle>
+              <CardTitle>Agrian Label Center</CardTitle>
               <CardDescription>
-                Review your captures. You can capture up to 3 screenshots from different tabs (General, Safety, Crop Specific).
+                Search for products, then click "Capture This Page" to capture the visible content
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <iframe
+                  ref={iframeRef}
+                  src="https://www.agrian.com/labelcenter/results.cfm"
+                  className="w-full h-[600px] border-2 border-border rounded-lg"
+                  title="Agrian Label Center"
+                />
+                <Button
+                  onClick={handleCaptureIframe}
+                  className="absolute top-4 right-4 shadow-lg"
+                  size="lg"
+                  disabled={isExtracting}
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Capture This Page
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Uploaded Files Preview Gallery */}
+        {uploadedFiles.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Uploaded Files ({uploadedFiles.length})</CardTitle>
+              <CardDescription>
+                Review your uploads. You can upload multiple screenshots or PDF labels.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {capturedScreenshots.map((screenshot, index) => (
+                {uploadedFiles.map((item, index) => (
                   <div key={index} className="relative group">
-                    <img 
-                      src={screenshot} 
-                      alt={`Screenshot ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg border-2 border-border"
-                    />
+                    {item.type === 'pdf' ? (
+                      <div className="w-full h-48 flex items-center justify-center bg-muted rounded-lg border-2 border-border">
+                        <div className="text-center">
+                          <FileText className="h-16 w-16 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm font-medium">{item.file.name}</p>
+                          <p className="text-xs text-muted-foreground">PDF Document</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <img 
+                        src={item.preview} 
+                        alt={`Upload ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg border-2 border-border"
+                      />
+                    )}
                     <Button
                       variant="destructive"
                       size="icon"
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleRemoveScreenshot(index)}
+                      onClick={() => handleRemoveFile(index)}
                     >
                       <X className="h-4 w-4" />
                     </Button>
                     <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                      Screenshot {index + 1}
+                      {item.type === 'pdf' ? 'PDF' : 'Image'} {index + 1}
                     </div>
                   </div>
                 ))}
@@ -327,12 +404,12 @@ export default function ProductLookup() {
           <AlertDescription>
             <strong>How to use:</strong>
             <ol className="list-decimal list-inside mt-2 space-y-1">
-              <li>Click "Open Agrian" to search for EPA-registered products</li>
-              <li>Once you find the product, click "Capture Screenshot" to capture the visible page</li>
-              <li>Navigate to different tabs (Safety, Crop Specific) and capture more screenshots if needed</li>
-              <li>Click "Extract from Screenshots" to automatically fill in the product details</li>
+              <li><strong>Option 1:</strong> Click "Show Agrian Browser" to search products, then click "Capture This Page" button</li>
+              <li><strong>Option 2:</strong> Take screenshots manually (using your OS tool) and click "Upload Files" to upload them</li>
+              <li>Upload multiple images or PDF labels (up to 10MB each)</li>
+              <li>Click "Extract from Files" to automatically extract product details using AI</li>
               <li>Review and edit the extracted information as needed</li>
-              <li>Click "Save & Return to Job Form" to add this product to your work order</li>
+              <li>Click "Save & Return to Job Form" to add this product to your database</li>
             </ol>
           </AlertDescription>
         </Alert>
@@ -342,7 +419,7 @@ export default function ProductLookup() {
           <CardHeader>
             <CardTitle>Product Information</CardTitle>
             <CardDescription>
-              Capture screenshots or manually enter EPA-registered product details
+              AI-extracted or manually entered EPA-registered product details
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
