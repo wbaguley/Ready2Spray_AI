@@ -520,6 +520,122 @@ export const appRouter = router({
       const org = await getOrCreateUserOrganization(ctx.user.id);
       return await getProductsByOrgId(org.id);
     }),
+    extractFromScreenshot: protectedProcedure
+      .input(z.object({
+        imageData: z.string(), // base64 encoded image
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { invokeLLM } = await import("./_core/llm");
+        
+        try {
+          // Call LLM with vision to extract product details from screenshot
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: input.imageData,
+                    },
+                  },
+                  {
+                    type: "text",
+                    text: `Extract all product information from this Agrian Label Center screenshot. Return a JSON object with these fields:
+- productName: string
+- epaNumber: string
+- registrant: string
+- activeIngredients: string (with percentages)
+- reEntryInterval: string
+- preharvestInterval: string
+- maxApplicationsPerSeason: string
+- maxRatePerSeason: string
+- methodsAllowed: string
+- rate: string
+- diluentAerial: string
+- diluentGround: string
+- diluentChemigation: string
+- ppeInformation: string
+- labelSignalWord: string
+- genericConditions: string
+
+If a field is not visible in the screenshot, set it to an empty string. Be precise and extract exactly what you see.`,
+                  },
+                ],
+              },
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "product_extraction",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    productName: { type: "string" },
+                    epaNumber: { type: "string" },
+                    registrant: { type: "string" },
+                    activeIngredients: { type: "string" },
+                    reEntryInterval: { type: "string" },
+                    preharvestInterval: { type: "string" },
+                    maxApplicationsPerSeason: { type: "string" },
+                    maxRatePerSeason: { type: "string" },
+                    methodsAllowed: { type: "string" },
+                    rate: { type: "string" },
+                    diluentAerial: { type: "string" },
+                    diluentGround: { type: "string" },
+                    diluentChemigation: { type: "string" },
+                    ppeInformation: { type: "string" },
+                    labelSignalWord: { type: "string" },
+                    genericConditions: { type: "string" },
+                  },
+                  required: [
+                    "productName",
+                    "epaNumber",
+                    "registrant",
+                    "activeIngredients",
+                    "reEntryInterval",
+                    "preharvestInterval",
+                    "maxApplicationsPerSeason",
+                    "maxRatePerSeason",
+                    "methodsAllowed",
+                    "rate",
+                    "diluentAerial",
+                    "diluentGround",
+                    "diluentChemigation",
+                    "ppeInformation",
+                    "labelSignalWord",
+                    "genericConditions",
+                  ],
+                  additionalProperties: false,
+                },
+              },
+            },
+          });
+
+          const content = response.choices[0]?.message?.content;
+          if (!content || typeof content !== 'string') {
+            return {
+              success: false,
+              error: "No response from AI",
+            };
+          }
+
+          const extractedData = JSON.parse(content);
+          
+          return {
+            success: true,
+            extractedData,
+          };
+        } catch (error: any) {
+          console.error("Error extracting product data:", error);
+          return {
+            success: false,
+            error: error.message || "Failed to extract product data",
+          };
+        }
+      }),
   }),
 
   // AI Chat router

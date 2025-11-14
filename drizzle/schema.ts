@@ -636,3 +636,73 @@ export const auditLogs = pgTable("audit_logs", {
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+// Products Complete table - comprehensive product database with AI extraction support
+export const productsComplete = pgTable("products_complete", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  orgId: integer("org_id").notNull().references(() => organizations.id),
+  
+  // Basic Information
+  nickname: varchar("nickname", { length: 255 }).notNull(), // Searchable product name
+  description: text("description"),
+  epaNumber: varchar("epa_number", { length: 50 }),
+  manufacturer: varchar("manufacturer", { length: 255 }),
+  productType: varchar("product_type", { length: 50 }), // Chemical, Fertilizer, etc.
+  chemicalType: varchar("chemical_type", { length: 50 }), // Liquid, Granular, etc.
+  category: varchar("category", { length: 100 }),
+  status: varchar("status", { length: 20 }).default("active"),
+  
+  // Application Details
+  defaultAppliedInput: numeric("default_applied_input", { precision: 10, scale: 4 }),
+  defaultUnitApplied: varchar("default_unit_applied", { length: 20 }), // OZ-LIQ, GAL, etc.
+  baseUnit: varchar("base_unit", { length: 20 }), // GL, BU, EA, OZ-LIQ, PT, QT, etc.
+  applicationRatePerAcre: numeric("application_rate_per_acre", { precision: 10, scale: 4 }),
+  fieldApplicationPrice: numeric("field_application_price", { precision: 10, scale: 2 }),
+  
+  // Pricing & Inventory
+  minimumCharge: numeric("minimum_charge", { precision: 10, scale: 2 }),
+  commission: varchar("commission", { length: 50 }),
+  commissionPaid: numeric("commission_paid", { precision: 10, scale: 4 }),
+  extraCommissionPercent: numeric("extra_commission_percent", { precision: 5, scale: 2 }),
+  unitCost: numeric("unit_cost", { precision: 10, scale: 2 }),
+  reorderQty: numeric("reorder_qty", { precision: 10, scale: 4 }),
+  vendors: text("vendors"),
+  otcChemicalSalePrice: numeric("otc_chemical_sale_price", { precision: 10, scale: 2 }),
+  densityConversionRate: numeric("density_conversion_rate", { precision: 10, scale: 6 }),
+  densityUnitFrom: varchar("density_unit_from", { length: 20 }),
+  densityUnitTo: varchar("density_unit_to", { length: 20 }),
+  
+  // Settings (Boolean flags)
+  isRestricted: boolean("is_restricted").default(false),
+  dontSplitBilling: boolean("dont_split_billing").default(false),
+  isInventoryItem: boolean("is_inventory_item").default(false),
+  isDiscountable: boolean("is_discountable").default(false),
+  showOnJobSchedule: boolean("show_on_job_schedule").default(false),
+  isDiluent: boolean("is_diluent").default(false),
+  applyAsLiquid: boolean("apply_as_liquid").default(false),
+  
+  // Safety & Compliance
+  labelSignalWord: varchar("label_signal_word", { length: 20 }), // DANGER, WARNING, CAUTION
+  hoursReentry: numeric("hours_reentry", { precision: 10, scale: 2 }),
+  daysPreharvest: numeric("days_preharvest", { precision: 10, scale: 2 }),
+  cropOverrides: json("crop_overrides"), // [{crop: "Corn", days: 30}, ...]
+  sensitiveCrops: json("sensitive_crops"), // ["Tomatoes", "Grapes", ...]
+  reentryPpe: text("reentry_ppe"),
+  additionalRestrictions: text("additional_restrictions"),
+  activeIngredients: text("active_ingredients"),
+  
+  // AI Extraction metadata
+  extractedFromScreenshot: boolean("extracted_from_screenshot").default(false),
+  screenshotUrl: text("screenshot_url"),
+  extractionConfidence: numeric("extraction_confidence", { precision: 3, scale: 2 }), // 0.00 to 1.00
+  lastVerifiedAt: timestamp("last_verified_at"),
+  lastVerifiedBy: integer("last_verified_by").references(() => users.id),
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+export type ProductComplete = typeof productsComplete.$inferSelect;
+export type InsertProductComplete = typeof productsComplete.$inferInsert;

@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ExternalLink, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Save, AlertCircle, Camera, Upload, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 export default function ProductLookup() {
   const [, navigate] = useLocation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
   
   // Product data form fields
   const [productData, setProductData] = useState({
@@ -35,13 +38,69 @@ export default function ProductLookup() {
     genericConditions: "",
   });
 
+  const extractProductMutation = trpc.products.extractFromScreenshot.useMutation({
+    onSuccess: (data) => {
+      setIsExtracting(false);
+      if (data.success && data.extractedData) {
+        // Pre-fill form with extracted data
+        setProductData(prev => ({
+          ...prev,
+          ...data.extractedData,
+        }));
+        toast.success("Product details extracted successfully! Please review and edit as needed.");
+      } else {
+        toast.error(data.error || "Failed to extract product details");
+      }
+    },
+    onError: (error) => {
+      setIsExtracting(false);
+      toast.error("Error extracting product details: " + error.message);
+    },
+  });
+
   const handleInputChange = (field: string, value: string) => {
     setProductData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleOpenAgrian = () => {
     window.open("https://www.agrian.com/labelcenter/results.cfm", "_blank", "width=1200,height=800");
-    toast.info("Agrian Label Center opened in new window. Search for your product and copy the details back here.");
+    toast.info("Agrian Label Center opened in new window. Search for your product and take a screenshot.");
+  };
+
+  const handleScreenshotUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file is too large. Maximum size is 10MB.");
+      return;
+    }
+
+    setIsExtracting(true);
+    toast.info("Analyzing screenshot...");
+
+    // Convert file to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      extractProductMutation.mutate({ imageData: base64String });
+    };
+    reader.onerror = () => {
+      setIsExtracting(false);
+      toast.error("Failed to read image file");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCaptureClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSaveProduct = () => {
@@ -103,6 +162,15 @@ export default function ProductLookup() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Hidden file input for screenshot upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleScreenshotUpload}
+      />
+
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container py-4">
@@ -118,17 +186,37 @@ export default function ProductLookup() {
               <div>
                 <h1 className="text-2xl font-bold">EPA Product Lookup</h1>
                 <p className="text-sm text-muted-foreground">
-                  Search Agrian Label Center and enter EPA-compliant product data
+                  Search Agrian Label Center and capture product details with AI
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleOpenAgrian}
-              className="gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open Agrian Label Center
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleOpenAgrian}
+                variant="outline"
+                className="gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open Agrian
+              </Button>
+              <Button
+                onClick={handleCaptureClick}
+                disabled={isExtracting}
+                className="gap-2"
+              >
+                {isExtracting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Extracting...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Upload Screenshot
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -138,9 +226,15 @@ export default function ProductLookup() {
         <Alert className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>How to use:</strong> Click "Open Agrian Label Center" above to search for EPA-registered products. 
-            Once you find the right product, copy the relevant information from Agrian and paste it into the form below. 
-            Then click "Save & Return to Job Form" to add this product to your work order.
+            <strong>How to use:</strong>
+            <ol className="list-decimal list-inside mt-2 space-y-1">
+              <li>Click "Open Agrian" to search for EPA-registered products</li>
+              <li>Once you find the product, take a screenshot of the product details page</li>
+              <li>Click "Upload Screenshot" and select your screenshot file</li>
+              <li>AI will automatically extract and fill in the product details</li>
+              <li>Review and edit the extracted information as needed</li>
+              <li>Click "Save & Return to Job Form" to add this product to your work order</li>
+            </ol>
           </AlertDescription>
         </Alert>
 
@@ -149,7 +243,7 @@ export default function ProductLookup() {
           <CardHeader>
             <CardTitle>Product Information</CardTitle>
             <CardDescription>
-              Enter the EPA-registered product details from Agrian Label Center
+              Upload a screenshot or manually enter EPA-registered product details
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -333,6 +427,7 @@ export default function ProductLookup() {
               <Button
                 onClick={handleSaveProduct}
                 className="gap-2"
+                disabled={isExtracting}
               >
                 <Save className="h-4 w-4" />
                 Save & Return to Job Form
@@ -340,6 +435,7 @@ export default function ProductLookup() {
               <Button
                 variant="outline"
                 onClick={handleClearForm}
+                disabled={isExtracting}
               >
                 Clear Form
               </Button>
