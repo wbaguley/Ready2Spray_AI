@@ -211,3 +211,13 @@
 - [x] Create manual user creation form with name, email, and role selection
 - [x] Implement backend endpoint for creating users manually
 - [x] Test user creation workflow
+
+
+## Product Screenshot + AI Extraction Feature
+- [ ] Create products database table schema with all required fields
+- [ ] Add screenshot capture button to Product Lookup dialog
+- [ ] Implement AI vision extraction backend (LLM with image input)
+- [ ] Create product review/edit form with extracted data
+- [ ] Add save functionality to store products in database
+- [ ] Integrate saved products with job form
+- [ ] Test complete workflow (screenshot → extract → save → use)
