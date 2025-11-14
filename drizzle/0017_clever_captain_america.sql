@@ -1,0 +1,1 @@
+ALTER TABLE "jobs_v2" ADD COLUMN "product_id" integer;

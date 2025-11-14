@@ -1372,3 +1372,44 @@ export async function getJobsV2ByOrgId(orgId: number) {
   
   return result;
 }
+
+export async function getJobV2ById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(jobsV2)
+    .where(eq(jobsV2.id, id))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function updateJobV2Product(jobId: number, productId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .update(jobsV2)
+    .set({ productId, updatedAt: new Date() })
+    .where(eq(jobsV2.id, jobId))
+    .returning();
+  
+  return result[0];
+}
+
+export async function getJobV2WithProduct(jobId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const job = await getJobV2ById(jobId);
+  if (!job) return null;
+  
+  if (job.productId) {
+    const product = await getProductById(job.productId);
+    return { ...job, product };
+  }
+  
+  return { ...job, product: null };
+}

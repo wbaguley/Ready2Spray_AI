@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Loader2, Plus, Briefcase } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 
 export default function JobsV2() {
+  const [, setLocation] = useLocation();
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -135,7 +137,11 @@ export default function JobsV2() {
           ) : jobs && jobs.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {jobs.map((job) => (
-                <Card key={job.id} className="hover:shadow-lg transition-shadow">
+                <Card 
+                  key={job.id} 
+                  className="hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => setLocation(`/jobs-v2/${job.id}`)}
+                >
                   <CardHeader>
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-primary/10 rounded-lg">

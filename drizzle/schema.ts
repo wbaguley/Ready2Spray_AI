@@ -57,6 +57,7 @@ export const jobsV2 = pgTable("jobs_v2", {
   orgId: integer("org_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  productId: integer("product_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

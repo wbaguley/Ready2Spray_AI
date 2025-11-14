@@ -1271,6 +1271,12 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
       const org = await getOrCreateUserOrganization(ctx.user.id);
       return await getJobsV2ByOrgId(org.id);
     }),
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { getJobV2WithProduct } = await import("./db");
+        return await getJobV2WithProduct(input.id);
+      }),
     create: protectedProcedure
       .input(z.object({
         title: z.string().min(1, "Job title is required"),
@@ -1284,6 +1290,15 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           title: input.title,
           description: input.description || null,
         });
+      }),
+    linkProduct: protectedProcedure
+      .input(z.object({
+        jobId: z.number(),
+        productId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateJobV2Product } = await import("./db");
+        return await updateJobV2Product(input.jobId, input.productId);
       }),
   }),
 });

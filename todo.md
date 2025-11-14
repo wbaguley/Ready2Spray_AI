@@ -325,3 +325,17 @@
 - [x] Add "Jobs V2" to sidebar navigation
 - [x] Test creating and viewing jobs in Jobs V2
 - [x] Verify Jobs V2 works independently from legacy Jobs page
+
+
+## Jobs V2 - Job Detail View with Product Linking
+- [x] Add product_id column to jobs_v2 table
+- [x] Add getJobV2ById backend function
+- [x] Add updateJobV2Product backend function to link products
+- [x] Add jobsV2.getById and jobsV2.linkProduct tRPC endpoints
+- [x] Create JobV2Detail.tsx page component
+- [x] Add "Link Product" button on detail page
+- [x] Display linked product EPA and agricultural details
+- [x] Add /jobs-v2/:id route to App.tsx
+- [x] Make job cards clickable to navigate to detail page
+- [ ] Integrate ProductLookup component with Jobs V2
+- [ ] Test complete workflow: create job → view → link product → see details
