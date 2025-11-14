@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Calendar, ArrowLeft, Search, Eye, Edit, Trash2, History, Download, Upload, CheckSquare } from "lucide-react";
+import { Loader2, Plus, Calendar, ArrowLeft, Search, Eye, Edit, Trash2, History, Download, Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -13,7 +13,6 @@ import { AgrianProductLookup } from "@/components/AgrianProductLookup";
 import { StatusHistory } from "@/components/StatusHistory";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { exportJobsToCSV } from "@/lib/pdfExport";
-import { BulkEditJobs } from "@/components/BulkEditJobs";
 
 export default function Jobs() {
   const [location, setLocation] = useLocation();
@@ -21,7 +20,6 @@ export default function Jobs() {
   const [showAgrianLookup, setShowAgrianLookup] = useState(false);
   const [editingJob, setEditingJob] = useState<any>(null);
   const [viewingHistoryJobId, setViewingHistoryJobId] = useState<number | null>(null);
-  const [showBulkEdit, setShowBulkEdit] = useState(false);
 
   // Check for selected product data from ProductLookup page
   useEffect(() => {
@@ -790,14 +788,6 @@ export default function Jobs() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => setShowBulkEdit(true)}
-            disabled={!jobs || jobs.length === 0}
-          >
-            <CheckSquare className="mr-2 h-4 w-4" />
-            Bulk Edit
-          </Button>
-          <Button
-            variant="outline"
             onClick={() => setLocation("/bulk-import")}
           >
             <Upload className="mr-2 h-4 w-4" />
@@ -966,15 +956,6 @@ export default function Jobs() {
           {viewingHistoryJobId && <StatusHistory jobId={viewingHistoryJobId} />}
         </DialogContent>
       </Dialog>
-
-      {/* Bulk Edit Jobs Dialog */}
-      <BulkEditJobs
-        open={showBulkEdit}
-        onOpenChange={setShowBulkEdit}
-        onSuccess={() => {
-          utils.jobs.list.invalidate();
-        }}
-      />
     </div>
   );
 }

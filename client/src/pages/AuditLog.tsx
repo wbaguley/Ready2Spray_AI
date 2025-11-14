@@ -20,8 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Filter, X, Eye, Download, FileText } from "lucide-react";
-import { exportAuditLogsToCSV, exportAuditLogsToPDF } from "@/lib/auditLogExport";
+import { Loader2, Filter, X, Eye } from "lucide-react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -88,31 +87,13 @@ export default function AuditLog() {
             Track all user actions and system changes
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => exportAuditLogsToCSV(auditLogs || [])}
-            disabled={!auditLogs || auditLogs.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => exportAuditLogsToPDF(auditLogs || [])}
-            disabled={!auditLogs || auditLogs.length === 0}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            {showFilters ? "Hide" : "Show"} Filters
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          {showFilters ? "Hide" : "Show"} Filters
+        </Button>
       </div>
 
       {showFilters && (

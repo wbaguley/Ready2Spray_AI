@@ -19,46 +19,6 @@ export const appRouter = router({
     }),
   }),
 
-  // Analytics router
-  analytics: router({
-    jobCompletionByPersonnel: protectedProcedure
-      .input(z.object({
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-      }))
-      .query(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, getJobCompletionByPersonnel } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        const startDate = input.startDate ? new Date(input.startDate) : undefined;
-        const endDate = input.endDate ? new Date(input.endDate) : undefined;
-        return await getJobCompletionByPersonnel(org.id, startDate, endDate);
-      }),
-    revenueByCustomer: protectedProcedure
-      .input(z.object({
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-      }))
-      .query(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, getRevenueByCustomer } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        const startDate = input.startDate ? new Date(input.startDate) : undefined;
-        const endDate = input.endDate ? new Date(input.endDate) : undefined;
-        return await getRevenueByCustomer(org.id, startDate, endDate);
-      }),
-    equipmentUtilization: protectedProcedure
-      .input(z.object({
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-      }))
-      .query(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, getEquipmentUtilization } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        const startDate = input.startDate ? new Date(input.startDate) : undefined;
-        const endDate = input.endDate ? new Date(input.endDate) : undefined;
-        return await getEquipmentUtilization(org.id, startDate, endDate);
-      }),
-  }),
-
   // Organization router
   organization: router({
     get: protectedProcedure.query(async ({ ctx }) => {
@@ -445,118 +405,6 @@ export const appRouter = router({
           createdJobs,
         };
       }),
-    bulkUpdate: protectedProcedure
-      .input(z.object({
-        jobIds: z.array(z.number()),
-        updates: z.object({
-          statusId: z.number().optional(),
-          priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
-          assignedPersonnelId: z.number().optional(),
-        }),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const { updateJob, getJobById, createJobStatusHistory, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        
-        const results = [];
-        const errors = [];
-        
-        for (const jobId of input.jobIds) {
-          try {
-            // Get current job state
-            const currentJob = await getJobById(jobId);
-            
-            // If status is being changed, log it to history
-            if (input.updates.statusId !== undefined && currentJob) {
-              if (currentJob.statusId !== input.updates.statusId) {
-                await createJobStatusHistory({
-                  jobId,
-                  fromStatusId: currentJob.statusId,
-                  toStatusId: input.updates.statusId,
-                  changedByUserId: ctx.user.id,
-                });
-              }
-            }
-            
-            // Update the job
-            await updateJob(jobId, input.updates);
-            
-            // Create audit log
-            await createAuditLog({
-              userId: ctx.user.id,
-              organizationId: org.id,
-              action: "update",
-              entityType: "job",
-              entityId: jobId,
-              changes: JSON.stringify({ bulkUpdate: input.updates }),
-              ipAddress: ctx.req.ip || null,
-              userAgent: ctx.req.get("user-agent") || null,
-            });
-            
-            results.push({ jobId, success: true });
-          } catch (error: any) {
-            errors.push({ jobId, error: error.message });
-          }
-        }
-        
-        return {
-          success: errors.length === 0,
-          totalJobs: input.jobIds.length,
-          successCount: results.length,
-          errorCount: errors.length,
-          results,
-          errors,
-        };
-      }),
-  }),
-
-  // Job Templates router
-  jobTemplates: router({
-    list: protectedProcedure.query(async ({ ctx }) => {
-      const { getOrCreateUserOrganization, getJobTemplatesByOrgId } = await import("./db");
-      const org = await getOrCreateUserOrganization(ctx.user.id);
-      return await getJobTemplatesByOrgId(org.id);
-    }),
-    create: protectedProcedure
-      .input(z.object({
-        name: z.string(),
-        description: z.string().optional(),
-        jobType: z.enum(["crop_dusting", "pest_control", "weed_control", "fungicide", "fertilizer", "other"]),
-        priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
-        state: z.string().optional(),
-        acres: z.string().optional(),
-        commodityCrop: z.string().optional(),
-        targetPest: z.string().optional(),
-        epaNumber: z.string().optional(),
-        applicationRate: z.string().optional(),
-        applicationMethod: z.enum(["aerial", "ground_boom", "backpack", "hand_wand", "ulv", "chemigation", "other"]).optional(),
-        chemicalProduct: z.string().optional(),
-        reEntryInterval: z.string().optional(),
-        preharvestInterval: z.string().optional(),
-        maxApplicationsPerSeason: z.string().optional(),
-        maxRatePerSeason: z.string().optional(),
-        methodsAllowed: z.string().optional(),
-        rate: z.string().optional(),
-        diluentAerial: z.string().optional(),
-        diluentGround: z.string().optional(),
-        diluentChemigation: z.string().optional(),
-        genericConditions: z.string().optional(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createJobTemplate } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        return await createJobTemplate({
-          ...input,
-          orgId: org.id,
-        });
-      }),
-    delete: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        const { deleteJobTemplate } = await import("./db");
-        await deleteJobTemplate(input.id);
-        return { success: true };
-      }),
   }),
 
   // Job Statuses router
@@ -636,22 +484,9 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createPersonnel, createAuditLog } = await import("./db");
+        const { getOrCreateUserOrganization, createPersonnel } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
-        const personnel = await createPersonnel({ ...input, orgId: org.id });
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "create",
-          entityType: "personnel",
-          entityId: personnel.id,
-          changes: JSON.stringify({ created: input }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
-        return personnel;
+        return await createPersonnel({ ...input, orgId: org.id });
       }),
     update: protectedProcedure
       .input(z.object({
@@ -665,43 +500,15 @@ export const appRouter = router({
         applicatorLicense: z.string().optional(),
         notes: z.string().optional(),
       }))
-      .mutation(async ({ ctx, input }) => {
-        const { updatePersonnel, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        const personnel = await updatePersonnel(input.id, input);
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "update",
-          entityType: "personnel",
-          entityId: input.id,
-          changes: JSON.stringify({ updated: input }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
-        return personnel;
+      .mutation(async ({ input }) => {
+        const { updatePersonnel } = await import("./db");
+        return await updatePersonnel(input.id, input);
       }),
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        const { deletePersonnel, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        
+      .mutation(async ({ input }) => {
+        const { deletePersonnel } = await import("./db");
         await deletePersonnel(input.id);
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "delete",
-          entityType: "personnel",
-          entityId: input.id,
-          changes: JSON.stringify({ deleted: true }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
         return { success: true };
       }),
   }),
@@ -908,63 +715,22 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
     create: protectedProcedure
       .input(createEquipmentSchema)
       .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createEquipment, createAuditLog } = await import("./db");
+        const { getOrCreateUserOrganization, createEquipment } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
-        await createEquipment({ ...input, orgId: org.id });
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "create",
-          entityType: "equipment",
-          entityId: 0, // Equipment ID not available from createEquipment
-          changes: JSON.stringify({ created: input }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
-        return { success: true };
+        return await createEquipment({ ...input, orgId: org.id });
       }),
     update: protectedProcedure
       .input(updateEquipmentSchema)
-      .mutation(async ({ ctx, input }) => {
-        const { updateEquipment, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
+      .mutation(async ({ input }) => {
+        const { updateEquipment } = await import("./db");
         const { id, ...data } = input;
-        const equipment = await updateEquipment(id, data);
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "update",
-          entityType: "equipment",
-          entityId: id,
-          changes: JSON.stringify({ updated: data }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
-        return equipment;
+        return await updateEquipment(id, data);
       }),
     delete: protectedProcedure
       .input(deleteEquipmentSchema)
-      .mutation(async ({ ctx, input }) => {
-        const { deleteEquipment, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        
+      .mutation(async ({ input }) => {
+        const { deleteEquipment } = await import("./db");
         await deleteEquipment(input.id);
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "delete",
-          entityType: "equipment",
-          entityId: input.id,
-          changes: JSON.stringify({ deleted: true }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
         return { success: true };
       }),
   }),
@@ -1061,63 +827,22 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
     create: protectedProcedure
       .input(createSiteSchema)
       .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createSite, createAuditLog } = await import("./db");
+        const { getOrCreateUserOrganization, createSite } = await import("./db");
         const org = await getOrCreateUserOrganization(ctx.user.id);
-        const site = await createSite({ ...input, orgId: org.id });
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "create",
-          entityType: "site",
-          entityId: site.id,
-          changes: JSON.stringify({ created: input }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
-        return site;
+        return await createSite({ ...input, orgId: org.id });
       }),
     update: protectedProcedure
       .input(updateSiteSchema)
-      .mutation(async ({ ctx, input }) => {
-        const { updateSite, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
+      .mutation(async ({ input }) => {
+        const { updateSite } = await import("./db");
         const { id, ...data } = input;
-        const site = await updateSite(id, data);
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "update",
-          entityType: "site",
-          entityId: id,
-          changes: JSON.stringify({ updated: data }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
-        return site;
+        return await updateSite(id, data);
       }),
     delete: protectedProcedure
       .input(deleteSiteSchema)
-      .mutation(async ({ ctx, input }) => {
-        const { deleteSite, getOrCreateUserOrganization, createAuditLog } = await import("./db");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        
+      .mutation(async ({ input }) => {
+        const { deleteSite } = await import("./db");
         await deleteSite(input.id);
-        
-        await createAuditLog({
-          userId: ctx.user.id,
-          organizationId: org.id,
-          action: "delete",
-          entityType: "site",
-          entityId: input.id,
-          changes: JSON.stringify({ deleted: true }),
-          ipAddress: ctx.req.ip || null,
-          userAgent: ctx.req.get("user-agent") || null,
-        });
-        
         return { success: true };
       }),
   }),
