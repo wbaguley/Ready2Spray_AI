@@ -268,3 +268,6 @@
 - [x] Increase PPE textarea size for long text (8 rows, resizable)
 - [x] Add EPA fields display to job creation form (green badge shows linked product)
 - [x] Ensure extracted data flows through save → job form → job detail
+
+## Bug - Database Type Mismatch
+- [x] Fix Drizzle using Postgres syntax on MySQL database (created table in correct Postgres/Supabase database)

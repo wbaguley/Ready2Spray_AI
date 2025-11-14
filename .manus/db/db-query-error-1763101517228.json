@@ -1,0 +1,8 @@
+{
+  "query": "SELECT COUNT(*) FROM products_complete;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT COUNT(*) FROM products_complete;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '6adcecxv2yg38ygq7gdrsu.products_complete' doesn't exist"
+  ]
+}
