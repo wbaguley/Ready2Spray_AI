@@ -261,3 +261,4 @@
 
 ## Bug Fixes - Product Creation
 - [x] Fix product creation error - missing org_id in INSERT query
+- [x] Fix SQL parameter count mismatch (18 columns but 17 values)

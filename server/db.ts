@@ -1232,24 +1232,38 @@ export async function createProduct(productData: any) {
     throw new Error("Database not available");
   }
 
-  const result = await db.execute(sql`
-    INSERT INTO products_complete (
-      org_id, product_name, epa_number, registrant, active_ingredients,
-      re_entry_interval, preharvest_interval, max_applications_per_season,
-      max_rate_per_season, methods_allowed, rate,
-      diluent_aerial, diluent_ground, diluent_chemigation,
-      ppe_information, label_signal_word, generic_conditions,
-      created_at, updated_at
-    ) VALUES (
-      ${productData.orgId}, ${productData.productName}, ${productData.epaNumber}, ${productData.registrant}, ${productData.activeIngredients},
-      ${productData.reEntryInterval}, ${productData.preharvestInterval}, ${productData.maxApplicationsPerSeason},
-      ${productData.maxRatePerSeason}, ${productData.methodsAllowed}, ${productData.rate},
-      ${productData.diluentAerial}, ${productData.diluentGround}, ${productData.diluentChemigation},
-      ${productData.ppeInformation}, ${productData.labelSignalWord}, ${productData.genericConditions},
-      NOW(), NOW()
-    ) RETURNING *
-  `);
-
+  const { productsComplete } = await import("../drizzle/schema");
+  
+  // Map extracted product data to schema columns
+  const insertData: any = {
+    orgId: productData.orgId,
+    nickname: productData.productName || "Unnamed Product",
+    epaNumber: productData.epaNumber || null,
+    manufacturer: productData.registrant || null,
+    activeIngredients: productData.activeIngredients || null,
+    labelSignalWord: productData.labelSignalWord || null,
+    reentryPpe: productData.ppeInformation || null,
+    additionalRestrictions: productData.genericConditions || null,
+    extractedFromScreenshot: true,
+  };
+  
+  // Parse re-entry interval (convert "48 hours" to numeric)
+  if (productData.reEntryInterval) {
+    const hoursMatch = productData.reEntryInterval.match(/(\d+)\s*hours?/i);
+    if (hoursMatch) {
+      insertData.hoursReentry = parseFloat(hoursMatch[1]);
+    }
+  }
+  
+  // Parse pre-harvest interval (convert "7 days" to numeric)
+  if (productData.preharvestInterval) {
+    const daysMatch = productData.preharvestInterval.match(/(\d+)\s*days?/i);
+    if (daysMatch) {
+      insertData.daysPreharvest = parseFloat(daysMatch[1]);
+    }
+  }
+  
+  const result = await db.insert(productsComplete).values(insertData).returning();
   return result[0];
 }
 
@@ -1259,9 +1273,9 @@ export async function getProductById(id: number) {
     throw new Error("Database not available");
   }
 
-  const result = await db.execute(sql`SELECT * FROM products_complete WHERE id = ${id}`);
-
-  return result[0];
+  const { productsComplete } = await import("../drizzle/schema");
+  const result = await db.select().from(productsComplete).where(eq(productsComplete.id, id)).limit(1);
+  return result[0] || null;
 }
 
 export async function searchProducts(searchTerm: string) {
@@ -1270,16 +1284,26 @@ export async function searchProducts(searchTerm: string) {
     throw new Error("Database not available");
   }
 
-  const searchPattern = `%${searchTerm}%`;
-  const result = await db.execute(sql`
-    SELECT id, product_name, epa_number, registrant, active_ingredients 
-    FROM products_complete 
-    WHERE product_name ILIKE ${searchPattern} 
-       OR epa_number ILIKE ${searchPattern} 
-       OR registrant ILIKE ${searchPattern}
-    ORDER BY product_name
-    LIMIT 50
-  `);
+  const { productsComplete } = await import("../drizzle/schema");
+  const { or, ilike } = await import("drizzle-orm");
+  
+  const result = await db
+    .select({
+      id: productsComplete.id,
+      nickname: productsComplete.nickname,
+      epaNumber: productsComplete.epaNumber,
+      manufacturer: productsComplete.manufacturer,
+      activeIngredients: productsComplete.activeIngredients,
+    })
+    .from(productsComplete)
+    .where(
+      or(
+        ilike(productsComplete.nickname, `%${searchTerm}%`),
+        ilike(productsComplete.epaNumber, `%${searchTerm}%`),
+        ilike(productsComplete.manufacturer, `%${searchTerm}%`)
+      )
+    )
+    .limit(50);
 
   return result;
 }

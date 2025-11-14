@@ -25,13 +25,6 @@ export default function ProductLookup() {
     // Crop Specific
     reEntryInterval: "",
     preharvestInterval: "",
-    maxApplicationsPerSeason: "",
-    maxRatePerSeason: "",
-    methodsAllowed: "",
-    rate: "",
-    diluentAerial: "",
-    diluentGround: "",
-    diluentChemigation: "",
     // Safety / PPE
     ppeInformation: "",
     labelSignalWord: "",
@@ -184,18 +177,10 @@ export default function ProductLookup() {
       // Navigate to job form with product data in URL params
       const params = new URLSearchParams();
       params.set('productId', String(product.id || ''));
-      params.set('productName', String(product.product_name || ''));
-      params.set('epaNumber', String(product.epa_number || ''));
-      params.set('reEntryInterval', String(product.re_entry_interval || ''));
-      params.set('preharvestInterval', String(product.preharvest_interval || ''));
-      params.set('maxApplicationsPerSeason', String(product.max_applications_per_season || ''));
-      params.set('maxRatePerSeason', String(product.max_rate_per_season || ''));
-      params.set('methodsAllowed', String(product.methods_allowed || ''));
-      params.set('rate', String(product.rate || ''));
-      params.set('diluentAerial', String(product.diluent_aerial || ''));
-      params.set('diluentGround', String(product.diluent_ground || ''));
-      params.set('diluentChemigation', String(product.diluent_chemigation || ''));
-      params.set('genericConditions', String(product.generic_conditions || ''));
+      params.set('productName', String(product.nickname || ''));
+      params.set('epaNumber', String(product.epaNumber || ''));
+      params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
+      params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
       navigate(`/jobs/new?${params.toString()}`);
     },
     onError: (error) => {
@@ -222,13 +207,6 @@ export default function ProductLookup() {
       activeIngredients: "",
       reEntryInterval: "",
       preharvestInterval: "",
-      maxApplicationsPerSeason: "",
-      maxRatePerSeason: "",
-      methodsAllowed: "",
-      rate: "",
-      diluentAerial: "",
-      diluentGround: "",
-      diluentChemigation: "",
       ppeInformation: "",
       labelSignalWord: "",
       genericConditions: "",
@@ -441,69 +419,7 @@ export default function ProductLookup() {
                     onChange={(e) => handleInputChange("preharvestInterval", e.target.value)}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="maxApplicationsPerSeason">Max Applications/Season</Label>
-                  <Input
-                    id="maxApplicationsPerSeason"
-                    placeholder="e.g., 3"
-                    value={productData.maxApplicationsPerSeason}
-                    onChange={(e) => handleInputChange("maxApplicationsPerSeason", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="maxRatePerSeason">Max Rate/Season</Label>
-                  <Input
-                    id="maxRatePerSeason"
-                    placeholder="e.g., 8 quarts/acre"
-                    value={productData.maxRatePerSeason}
-                    onChange={(e) => handleInputChange("maxRatePerSeason", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="methodsAllowed">Application Methods Allowed</Label>
-                  <Input
-                    id="methodsAllowed"
-                    placeholder="e.g., Ground, Aerial"
-                    value={productData.methodsAllowed}
-                    onChange={(e) => handleInputChange("methodsAllowed", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="rate">Application Rate</Label>
-                  <Input
-                    id="rate"
-                    placeholder="e.g., 22 fl oz/acre"
-                    value={productData.rate}
-                    onChange={(e) => handleInputChange("rate", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="diluentAerial">Diluent (Aerial)</Label>
-                  <Input
-                    id="diluentAerial"
-                    placeholder="e.g., 3-15 gal/acre"
-                    value={productData.diluentAerial}
-                    onChange={(e) => handleInputChange("diluentAerial", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="diluentGround">Diluent (Ground)</Label>
-                  <Input
-                    id="diluentGround"
-                    placeholder="e.g., 10-40 gal/acre"
-                    value={productData.diluentGround}
-                    onChange={(e) => handleInputChange("diluentGround", e.target.value)}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="diluentChemigation">Diluent (Chemigation)</Label>
-                  <Input
-                    id="diluentChemigation"
-                    placeholder="e.g., Sufficient water to provide uniform coverage"
-                    value={productData.diluentChemigation}
-                    onChange={(e) => handleInputChange("diluentChemigation", e.target.value)}
-                  />
-                </div>
+
               </div>
             </div>
 

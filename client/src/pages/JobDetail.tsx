@@ -412,50 +412,50 @@ export default function JobDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Product Name</h3>
-                  <p className="text-sm font-semibold">{product.product_name}</p>
+                  <p className="text-sm font-semibold">{product.nickname}</p>
                 </div>
-                {product.epa_number && (
+                {product.epaNumber && (
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">EPA Registration #</h3>
-                    <p className="text-sm">{product.epa_number}</p>
+                    <p className="text-sm">{product.epaNumber}</p>
                   </div>
                 )}
-                {product.registrant && (
+                {product.manufacturer && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Registrant</h3>
-                    <p className="text-sm">{product.registrant}</p>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Manufacturer</h3>
+                    <p className="text-sm">{product.manufacturer}</p>
                   </div>
                 )}
-                {product.active_ingredients && (
+                {product.activeIngredients && (
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Ingredients</h3>
-                    <p className="text-sm">{product.active_ingredients}</p>
+                    <p className="text-sm">{product.activeIngredients}</p>
                   </div>
                 )}
               </div>
 
-              {(product.re_entry_interval || product.preharvest_interval || product.label_signal_word) && (
+              {(product.hoursReentry || product.daysPreharvest || product.labelSignalWord) && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="text-sm font-medium mb-2">Safety Information</h3>
                     <div className="grid grid-cols-3 gap-4">
-                      {product.re_entry_interval && (
+                      {product.hoursReentry && (
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Re-Entry Interval (REI)</p>
-                          <p className="text-sm">{product.re_entry_interval}</p>
+                          <p className="text-sm">{product.hoursReentry} hours</p>
                         </div>
                       )}
-                      {product.preharvest_interval && (
+                      {product.daysPreharvest && (
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Pre-Harvest Interval (PHI)</p>
-                          <p className="text-sm">{product.preharvest_interval}</p>
+                          <p className="text-sm">{product.daysPreharvest} days</p>
                         </div>
                       )}
-                      {product.label_signal_word && (
+                      {product.labelSignalWord && (
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Signal Word</p>
-                          <p className="text-sm font-semibold">{product.label_signal_word}</p>
+                          <p className="text-sm font-semibold">{product.labelSignalWord}</p>
                         </div>
                       )}
                     </div>
@@ -463,86 +463,24 @@ export default function JobDetail() {
                 </>
               )}
 
-              {product.ppe_information && (
+              {product.reentryPpe && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">PPE Requirements</h3>
-                    <p className="text-sm whitespace-pre-wrap">{product.ppe_information}</p>
+                    <p className="text-sm whitespace-pre-wrap">{product.reentryPpe}</p>
                   </div>
                 </>
               )}
 
-              {(product.max_applications_per_season || product.max_rate_per_season || product.methods_allowed || product.rate) && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Application Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {product.max_applications_per_season && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Max Applications/Season</p>
-                          <p className="text-sm">{product.max_applications_per_season}</p>
-                        </div>
-                      )}
-                      {product.max_rate_per_season && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Max Rate/Season</p>
-                          <p className="text-sm">{product.max_rate_per_season}</p>
-                        </div>
-                      )}
-                      {product.methods_allowed && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Methods Allowed</p>
-                          <p className="text-sm">{product.methods_allowed}</p>
-                        </div>
-                      )}
-                      {product.rate && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Application Rate</p>
-                          <p className="text-sm">{product.rate}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
 
-              {(product.diluent_aerial || product.diluent_ground || product.diluent_chemigation) && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Diluent Information</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      {product.diluent_aerial && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Aerial</p>
-                          <p className="text-sm">{product.diluent_aerial}</p>
-                        </div>
-                      )}
-                      {product.diluent_ground && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Ground</p>
-                          <p className="text-sm">{product.diluent_ground}</p>
-                        </div>
-                      )}
-                      {product.diluent_chemigation && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Chemigation</p>
-                          <p className="text-sm">{product.diluent_chemigation}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
 
-              {product.generic_conditions && (
+              {product.additionalRestrictions && (
                 <>
                   <Separator />
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Generic Conditions</h3>
-                    <p className="text-sm whitespace-pre-wrap">{product.generic_conditions}</p>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Additional Restrictions</h3>
+                    <p className="text-sm whitespace-pre-wrap">{product.additionalRestrictions}</p>
                   </div>
                 </>
               )}
