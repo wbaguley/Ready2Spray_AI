@@ -278,3 +278,8 @@
 - [x] Update ProductLookup to accept job_id parameter
 - [x] After product save, update job with product_id
 - [x] Test: Create job → View job → Link product → See EPA info
+
+## Database Schema Migration
+- [x] Check existing tables in Supabase
+- [x] Run Drizzle migrations to create all missing tables (personnel, sites, equipment, job_statuses, jobs)
+- [x] Verify all tables exist and queries work
