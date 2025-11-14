@@ -293,3 +293,7 @@
 - [x] Remove "Agricultural Details" section (State, Commodity/Crop, Target Pest, Application Rate, Application Method, Chemical Product, EPA Number)
 - [x] Job form only has: Basic Info (title, description, customer, site, personnel, equipment, dates, location)
 - [x] All agricultural/EPA data comes from linked products
+
+## Fix Jobs Table Schema Mismatch
+- [x] Add missing agricultural/EPA columns to jobs table (state, commodity_crop, target_pest, epa_number, application_rate, application_method, chemical_product, re_entry_interval, preharvest_interval, max_applications_per_season, max_rate_per_season, methods_allowed, rate, diluent_aerial, diluent_ground, diluent_chemigation, generic_conditions)
+- [x] Test job creation works after adding columns
