@@ -659,8 +659,10 @@ If a field is not visible in the screenshot, set it to an empty string. Be preci
         labelSignalWord: z.string().optional(),
         genericConditions: z.string().optional(),
       }))
-      .mutation(async ({ ctx, input }) => {        const { createProduct } = await import("./db");
-        const product = await createProduct(input);
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createProduct } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        const product = await createProduct({ ...input, orgId: org.id });
         return product;
       }),
     getById: protectedProcedure

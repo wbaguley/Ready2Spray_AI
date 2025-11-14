@@ -1234,14 +1234,14 @@ export async function createProduct(productData: any) {
 
   const result = await db.execute(sql`
     INSERT INTO products_complete (
-      product_name, epa_number, registrant, active_ingredients,
+      org_id, product_name, epa_number, registrant, active_ingredients,
       re_entry_interval, preharvest_interval, max_applications_per_season,
       max_rate_per_season, methods_allowed, rate,
       diluent_aerial, diluent_ground, diluent_chemigation,
       ppe_information, label_signal_word, generic_conditions,
       created_at, updated_at
     ) VALUES (
-      ${productData.productName}, ${productData.epaNumber}, ${productData.registrant}, ${productData.activeIngredients},
+      ${productData.orgId}, ${productData.productName}, ${productData.epaNumber}, ${productData.registrant}, ${productData.activeIngredients},
       ${productData.reEntryInterval}, ${productData.preharvestInterval}, ${productData.maxApplicationsPerSeason},
       ${productData.maxRatePerSeason}, ${productData.methodsAllowed}, ${productData.rate},
       ${productData.diluentAerial}, ${productData.diluentGround}, ${productData.diluentChemigation},
