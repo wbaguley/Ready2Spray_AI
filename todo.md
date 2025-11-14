@@ -288,3 +288,8 @@
 - [x] Remove entire "Crop Specifics" section from job creation form
 - [x] Keep only Agricultural Details (state, crop, target pest, application rate/method, chemical product)
 - [x] EPA compliance fields (REI, PHI, max applications, etc.) come only from linked products
+
+## Remove Agricultural Details from Job Form
+- [x] Remove "Agricultural Details" section (State, Commodity/Crop, Target Pest, Application Rate, Application Method, Chemical Product, EPA Number)
+- [x] Job form only has: Basic Info (title, description, customer, site, personnel, equipment, dates, location)
+- [x] All agricultural/EPA data comes from linked products
