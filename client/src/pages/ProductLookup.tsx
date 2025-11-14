@@ -16,6 +16,10 @@ export default function ProductLookup() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<Array<{file: File, preview: string, type: 'image' | 'pdf'}>>([]);
   
+  // Get jobId from URL params if linking to existing job
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobId = urlParams.get('jobId') ? parseInt(urlParams.get('jobId')!) : null;
+  
   // Product data form fields
   const [productData, setProductData] = useState({
     productName: "",
@@ -171,17 +175,37 @@ export default function ProductLookup() {
     }
   };
 
+  const updateJobMutation = trpc.jobs.update.useMutation();
+  
   const createProductMutation = trpc.products.create.useMutation({
     onSuccess: (product: any) => {
       toast.success("Product saved successfully!");
-      // Navigate to job form with product data in URL params
-      const params = new URLSearchParams();
-      params.set('productId', String(product.id || ''));
-      params.set('productName', String(product.nickname || ''));
-      params.set('epaNumber', String(product.epaNumber || ''));
-      params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
-      params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
-      navigate(`/jobs/new?${params.toString()}`);
+      
+      if (jobId) {
+        // If we have a jobId, update the job with this product
+        updateJobMutation.mutate(
+          { id: jobId, productId: product.id },
+          {
+            onSuccess: () => {
+              toast.success("Product linked to job!");
+              navigate(`/jobs/${jobId}`);
+            },
+            onError: (error) => {
+              toast.error(`Failed to link product: ${error.message}`);
+              navigate(`/jobs/${jobId}`);
+            }
+          }
+        );
+      } else {
+        // No jobId, navigate to job form with product data
+        const params = new URLSearchParams();
+        params.set('productId', String(product.id || ''));
+        params.set('productName', String(product.nickname || ''));
+        params.set('epaNumber', String(product.epaNumber || ''));
+        params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
+        params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
+        navigate(`/jobs/new?${params.toString()}`);
+      }
     },
     onError: (error) => {
       toast.error("Failed to save product: " + error.message);
@@ -470,12 +494,12 @@ export default function ProductLookup() {
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSave} className="flex-1">
                 <Save className="h-4 w-4 mr-2" />
-                Save & Return to Job Form
+                {jobId ? 'Save & Link to Job' : 'Save & Return to Job Form'}
               </Button>
               <Button onClick={handleClear} variant="outline">
                 Clear Form
               </Button>
-              <Button onClick={() => navigate("/jobs")} variant="ghost">
+              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : "/jobs")} variant="ghost">
                 Cancel
               </Button>
             </div>

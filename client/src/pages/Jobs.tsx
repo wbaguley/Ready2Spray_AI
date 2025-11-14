@@ -654,32 +654,31 @@ export default function Jobs() {
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="chemicalProduct">Chemical Product</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setLocation("/product-lookup");
-                    }}
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    EPA Product Lookup
-                  </Button>
+                  <Input
+                    id="chemicalProduct"
+                    placeholder="e.g., Roundup, Avicta"
+                    value={formData.chemicalProduct}
+                    onChange={(e) =>
+                      setFormData({ ...formData, chemicalProduct: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tip: Create the job first, then link EPA products from the job detail page
+                  </p>
                 </div>
-                <Select
-                  value={formData.chemicalProduct}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, chemicalProduct: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select chemical product (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="product1">Product 1</SelectItem>
-                    <SelectItem value="product2">Product 2</SelectItem>
-                  </SelectContent>
-                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="epaNumber">EPA Registration Number (Optional)</Label>
+                  <Input
+                    id="epaNumber"
+                    placeholder="e.g., 352-652"
+                    value={formData.epaNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, epaNumber: e.target.value })
+                    }
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -271,3 +271,10 @@
 
 ## Bug - Database Type Mismatch
 - [x] Fix Drizzle using Postgres syntax on MySQL database (created table in correct Postgres/Supabase database)
+
+## Restructure Product Workflow
+- [x] Remove Product Lookup button from job creation form
+- [x] Add "Link Product" button to job detail view
+- [x] Update ProductLookup to accept job_id parameter
+- [x] After product save, update job with product_id
+- [x] Test: Create job → View job → Link product → See EPA info
