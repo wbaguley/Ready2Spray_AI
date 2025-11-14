@@ -92,6 +92,20 @@
       "when": 1763072311605,
       "tag": "0012_sour_exodus",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1763077000953,
+      "tag": "0013_strong_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1763078613923,
+      "tag": "0014_odd_energizer",
+      "breakpoints": true
     }
   ]
 }
