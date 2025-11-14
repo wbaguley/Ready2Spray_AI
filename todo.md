@@ -221,3 +221,13 @@
 - [x] Add save functionality to store products in database
 - [x] Integrate saved products with job form
 - [x] Test complete workflow (screenshot → extract → save → use)
+
+
+## Multi-Screenshot Capture Enhancement
+- [x] Add "Capture Screenshot" button to Product Lookup window
+- [x] Implement browser screenshot capture API using getDisplayMedia
+- [x] Add screenshot preview gallery showing captured images (up to 3)
+- [x] Support capturing 2-3 screenshots (for different tabs: General, Safety, Crop Specific)
+- [x] Add "Extract from Screenshots" button to process multiple screenshots
+- [x] Implement batch AI extraction that merges data from multiple screenshots
+- [x] Test complete multi-capture workflow
