@@ -303,3 +303,25 @@
 - [x] Update frontend to not send agricultural/EPA fields during job creation
 - [x] Only insert: title, description, job_type, priority, customer_id, site_id, assigned_personnel_id, equipment_id, location_address, scheduled_start, scheduled_end, notes
 - [x] Test job creation works
+
+## CRITICAL: Job Creation Still Failing
+- [ ] Check actual jobs table columns in Supabase database
+- [ ] Identify mismatch between Drizzle schema and actual database
+- [ ] Either update schema file to match database OR add missing columns to database
+- [ ] Test job creation works with minimal data (title, job_type, priority only)
+
+## Create New Job Mutation with Raw SQL
+- [ ] Replace createJob function with raw SQL INSERT
+- [ ] Only insert fields from the form: org_id, title, description, job_type, priority, status_id, customer_id, assigned_personnel_id, equipment_id, location_address, scheduled_start, scheduled_end
+- [ ] Test job creation works with minimal fields
+
+
+## Jobs V2 - Simplified Job Management System
+- [x] Create jobs_v2 database table (id, org_id, title, description, created_at, updated_at)
+- [x] Add database helper functions (createJobV2, getJobsV2ByOrgId)
+- [x] Create jobsV2 tRPC router with create and list endpoints
+- [x] Create JobsV2.tsx page with simple form (title + description)
+- [x] Add job list view to JobsV2 page
+- [x] Add "Jobs V2" to sidebar navigation
+- [x] Test creating and viewing jobs in Jobs V2
+- [x] Verify Jobs V2 works independently from legacy Jobs page

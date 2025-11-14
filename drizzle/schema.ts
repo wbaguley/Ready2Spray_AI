@@ -51,6 +51,19 @@ export const users = pgTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+// Jobs V2 table - Simplified job management
+export const jobsV2 = pgTable("jobs_v2", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  orgId: integer("org_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type JobV2 = typeof jobsV2.$inferSelect;
+export type InsertJobV2 = typeof jobsV2.$inferInsert;
+
 // Organizations table with subscription management and mode selection
 export const organizations = pgTable("organizations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

@@ -1,0 +1,21 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS jobs (\n  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  org_id integer NOT NULL,\n  customer_id integer,\n  assigned_personnel_id integer,\n  equipment_id integer,\n  product_id integer,\n  site_id integer,\n  status_id integer,\n  title text NOT NULL,\n  description text,\n  job_type varchar(50) NOT NULL DEFAULT 'crop_dusting',\n  priority varchar(20) NOT NULL DEFAULT 'medium',\n  location_address text,\n  location_lat varchar(50),\n  location_lng varchar(50),\n  scheduled_start timestamp,\n  scheduled_end timestamp,\n  actual_start timestamp,\n  actual_end timestamp,\n  notes text,\n  state varchar(100),\n  acres numeric(10, 2),\n  commodity_crop varchar(200),\n  target_pest varchar(200),\n  epa_number varchar(100),\n  application_rate varchar(100),\n  application_method varchar(100),\n  chemical_product varchar(200),\n  re_entry_interval varchar(100),\n  preharvest_interval varchar(100),\n  max_applications_per_season varchar(50),\n  max_rate_per_season varchar(100),\n  methods_allowed varchar(200),\n  rate varchar(100),\n  diluent_aerial varchar(100),\n  diluent_ground varchar(100),\n  diluent_chemigation varchar(100),\n  generic_conditions text,\n  created_at timestamp DEFAULT now() NOT NULL,\n  updated_at timestamp DEFAULT now() NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute CREATE TABLE IF NOT EXISTS jobs (\n  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  org_id integer NOT NULL,\n  customer_id integer,\n  assigned_personnel_id integer,\n  equipment_id integer,\n  product_id integer,\n  site_id integer,\n  status_id integer,\n  title text NOT NULL,\n  description text,\n  job_type varchar(50) NOT NULL DEFAULT 'crop_dusting',\n  priority varchar(20) NOT NULL DEFAULT 'medium',\n  location_address text,\n  location_lat varchar(50),\n  location_lng varchar(50),\n  scheduled_start timestamp,\n  scheduled_end timestamp,\n  actual_start timestamp,\n  actual_end timestamp,\n  notes text,\n  state varchar(100),\n  acres numeric(10, 2),\n  commodity_crop varchar(200),\n  target_pest varchar(200),\n  epa_number varchar(100),\n  application_rate varchar(100),\n  application_method varchar(100),\n  chemical_product varchar(200),\n  re_entry_interval varchar(100),\n  preharvest_interval varchar(100),\n  max_applications_per_season varchar(50),\n  max_rate_per_season varchar(100),\n  methods_allowed varchar(200),\n  rate varchar(100),\n  diluent_aerial varchar(100),\n  diluent_ground varchar(100),\n  diluent_chemigation varchar(100),\n  generic_conditions text,\n  created_at timestamp DEFAULT now() NOT NULL,\n  updated_at timestamp DEFAULT now() NOT NULL\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 2 column 54 near \"IDENTITY,",
+    "  org_id integer NOT NULL,",
+    "  customer_id integer,",
+    "  assigned_personnel_id integer,",
+    "  equipment_id integer,",
+    "  product_id integer,",
+    "  site_id integer,",
+    "  status_id integer,",
+    "  title text NOT NULL,",
+    "  description text,",
+    "  job_type varchar(50) NOT NULL DEFAULT 'crop_dusting',",
+    "  priority varchar(20) NOT NULL DEFAULT 'medium',",
+    "  location_address text,",
+    "  location_lat"
+  ]
+}

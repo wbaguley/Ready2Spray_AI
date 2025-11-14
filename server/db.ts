@@ -1,7 +1,7 @@
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers } from "../drizzle/schema";
+import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobsV2, InsertJobV2 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -278,8 +278,46 @@ export async function createJob(data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const { jobs } = await import("../drizzle/schema");
-  const result = await db.insert(jobs).values(data).returning();
+  // Use raw SQL to avoid Drizzle trying to insert into columns that don't exist
+  const { sql } = await import("drizzle-orm");
+  
+  const result = await db.execute(sql`
+    INSERT INTO jobs (
+      org_id,
+      title,
+      description,
+      job_type,
+      priority,
+      status_id,
+      customer_id,
+      assigned_personnel_id,
+      equipment_id,
+      location_address,
+      scheduled_start,
+      scheduled_end,
+      notes,
+      created_at,
+      updated_at
+    ) VALUES (
+      ${data.orgId},
+      ${data.title},
+      ${data.description || null},
+      ${data.jobType},
+      ${data.priority || 'medium'},
+      ${data.statusId || null},
+      ${data.customerId || null},
+      ${data.assignedPersonnelId || null},
+      ${data.equipmentId || null},
+      ${data.locationAddress || null},
+      ${data.scheduledStart || null},
+      ${data.scheduledEnd || null},
+      ${data.notes || null},
+      NOW(),
+      NOW()
+    )
+    RETURNING *
+  `);
+  
   return result[0];
 }
 
@@ -1305,5 +1343,32 @@ export async function searchProducts(searchTerm: string) {
     )
     .limit(50);
 
+  return result;
+}
+
+// ============================================================================
+// Jobs V2 helpers - Simplified job management
+// ============================================================================
+
+export async function createJobV2(data: InsertJobV2) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(jobsV2).values(data).returning();
+  return result[0];
+}
+
+export async function getJobsV2ByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { desc } = await import("drizzle-orm");
+  
+  const result = await db
+    .select()
+    .from(jobsV2)
+    .where(eq(jobsV2.orgId, orgId))
+    .orderBy(desc(jobsV2.createdAt));
+  
   return result;
 }

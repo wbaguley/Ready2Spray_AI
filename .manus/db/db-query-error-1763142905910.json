@@ -1,0 +1,14 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS jobs_v2 (\n  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  org_id integer NOT NULL,\n  title text NOT NULL,\n  description text,\n  created_at timestamp DEFAULT now() NOT NULL,\n  updated_at timestamp DEFAULT now() NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute CREATE TABLE IF NOT EXISTS jobs_v2 (\n  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  org_id integer NOT NULL,\n  title text NOT NULL,\n  description text,\n  created_at timestamp DEFAULT now() NOT NULL,\n  updated_at timestamp DEFAULT now() NOT NULL\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 2 column 54 near \"IDENTITY,",
+    "  org_id integer NOT NULL,",
+    "  title text NOT NULL,",
+    "  description text,",
+    "  created_at timestamp DEFAULT now() NOT NULL,",
+    "  updated_at timestamp DEFAULT now() NOT NULL",
+    ")\""
+  ]
+}

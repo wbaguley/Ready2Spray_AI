@@ -160,7 +160,7 @@ export const appRouter = router({
           organizationId: org.id,
           action: "create",
           entityType: "job",
-          entityId: job.id,
+          entityId: job.id as number,
           changes: JSON.stringify({ created: input }),
           ipAddress: ctx.req.ip || null,
           userAgent: ctx.req.get("user-agent") || null,
@@ -1261,6 +1261,29 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         const { updateUserRole } = await import("./db");
         await updateUserRole(input.userId, input.userRole);
         return { success: true };
+      }),
+  }),
+
+  // Jobs V2 router - Simplified job management
+  jobsV2: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getJobsV2ByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getJobsV2ByOrgId(org.id);
+    }),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1, "Job title is required"),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createJobV2 } = await import("./db");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        return await createJobV2({
+          orgId: org.id,
+          title: input.title,
+          description: input.description || null,
+        });
       }),
   }),
 });

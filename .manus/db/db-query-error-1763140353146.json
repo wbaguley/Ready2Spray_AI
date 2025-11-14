@@ -1,0 +1,21 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS organizations (\n  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  owner_id integer NOT NULL,\n  name varchar(255) NOT NULL,\n  email varchar(320),\n  phone varchar(20),\n  address text,\n  city varchar(100),\n  state varchar(50),\n  zip_code varchar(20),\n  subscription_plan varchar(20) DEFAULT 'FREE',\n  subscription_status varchar(20) DEFAULT 'active',\n  trial_ends_at timestamp,\n  subscription_starts_at timestamp,\n  subscription_ends_at timestamp,\n  stripe_customer_id varchar(255),\n  stripe_subscription_id varchar(255),\n  logo_url text,\n  notes text,\n  created_at timestamp DEFAULT now() NOT NULL,\n  updated_at timestamp DEFAULT now() NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute CREATE TABLE IF NOT EXISTS organizations (\n  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  owner_id integer NOT NULL,\n  name varchar(255) NOT NULL,\n  email varchar(320),\n  phone varchar(20),\n  address text,\n  city varchar(100),\n  state varchar(50),\n  zip_code varchar(20),\n  subscription_plan varchar(20) DEFAULT 'FREE',\n  subscription_status varchar(20) DEFAULT 'active',\n  trial_ends_at timestamp,\n  subscription_starts_at timestamp,\n  subscription_ends_at timestamp,\n  stripe_customer_id varchar(255),\n  stripe_subscription_id varchar(255),\n  logo_url text,\n  notes text,\n  created_at timestamp DEFAULT now() NOT NULL,\n  updated_at timestamp DEFAULT now() NOT NULL\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 2 column 54 near \"IDENTITY,",
+    "  owner_id integer NOT NULL,",
+    "  name varchar(255) NOT NULL,",
+    "  email varchar(320),",
+    "  phone varchar(20),",
+    "  address text,",
+    "  city varchar(100),",
+    "  state varchar(50),",
+    "  zip_code varchar(20),",
+    "  subscription_plan varchar(20) DEFAULT 'FREE',",
+    "  subscription_status varchar(20) DEFAULT 'active',",
+    "  trial_ends_at timestamp,",
+    "  subscription_starts_at timestamp,",
+    "  subscrip"
+  ]
+}
