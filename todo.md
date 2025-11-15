@@ -420,3 +420,11 @@
 - [x] Implement KML generation from drawn shapes
 - [x] Add KML download functionality for created maps
 - [x] Test complete KML workflow (upload, parse, create, download)
+
+
+## URGENT: Fix KML File Upload
+- [x] Investigate backend uploadMapFile mutation database INSERT error
+- [x] Check actual maps table columns vs what mutation is trying to insert
+- [x] Fix column mismatch in upload mutation
+- [x] Ensure S3 upload works correctly
+- [x] Test KML file upload end-to-end with real file

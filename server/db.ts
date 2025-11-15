@@ -1540,9 +1540,23 @@ export async function createMapFile(data: {
 
   const { maps } = await import("../drizzle/schema");
   
+  // Build insert object with only user-provided fields
+  const insertData: any = {
+    orgId: data.orgId,
+    name: data.name,
+    fileUrl: data.fileUrl,
+    fileKey: data.fileKey,
+    fileType: data.fileType,
+  };
+  
+  // Add optional fields if provided
+  if (data.jobId !== undefined) insertData.jobId = data.jobId;
+  if (data.fileSize !== undefined) insertData.fileSize = data.fileSize;
+  if (data.uploadedBy !== undefined) insertData.uploadedBy = data.uploadedBy;
+  
   const result = await db
     .insert(maps)
-    .values(data)
+    .values(insertData)
     .returning();
   
   return result[0];
