@@ -26,7 +26,8 @@ import {
   Calendar,
   Briefcase,
   Flag,
-  Pencil
+  Pencil,
+  Trash2
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { EditJobDialog } from "@/components/EditJobDialog";
@@ -37,6 +38,21 @@ export default function JobV2Detail() {
   const jobId = params.id ? parseInt(params.id) : 0;
   const { data: job, isLoading, refetch } = trpc.jobsV2.getById.useQuery({ id: jobId });
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const deleteJobMutation = trpc.jobsV2.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Job deleted successfully");
+      navigate("/jobs-v2");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete job: ${error.message}`);
+    },
+  });
+
+  const handleDelete = () => {
+    deleteJobMutation.mutate({ id: jobId });
+  };
 
   const handleLinkProduct = () => {
     navigate(`/product-lookup?jobV2Id=${jobId}`);
@@ -130,10 +146,16 @@ export default function JobV2Detail() {
               </p>
             </div>
           </div>
-          <Button onClick={() => setShowEditDialog(true)}>
-            <Pencil className="w-4 h-4 mr-2" />
-            Edit Job
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowEditDialog(true)}>
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Job
+            </Button>
+            <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
+          </div>
         </div>
 
         {/* Edit Job Dialog */}
@@ -143,6 +165,37 @@ export default function JobV2Detail() {
           onOpenChange={setShowEditDialog}
           onSuccess={() => refetch()}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Job</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{job.title}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={deleteJobMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteJobMutation.isPending}
+              >
+                {deleteJobMutation.isPending && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                Delete Job
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Job Information Card */}
         <Card>

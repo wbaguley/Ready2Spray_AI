@@ -1500,3 +1500,21 @@ export async function updateJobV2(id: number, updates: Partial<{
   
   return result[0];
 }
+
+
+export async function deleteJobV2(id: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { jobsV2 } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  const result = await db
+    .delete(jobsV2)
+    .where(eq(jobsV2.id, id))
+    .returning();
+  
+  return result[0];
+}

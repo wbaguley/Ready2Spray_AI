@@ -385,3 +385,12 @@
 - [x] Add "Edit Job" button to job detail page
 - [x] Create edit job mutation in backend
 - [ ] Test editing job updates all fields correctly
+
+
+## Jobs V2 - Delete Functionality
+- [x] Add deleteJobV2 function to backend (server/db.ts)
+- [x] Add delete endpoint to jobsV2 tRPC router
+- [x] Add Delete button to job detail page header
+- [x] Create confirmation dialog for delete action
+- [x] Navigate back to Jobs V2 list after successful deletion
+- [ ] Test delete functionality end-to-end

@@ -1358,6 +1358,12 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
       const org = await getOrCreateUserOrganization(ctx.user.id);
       return await getEquipmentByOrgId(org.id);
     }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteJobV2 } = await import("./db");
+        return await deleteJobV2(input.id);
+      }),
   }),
 });
 
