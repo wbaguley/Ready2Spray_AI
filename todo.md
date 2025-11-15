@@ -407,3 +407,16 @@
 - [ ] Update Edit Job dialog with map picker
 - [ ] Display map with existing location on job detail page
 - [ ] Test complete map workflow (select location, save, view)
+
+
+## KML File Upload and Creation System
+- [x] Fix database schema mismatch for map files upload (ensure all columns exist)
+- [x] Research KML file format structure and parsing requirements
+- [x] Fix map files upload query errors (column mismatch between code and database)
+- [x] Test KML file upload end-to-end with real KML file
+- [ ] Implement KML file parsing to extract geometries (polygons, lines, markers)
+- [x] Create KML creation tool with Google Maps Drawing Manager
+- [x] Add drawing tools UI (polygon, polyline, marker, rectangle, circle)
+- [x] Implement KML generation from drawn shapes
+- [x] Add KML download functionality for created maps
+- [x] Test complete KML workflow (upload, parse, create, download)

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Upload, FileText, Trash2, Download, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { KMLDrawingManager } from "./KMLDrawingManager";
 
 interface MapFilesSectionProps {
   jobId: number;
@@ -120,14 +121,39 @@ export function MapFilesSection({ jobId }: MapFilesSectionProps) {
             <MapPin className="w-5 h-5 text-muted-foreground" />
             <h3 className="text-lg font-semibold">Map Files</h3>
           </div>
-          <Button
-            onClick={() => setIsUploadDialogOpen(true)}
-            size="sm"
-            className="gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            Upload Map
-          </Button>
+          <div className="flex gap-2">
+            <KMLDrawingManager
+              jobId={jobId}
+              onSave={async (kmlData) => {
+                // Convert KML string to File object
+                const blob = new Blob([kmlData.kmlContent], { type: "application/vnd.google-earth.kml+xml" });
+                const file = new File([blob], `${kmlData.name}.kml`, { type: "application/vnd.google-earth.kml+xml" });
+                
+                // Upload the file
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                  const base64 = e.target?.result as string;
+                  await uploadMutation.mutateAsync({
+                    jobId,
+                    name: kmlData.name,
+                    fileType: "kml",
+                    fileContent: base64.split(',')[1], // Remove data:... prefix
+                    fileSize: kmlData.fileSize,
+                  });
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+            <Button
+              onClick={() => setIsUploadDialogOpen(true)}
+              size="sm"
+              variant="outline"
+              className="gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Map
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
