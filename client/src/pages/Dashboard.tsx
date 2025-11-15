@@ -1,8 +1,11 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, Users, UserCheck, Package, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Briefcase, Users, UserCheck, Package, Loader2, Plus } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function Dashboard() {
+  const [, setLocation] = useLocation();
   const { data: jobs, isLoading: jobsLoading } = trpc.jobs.list.useQuery();
   const { data: customers, isLoading: customersLoading } = trpc.customers.list.useQuery();
   const { data: personnel, isLoading: personnelLoading } = trpc.personnel.list.useQuery();
@@ -45,11 +48,51 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your agricultural operations
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Overview of your agricultural operations
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setLocation('/jobs?action=create')}
+            variant="default"
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Job
+          </Button>
+          <Button
+            onClick={() => setLocation('/customers?action=create')}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Customer
+          </Button>
+          <Button
+            onClick={() => setLocation('/personnel?action=create')}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Personnel
+          </Button>
+          <Button
+            onClick={() => setLocation('/product-lookup')}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Product
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
