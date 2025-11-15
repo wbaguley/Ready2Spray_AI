@@ -349,3 +349,28 @@
 - [x] Test: Click "Link Product" → Opens ProductLookup page
 - [x] Test: Save product → Links to Jobs V2 job
 - [x] Test: Product details display on job detail page after linking
+
+
+## Bug Fix - AI Extraction Not Working
+- [x] Investigate server error causing HTML response instead of JSON
+- [x] Fix malformed import in server/db.ts causing esbuild errors
+- [x] Restore correct PostgreSQL imports for Supabase connection
+- [x] Restart server to apply fixes
+- [ ] Test AI extraction with screenshot upload
+- [ ] Verify extraction returns valid JSON data
+
+
+## Jobs V2 - Add Comprehensive Form Fields
+- [x] Add job_type, priority, status columns to jobs_v2 table
+- [x] Add customer_id, personnel_id, equipment_id foreign keys to jobs_v2
+- [x] Add location, scheduled_start, scheduled_end columns to jobs_v2
+- [x] Update createJobV2 backend function to handle all new fields
+- [x] Add backend functions to fetch customers, personnel, equipment for dropdowns
+- [x] Update jobsV2.create tRPC endpoint with new field validation
+- [x] Update JobsV2 create form with Job Type, Priority, Status dropdowns
+- [x] Add Customer dropdown with existing customers
+- [x] Add Assigned Personnel and Equipment dropdowns
+- [x] Add Job Location text input
+- [x] Add Scheduled Start and End datetime pickers
+- [x] Update JobV2Detail page to display all new fields
+- [ ] Test creating job with all fields populated

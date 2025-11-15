@@ -1264,12 +1264,12 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
       }),
   }),
 
-  // Jobs V2 router - Simplified job management
+  // Jobs V2 router - Comprehensive job management
   jobsV2: router({
     list: protectedProcedure.query(async ({ ctx }) => {
-      const { getOrCreateUserOrganization, getJobsV2ByOrgId } = await import("./db");
+      const { getOrCreateUserOrganization, getJobsV2WithRelations } = await import("./db");
       const org = await getOrCreateUserOrganization(ctx.user.id);
-      return await getJobsV2ByOrgId(org.id);
+      return await getJobsV2WithRelations(org.id);
     }),
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -1281,6 +1281,15 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
       .input(z.object({
         title: z.string().min(1, "Job title is required"),
         description: z.string().optional(),
+        jobType: z.enum(["crop_dusting", "pest_control", "fertilization", "herbicide"]).optional(),
+        priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+        status: z.enum(["pending", "ready", "in_progress", "completed", "cancelled"]).optional(),
+        customerId: z.number().optional(),
+        personnelId: z.number().optional(),
+        equipmentId: z.number().optional(),
+        location: z.string().optional(),
+        scheduledStart: z.string().optional(), // ISO date string
+        scheduledEnd: z.string().optional(), // ISO date string
       }))
       .mutation(async ({ ctx, input }) => {
         const { getOrCreateUserOrganization, createJobV2 } = await import("./db");
@@ -1289,6 +1298,15 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           orgId: org.id,
           title: input.title,
           description: input.description || null,
+          jobType: input.jobType || null,
+          priority: input.priority || "medium",
+          status: input.status || "pending",
+          customerId: input.customerId || null,
+          personnelId: input.personnelId || null,
+          equipmentId: input.equipmentId || null,
+          location: input.location || null,
+          scheduledStart: input.scheduledStart ? new Date(input.scheduledStart) : null,
+          scheduledEnd: input.scheduledEnd ? new Date(input.scheduledEnd) : null,
         });
       }),
     linkProduct: protectedProcedure
@@ -1300,6 +1318,22 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         const { updateJobV2Product } = await import("./db");
         return await updateJobV2Product(input.jobId, input.productId);
       }),
+    // Dropdown data endpoints
+    getCustomers: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getCustomersByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getCustomersByOrgId(org.id);
+    }),
+    getPersonnel: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getPersonnelByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getPersonnelByOrgId(org.id);
+    }),
+    getEquipment: protectedProcedure.query(async ({ ctx }) => {
+      const { getOrCreateUserOrganization, getEquipmentByOrgId } = await import("./db");
+      const org = await getOrCreateUserOrganization(ctx.user.id);
+      return await getEquipmentByOrgId(org.id);
+    }),
   }),
 });
 

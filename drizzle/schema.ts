@@ -51,12 +51,21 @@ export const users = pgTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// Jobs V2 table - Simplified job management
+// Jobs V2 table - Comprehensive job management
 export const jobsV2 = pgTable("jobs_v2", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   orgId: integer("org_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  jobType: jobTypeEnum("job_type"),
+  priority: priorityEnum("priority").default("medium"),
+  status: jobStatusEnum("status").default("pending").notNull(),
+  customerId: integer("customer_id"),
+  personnelId: integer("personnel_id"),
+  equipmentId: integer("equipment_id"),
+  location: text("location"),
+  scheduledStart: timestamp("scheduled_start"),
+  scheduledEnd: timestamp("scheduled_end"),
   productId: integer("product_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

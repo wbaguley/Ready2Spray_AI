@@ -1413,3 +1413,45 @@ export async function getJobV2WithProduct(jobId: number) {
   
   return { ...job, product: null };
 }
+
+
+// Get Jobs V2 with related data (customer, personnel, equipment, product)
+export async function getJobsV2WithRelations(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: jobsV2.id,
+      orgId: jobsV2.orgId,
+      title: jobsV2.title,
+      description: jobsV2.description,
+      jobType: jobsV2.jobType,
+      priority: jobsV2.priority,
+      status: jobsV2.status,
+      location: jobsV2.location,
+      scheduledStart: jobsV2.scheduledStart,
+      scheduledEnd: jobsV2.scheduledEnd,
+      createdAt: jobsV2.createdAt,
+      updatedAt: jobsV2.updatedAt,
+      // Customer info
+      customerId: jobsV2.customerId,
+      customerName: customers.name,
+      // Personnel info
+      personnelId: jobsV2.personnelId,
+      personnelName: personnel.name,
+      // Equipment info
+      equipmentId: jobsV2.equipmentId,
+      equipmentName: equipment.name,
+      // Product info
+      productId: jobsV2.productId,
+    })
+    .from(jobsV2)
+    .leftJoin(customers, eq(jobsV2.customerId, customers.id))
+    .leftJoin(personnel, eq(jobsV2.personnelId, personnel.id))
+    .leftJoin(equipment, eq(jobsV2.equipmentId, equipment.id))
+    .where(eq(jobsV2.orgId, orgId))
+    .orderBy(desc(jobsV2.createdAt));
+  
+  return result;
+}
