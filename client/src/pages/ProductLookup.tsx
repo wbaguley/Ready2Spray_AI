@@ -20,7 +20,6 @@ export default function ProductLookup() {
   const urlParams = new URLSearchParams(window.location.search);
   const jobId = urlParams.get('jobId') ? parseInt(urlParams.get('jobId')!) : null;
   const jobV2Id = urlParams.get('jobV2Id') ? parseInt(urlParams.get('jobV2Id')!) : null;
-  const fromProducts = urlParams.get('from') === 'products';
   
   // Product data form fields
   const [productData, setProductData] = useState({
@@ -520,12 +519,12 @@ export default function ProductLookup() {
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSave} className="flex-1">
                 <Save className="h-4 w-4 mr-2" />
-                {(jobId || jobV2Id) ? 'Save & Link to Job' : fromProducts ? 'Save Product' : 'Save & Return to Job Form'}
+                {(jobId || jobV2Id) ? 'Save & Link to Job' : 'Save & Return to Job Form'}
               </Button>
               <Button onClick={handleClear} variant="outline">
                 Clear Form
               </Button>
-              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs/${jobV2Id}` : fromProducts ? "/products" : "/jobs")} variant="ghost">
+              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs/${jobV2Id}` : "/jobs")} variant="ghost">
                 Cancel
               </Button>
             </div>
