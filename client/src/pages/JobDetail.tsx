@@ -45,7 +45,7 @@ export default function JobV2Detail() {
   const deleteJobMutation = trpc.jobsV2.delete.useMutation({
     onSuccess: () => {
       toast.success("Job deleted successfully");
-      navigate("/jobs-v2");
+      navigate("/jobs");
     },
     onError: (error) => {
       toast.error(`Failed to delete job: ${error.message}`);
@@ -77,7 +77,7 @@ export default function JobV2Detail() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground mb-4">Job not found</p>
-              <Button onClick={() => navigate("/jobs-v2")}>
+              <Button onClick={() => navigate("/jobs")}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Jobs
               </Button>
@@ -125,7 +125,7 @@ export default function JobV2Detail() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/jobs-v2")}
+              onClick={() => navigate("/jobs")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>

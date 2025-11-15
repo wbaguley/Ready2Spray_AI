@@ -205,11 +205,11 @@ export default function ProductLookup() {
           {
             onSuccess: () => {
               toast.success("Product linked to job!");
-              navigate(`/jobs-v2/${jobV2Id}`);
+              navigate(`/jobs/${jobV2Id}`);
             },
             onError: (error) => {
               toast.error(`Failed to link product: ${error.message}`);
-              navigate(`/jobs-v2/${jobV2Id}`);
+              navigate(`/jobs/${jobV2Id}`);
             }
           }
         );
@@ -516,7 +516,7 @@ export default function ProductLookup() {
               <Button onClick={handleClear} variant="outline">
                 Clear Form
               </Button>
-              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs-v2/${jobV2Id}` : "/jobs")} variant="ghost">
+              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs/${jobV2Id}` : "/jobs")} variant="ghost">
                 Cancel
               </Button>
             </div>

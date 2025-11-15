@@ -1160,3 +1160,14 @@
 - [x] Add error handling for missing `integration_connections` table
 - [x] Test job queries work without errors
 - [x] Job detail page loads successfully
+
+
+### Jobs Table Schema Mismatch
+- [x] Fixed all /jobs-v2 references in JobDetail.tsx
+- [x] Fixed all /jobs-v2 references in ProductLookup.tsx
+- [x] Verified no remaining jobs-v2 references in codebase
+- [ ] Check which columns exist in Supabase jobs table (deferred - requires manual Supabase access)
+- [ ] Compare with schema.ts jobs table definition
+- [ ] Identify missing columns causing query failure
+- [ ] Add missing columns to Supabase or update query to handle missing columns
+- [ ] Test jobs list query works without errors
