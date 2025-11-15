@@ -1178,3 +1178,16 @@
 - [x] Fix AI chat button positioning - moved to bottom-right corner
 - [x] Use inline styles for fixed positioning to prevent CSS conflicts
 - [x] Applied consistent positioning to button, minimized, and full chat states
+
+
+---
+
+## KEYBOARD SHORTCUTS - DASHBOARD
+
+### Implementation
+- [x] Add quick action buttons to Dashboard header
+- [x] New Job button - navigates to /jobs?action=create
+- [x] New Customer button - navigates to /customers?action=create
+- [x] New Personnel button - navigates to /personnel?action=create
+- [x] New Product button - navigates to /product-lookup
+- [x] Style buttons with Plus icons for visual clarity
