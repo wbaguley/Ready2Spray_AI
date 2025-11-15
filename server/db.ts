@@ -1280,10 +1280,11 @@ export async function createProduct(productData: any) {
     throw new Error("Database not available");
   }
 
-  const { productsComplete } = await import("../drizzle/schema");
-  
-  // Map extracted product data to schema columns
-  const insertData: any = {
+  try {
+    const { productsComplete } = await import("../drizzle/schema");
+    
+    // Map extracted product data to schema columns
+    const insertData: any = {
     orgId: productData.orgId,
     nickname: productData.productName || "Unnamed Product",
     epaNumber: productData.epaNumber || null,
@@ -1310,9 +1311,15 @@ export async function createProduct(productData: any) {
       insertData.daysPreharvest = parseFloat(daysMatch[1]);
     }
   }
-  
-  const result = await db.insert(productsComplete).values(insertData).returning();
-  return result[0];
+    
+    console.log('[createProduct] Inserting product:', insertData);
+    const result = await db.insert(productsComplete).values(insertData).returning();
+    console.log('[createProduct] Product created:', result[0]);
+    return result[0];
+  } catch (error) {
+    console.error('[createProduct] Error:', error);
+    throw error;
+  }
 }
 
 export async function getProductById(id: number) {

@@ -1201,3 +1201,28 @@
 - [x] Update Products.tsx page title and descriptions
 - [x] Update ProductLookup.tsx page title and descriptions
 - [x] Test all changes display correctly
+
+
+---
+
+## PRODUCT WORKFLOW FIXES
+
+### Issue 1: ProductLookup Navigation
+- [ ] Check URL params to detect if opened from Products page vs Job form
+- [ ] If opened from Products page, navigate back to `/products` after save
+- [ ] If opened from Job form, navigate to job form with product data
+- [ ] Update "Save & Return" button text based on context
+
+### Issue 2: Product Not Saving
+- [ ] Debug why products.create mutation isn't saving to database
+- [ ] Check if database schema has all required fields
+- [ ] Verify tRPC procedure is correctly implemented
+- [ ] Add error logging to identify save failures
+- [ ] Test product save and verify it appears in Products list
+
+### Issue 3: Job Detail Product Selector
+- [ ] Add searchable dropdown/combobox to Job Detail page
+- [ ] Connect to products.list query to show all uploaded products
+- [ ] Allow searching by product name, EPA reg #, or active ingredient
+- [ ] Update job.productId when product is selected
+- [ ] Show selected product details (REI, PHI, signal word)

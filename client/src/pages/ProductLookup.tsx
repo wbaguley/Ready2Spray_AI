@@ -214,14 +214,22 @@ export default function ProductLookup() {
           }
         );
       } else {
-        // No jobId, navigate to job form with product data
-        const params = new URLSearchParams();
-        params.set('productId', String(product.id || ''));
-        params.set('productName', String(product.nickname || ''));
-        params.set('epaNumber', String(product.epaNumber || ''));
-        params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
-        params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
-        navigate(`/jobs/new?${params.toString()}`);
+        // No jobId - check if we came from Products page
+        const referrer = urlParams.get('from');
+        if (referrer === 'products') {
+          // Return to Products page
+          toast.success("Product saved to library!");
+          navigate('/products');
+        } else {
+          // Navigate to job form with product data
+          const params = new URLSearchParams();
+          params.set('productId', String(product.id || ''));
+          params.set('productName', String(product.nickname || ''));
+          params.set('epaNumber', String(product.epaNumber || ''));
+          params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
+          params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
+          navigate(`/jobs/new?${params.toString()}`);
+        }
       }
     },
     onError: (error) => {
