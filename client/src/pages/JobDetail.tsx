@@ -1,275 +1,345 @@
-import { useEffect, useState } from "react";
-import { useRoute, useLocation } from "wouter";
+import { useState } from "react";
+import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, MapPin, User, Users, Loader2, Edit, Trash2, Clock, Download, Link } from "lucide-react";
-import { exportJobToPDF } from "@/lib/pdfExport";
-import { format } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { StatusHistory } from "@/components/StatusHistory";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { 
+  Loader2, 
+  ArrowLeft, 
+  Link as LinkIcon, 
+  Package, 
+  AlertTriangle, 
+  Clock, 
+  Droplets, 
+  Sprout,
+  MapPin,
+  User,
+  Wrench,
+  Calendar,
+  Briefcase,
+  Flag,
+  Pencil,
+  Trash2
+} from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { EditJobDialog } from "@/components/EditJobDialog";
+import { MapView } from "@/components/Map";
+import { MapFilesSection } from "@/components/MapFilesSection";
 
-export default function JobDetail() {
-  const [, params] = useRoute("/jobs/:id");
-  const [, setLocation] = useLocation();
-  const jobId = params?.id ? parseInt(params.id) : null;
+export default function JobV2Detail() {
+  const params = useParams();
+  const [, navigate] = useLocation();
+  const jobId = params.id ? parseInt(params.id) : 0;
+  const { data: job, isLoading, refetch } = trpc.jobsV2.getById.useQuery({ id: jobId });
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const [showHistory, setShowHistory] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const { data: jobs, isLoading } = trpc.jobs.list.useQuery();
-  const { data: customers } = trpc.customers.list.useQuery();
-  const { data: personnel } = trpc.personnel.list.useQuery();
-  const deleteMutation = trpc.jobs.delete.useMutation();
-  const utils = trpc.useUtils();
-
-  const job = jobs?.find((j) => j.id === jobId);
-  const customer = customers?.find((c) => c.id === job?.customerId);
-  const assignedPerson = personnel?.find((p) => p.id === job?.assignedPersonnelId);
-  
-  // Fetch product data if job has productId
-  const { data: product } = trpc.products.getById.useQuery(
-    { id: job?.productId || 0 },
-    { enabled: !!job?.productId }
-  ) as { data: any };
-
-  useEffect(() => {
-    if (!isLoading && !job) {
-      toast.error("Job not found");
-      setLocation("/jobs");
-    }
-  }, [job, isLoading, setLocation]);
-
-  const handleDelete = async () => {
-    if (!jobId) return;
-
-    try {
-      await deleteMutation.mutateAsync({ id: jobId });
+  const deleteJobMutation = trpc.jobsV2.delete.useMutation({
+    onSuccess: () => {
       toast.success("Job deleted successfully");
-      utils.jobs.list.invalidate();
-      setLocation("/jobs");
-    } catch (error) {
-      toast.error("Failed to delete job");
-    }
+      navigate("/jobs-v2");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete job: ${error.message}`);
+    },
+  });
+
+  const handleDelete = () => {
+    deleteJobMutation.mutate({ id: jobId });
+  };
+
+  const handleLinkProduct = () => {
+    navigate(`/product-lookup?jobV2Id=${jobId}`);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (!job) {
-    return null;
+    return (
+      <DashboardLayout>
+        <div className="container mx-auto py-8">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-muted-foreground mb-4">Job not found</p>
+              <Button onClick={() => navigate("/jobs-v2")}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Jobs
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
   }
 
-  const priorityColors = {
-    low: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    medium: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    high: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-    urgent: "bg-red-500/10 text-red-500 border-red-500/20",
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'ready':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
   };
 
-  const jobTypeLabels = {
-    crop_dusting: "Crop Dusting",
-    pest_control: "Pest Control",
-    fertilization: "Fertilization",
-    herbicide: "Herbicide",
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'bg-red-100 text-red-800';
+      case 'high':
+        return 'bg-orange-100 text-orange-800';
+      case 'low':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
   };
 
   return (
-    <div className="container py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setLocation("/jobs")}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Jobs
-        </Button>
-
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
-            <div className="flex items-center gap-3 flex-wrap">
-              <Badge
-                variant="outline"
-                className="border"
-                style={{
-                  backgroundColor: job.statusColor ? `${job.statusColor}20` : undefined,
-                  borderColor: job.statusColor || undefined,
-                  color: job.statusColor || undefined,
-                }}
-              >
-                {job.statusName}
-              </Badge>
-              <Badge variant="outline" className={priorityColors[job.priority]}>
-                {job.priority.toUpperCase()}
-              </Badge>
-              <Badge variant="outline">{jobTypeLabels[job.jobType]}</Badge>
+    <DashboardLayout>
+      <div className="container mx-auto py-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/jobs-v2")}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">{job.title}</h1>
+                {job.status && (
+                  <Badge className={getStatusColor(job.status)}>
+                    {job.status.replace('_', ' ')}
+                  </Badge>
+                )}
+                {job.priority && (
+                  <Badge className={getPriorityColor(job.priority)}>
+                    {job.priority}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground mt-1">
+                Created {new Date(job.createdAt).toLocaleDateString()}
+              </p>
             </div>
           </div>
-
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation(`/product-lookup?jobId=${job.id}`)}
-            >
-              <Link className="h-4 w-4 mr-2" />
-              Link Product
+            <Button onClick={() => setShowEditDialog(true)}>
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Job
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => exportJobToPDF(job)}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export PDF
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation(`/jobs?edit=${job.id}`)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowHistory(true)}
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              History
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
+            <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </Button>
           </div>
         </div>
-      </div>
 
-      <div className="grid gap-6">
-        {/* Basic Information */}
+        {/* Edit Job Dialog */}
+        <EditJobDialog
+          job={job}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSuccess={() => refetch()}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Job</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{job.title}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={deleteJobMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteJobMutation.isPending}
+              >
+                {deleteJobMutation.isPending && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                Delete Job
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Job Information Card */}
         <Card>
           <CardHeader>
             <CardTitle>Job Information</CardTitle>
+            <CardDescription>Basic details about this spray job</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Title</label>
+                <p className="text-lg">{job.title}</p>
+              </div>
+              
+              {job.jobType && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
+                    Job Type
+                  </label>
+                  <p className="text-lg capitalize">{job.jobType.replace('_', ' ')}</p>
+                </div>
+              )}
+            </div>
+            
             {job.description && (
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Description</h3>
-                <p className="text-sm">{job.description}</p>
+                <label className="text-sm font-medium text-muted-foreground">Description</label>
+                <p className="text-base whitespace-pre-wrap">{job.description}</p>
               </div>
             )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Job Type</h3>
-                <p className="text-sm">{jobTypeLabels[job.jobType]}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Priority</h3>
-                <p className="text-sm capitalize">{job.priority}</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Customer & Personnel */}
+        {/* Customer & Assignment Card */}
         <Card>
           <CardHeader>
             <CardTitle>Customer & Assignment</CardTitle>
+            <CardDescription>Who is involved in this job</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                  <User className="h-4 w-4" />
-                  Customer
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {job.customerId && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Customer
+                  </label>
+                  <p className="text-lg">Customer #{job.customerId}</p>
                 </div>
-                <p className="text-sm">{customer?.name || "Not assigned"}</p>
-                {customer?.email && (
-                  <p className="text-xs text-muted-foreground">{customer.email}</p>
-                )}
-                {customer?.phone && (
-                  <p className="text-xs text-muted-foreground">{customer.phone}</p>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                  <Users className="h-4 w-4" />
-                  Assigned Personnel
+              )}
+              
+              {job.personnelId && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Assigned Personnel
+                  </label>
+                  <p className="text-lg">Personnel #{job.personnelId}</p>
                 </div>
-                <p className="text-sm">{assignedPerson?.name || "Not assigned"}</p>
-                {assignedPerson?.role && (
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {assignedPerson.role.replace("_", " ")}
-                  </p>
-                )}
-              </div>
+              )}
+              
+              {job.equipmentId && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Wrench className="w-4 h-4" />
+                    Assigned Equipment
+                  </label>
+                  <p className="text-lg">Equipment #{job.equipmentId}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Location & Schedule */}
+        {/* Location & Scheduling Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Location & Schedule</CardTitle>
+            <CardTitle>Location & Scheduling</CardTitle>
+            <CardDescription>Where and when this job takes place</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {job.locationAddress && (
-              <div>
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                  <MapPin className="h-4 w-4" />
-                  Location
-                </div>
-                <p className="text-sm">{job.locationAddress}</p>
+            {job.location && (
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Job Location
+                </label>
+                <p className="text-lg">{job.location}</p>
+                
+                {/* Show map if coordinates are available */}
+                {job.latitude && job.longitude && (
+                  <div className="mt-4 rounded-lg overflow-hidden border">
+                    <MapView
+                      initialCenter={{ lat: parseFloat(job.latitude.toString()), lng: parseFloat(job.longitude.toString()) }}
+                      initialZoom={15}
+                      onMapReady={(map) => {
+                        // Add marker at job location
+                        const position = { lat: parseFloat(job.latitude!.toString()), lng: parseFloat(job.longitude!.toString()) };
+                        
+                        new google.maps.Marker({
+                          position,
+                          map,
+                          title: job.title,
+                          icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: "#8b5cf6",
+                            fillOpacity: 1,
+                            strokeColor: "#ffffff",
+                            strokeWeight: 2,
+                          },
+                        });
+                      }}
+                      className="h-[300px] w-full"
+                    />
+                  </div>
+                )}
               </div>
             )}
-
-            <div className="grid grid-cols-2 gap-4">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {job.scheduledStart && (
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                    <Calendar className="h-4 w-4" />
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
                     Scheduled Start
-                  </div>
-                  <p className="text-sm">
-                    {format(new Date(job.scheduledStart), "PPpp")}
+                  </label>
+                  <p className="text-lg">
+                    {new Date(job.scheduledStart).toLocaleString()}
                   </p>
                 </div>
               )}
-
+              
               {job.scheduledEnd && (
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                    <Calendar className="h-4 w-4" />
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
                     Scheduled End
-                  </div>
-                  <p className="text-sm">
-                    {format(new Date(job.scheduledEnd), "PPpp")}
+                  </label>
+                  <p className="text-lg">
+                    {new Date(job.scheduledEnd).toLocaleString()}
                   </p>
                 </div>
               )}
@@ -277,280 +347,142 @@ export default function JobDetail() {
           </CardContent>
         </Card>
 
-        {/* Agricultural Details */}
-        {(job.state || job.commodityCrop || job.targetPest || job.epaNumber || job.applicationRate || job.applicationMethod || job.chemicalProduct) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Agricultural Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {job.state && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">State</h3>
-                    <p className="text-sm">{job.state}</p>
-                  </div>
-                )}
-                {job.commodityCrop && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Commodity/Crop</h3>
-                    <p className="text-sm">{job.commodityCrop}</p>
-                  </div>
-                )}
-                {job.targetPest && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Target Pest</h3>
-                    <p className="text-sm">{job.targetPest}</p>
-                  </div>
-                )}
-                {job.epaNumber && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">EPA Registration Number</h3>
-                    <p className="text-sm">{job.epaNumber}</p>
-                  </div>
-                )}
-                {job.applicationRate && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Application Rate</h3>
-                    <p className="text-sm">{job.applicationRate}</p>
-                  </div>
-                )}
-                {job.applicationMethod && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Application Method</h3>
-                    <p className="text-sm capitalize">{job.applicationMethod}</p>
-                  </div>
-                )}
-                {job.chemicalProduct && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Chemical Product</h3>
-                    <p className="text-sm">{job.chemicalProduct}</p>
-                  </div>
-                )}
+        {/* Map Files Section */}
+        <MapFilesSection jobId={job.id} />
+
+        {/* Product Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Chemical Product
+                </CardTitle>
+                <CardDescription>
+                  Link a product to view EPA compliance and agricultural details
+                </CardDescription>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Crop Specifics */}
-        {(job.reEntryInterval || job.preharvestInterval || job.maxApplicationsPerSeason || job.maxRatePerSeason || job.methodsAllowed || job.rate || job.diluentAerial || job.diluentGround || job.diluentChemigation) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Crop Specifics & Compliance</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {job.reEntryInterval && (
+              <Button onClick={handleLinkProduct}>
+                <LinkIcon className="w-4 h-4 mr-2" />
+                {job.productId ? "Change Product" : "Link Product"}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {job.product ? (
+              <div className="space-y-6">
+                {/* Product Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Re-Entry Interval (REI)</h3>
-                    <p className="text-sm">{job.reEntryInterval}</p>
+                    <label className="text-sm font-medium text-muted-foreground">Product Name</label>
+                    <p className="text-lg font-semibold">{job.product.nickname || "N/A"}</p>
                   </div>
-                )}
-                {job.preharvestInterval && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Pre-harvest Interval (PHI)</h3>
-                    <p className="text-sm">{job.preharvestInterval}</p>
+                    <label className="text-sm font-medium text-muted-foreground">EPA Number</label>
+                    <p className="text-lg">EPA {job.product.epaNumber || "N/A"}</p>
                   </div>
-                )}
-                {job.maxApplicationsPerSeason && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Max Applications per Season</h3>
-                    <p className="text-sm">{job.maxApplicationsPerSeason}</p>
+                    <label className="text-sm font-medium text-muted-foreground">Manufacturer</label>
+                    <p className="text-lg">{job.product.manufacturer || "N/A"}</p>
                   </div>
-                )}
-                {job.maxRatePerSeason && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Max Rate per Season</h3>
-                    <p className="text-sm">{job.maxRatePerSeason}</p>
+                    <label className="text-sm font-medium text-muted-foreground">Active Ingredients</label>
+                    <p className="text-lg">{job.product.activeIngredients || "N/A"}</p>
                   </div>
-                )}
-                {job.methodsAllowed && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Methods Allowed</h3>
-                    <p className="text-sm">{job.methodsAllowed}</p>
-                  </div>
-                )}
-                {job.rate && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Rate</h3>
-                    <p className="text-sm">{job.rate}</p>
-                  </div>
-                )}
-              </div>
-
-              {(job.diluentAerial || job.diluentGround || job.diluentChemigation) && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Diluent Information</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      {job.diluentAerial && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Aerial</p>
-                          <p className="text-sm">{job.diluentAerial}</p>
-                        </div>
-                      )}
-                      {job.diluentGround && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Ground</p>
-                          <p className="text-sm">{job.diluentGround}</p>
-                        </div>
-                      )}
-                      {job.diluentChemigation && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Chemigation</p>
-                          <p className="text-sm">{job.diluentChemigation}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Product Information */}
-        {product && (
-          <Card>
-            <CardHeader>
-              <CardTitle>EPA Product Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Product Name</h3>
-                  <p className="text-sm font-semibold">{product.nickname}</p>
                 </div>
-                {product.epaNumber && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">EPA Registration #</h3>
-                    <p className="text-sm">{product.epaNumber}</p>
-                  </div>
-                )}
-                {product.manufacturer && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Manufacturer</h3>
-                    <p className="text-sm">{product.manufacturer}</p>
-                  </div>
-                )}
-                {product.activeIngredients && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Ingredients</h3>
-                    <p className="text-sm">{product.activeIngredients}</p>
-                  </div>
-                )}
-              </div>
 
-              {(product.hoursReentry || product.daysPreharvest || product.labelSignalWord) && (
-                <>
-                  <Separator />
+                <Separator />
+
+                {/* EPA Compliance */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    EPA Compliance Requirements
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Re-Entry Interval (REI)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold">
+                          {job.product.hoursReentry ? `${job.product.hoursReentry} hours` : "N/A"}
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Sprout className="w-4 h-4" />
+                          Pre-Harvest Interval (PHI)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold">
+                          {job.product.daysPreharvest ? `${job.product.daysPreharvest} days` : "N/A"}
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Droplets className="w-4 h-4" />
+                          Max Applications/Season
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold">
+                          N/A
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Safety & PPE Information */}
+                {(job.product.labelSignalWord || job.product.reentryPpe) && (
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Safety Information</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      {product.hoursReentry && (
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-orange-500" />
+                      Safety & PPE Information
+                    </h3>
+                    <div className="space-y-4">
+                      {job.product.labelSignalWord && (
                         <div>
-                          <p className="text-xs text-muted-foreground mb-1">Re-Entry Interval (REI)</p>
-                          <p className="text-sm">{product.hoursReentry} hours</p>
+                          <label className="text-sm font-medium text-muted-foreground">Label Signal Word</label>
+                          <p className="text-lg font-semibold uppercase text-orange-600">{job.product.labelSignalWord}</p>
                         </div>
                       )}
-                      {product.daysPreharvest && (
+                      {job.product.reentryPpe && (
                         <div>
-                          <p className="text-xs text-muted-foreground mb-1">Pre-Harvest Interval (PHI)</p>
-                          <p className="text-sm">{product.daysPreharvest} days</p>
-                        </div>
-                      )}
-                      {product.labelSignalWord && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Signal Word</p>
-                          <p className="text-sm font-semibold">{product.labelSignalWord}</p>
+                          <label className="text-sm font-medium text-muted-foreground">PPE Requirements</label>
+                          <p className="text-base whitespace-pre-wrap bg-muted p-4 rounded-md">{job.product.reentryPpe}</p>
                         </div>
                       )}
                     </div>
                   </div>
-                </>
-              )}
-
-              {product.reentryPpe && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">PPE Requirements</h3>
-                    <p className="text-sm whitespace-pre-wrap">{product.reentryPpe}</p>
-                  </div>
-                </>
-              )}
-
-
-
-              {product.additionalRestrictions && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Additional Restrictions</h3>
-                    <p className="text-sm whitespace-pre-wrap">{product.additionalRestrictions}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Generic Conditions */}
-        {job.genericConditions && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Generic Conditions & Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-wrap">{job.genericConditions}</p>
-            </CardContent>
-          </Card>
-        )}
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No product linked yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Link a chemical product to view EPA compliance and agricultural details
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Status History Dialog */}
-      <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Status History</DialogTitle>
-            <DialogDescription>
-              View all status changes for this job
-            </DialogDescription>
-          </DialogHeader>
-          <StatusHistory jobId={job.id} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Job</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this job? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </DashboardLayout>
   );
 }

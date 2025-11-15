@@ -1380,25 +1380,46 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         fileSize: z.number().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { getOrCreateUserOrganization, createMapFile } = await import("./db");
-        const { storagePut } = await import("./storage");
-        const org = await getOrCreateUserOrganization(ctx.user.id);
-        
-        // Decode base64 and upload to S3
-        const fileBuffer = Buffer.from(input.fileContent, 'base64');
-        const fileKey = `org-${org.id}/jobs/${input.jobId}/maps/${Date.now()}-${input.name}`;
-        const { url } = await storagePut(fileKey, fileBuffer, `application/${input.fileType}`);
-        
-        return await createMapFile({
-          jobId: input.jobId,
-          orgId: org.id,
-          name: input.name,
-          fileType: input.fileType,
-          fileUrl: url,
-          fileKey,
-          fileSize: input.fileSize,
-          uploadedBy: ctx.user.id,
-        });
+        try {
+          const { getOrCreateUserOrganization, createMapFile } = await import("./db");
+          const { storagePut } = await import("./storage");
+          const org = await getOrCreateUserOrganization(ctx.user.id);
+          
+          // Decode base64 and upload to S3
+          const fileBuffer = Buffer.from(input.fileContent, 'base64');
+          const fileKey = `org-${org.id}/jobs/${input.jobId}/maps/${Date.now()}-${input.name}`;
+          const { url } = await storagePut(fileKey, fileBuffer, `application/${input.fileType}`);
+          
+          console.log('[uploadMapFile] About to insert:', {
+            jobId: input.jobId,
+            orgId: org.id,
+            name: input.name,
+            fileType: input.fileType,
+            fileUrl: url,
+            fileKey,
+            fileSize: input.fileSize,
+            uploadedBy: ctx.user.id,
+          });
+          
+          const result = await createMapFile({
+            jobId: input.jobId,
+            orgId: org.id,
+            name: input.name,
+            fileType: input.fileType,
+            fileUrl: url,
+            fileKey,
+            fileSize: input.fileSize,
+            uploadedBy: ctx.user.id,
+          });
+          
+          console.log('[uploadMapFile] Insert successful:', result);
+          return result;
+        } catch (error) {
+          console.error('[uploadMapFile] ERROR:', error);
+          console.error('[uploadMapFile] Error stack:', error instanceof Error ? error.stack : 'No stack');
+          console.error('[uploadMapFile] Error message:', error instanceof Error ? error.message : String(error));
+          throw error;
+        }
       }),
     getMapFiles: protectedProcedure
       .input(z.object({ jobId: z.number() }))

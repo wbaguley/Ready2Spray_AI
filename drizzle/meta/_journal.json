@@ -141,20 +141,6 @@
       "when": 1763173612474,
       "tag": "0019_tough_gabe_jones",
       "breakpoints": true
-    },
-    {
-      "idx": 20,
-      "version": "7",
-      "when": 1763174241523,
-      "tag": "0020_familiar_demogoblin",
-      "breakpoints": true
-    },
-    {
-      "idx": 21,
-      "version": "7",
-      "when": 1763174314234,
-      "tag": "0021_fluffy_nova",
-      "breakpoints": true
     }
   ]
 }

@@ -434,3 +434,714 @@
 - [x] Verify actual code in createMapFile function in server/db.ts
 - [x] Properly fix the function to exclude auto-generated columns (using raw SQL)
 - [ ] Test upload works end-to-end
+
+
+## CRITICAL: Fix Foreign Key Constraint Error in Maps Upload
+- [x] Root cause: Code uses Supabase PostgreSQL but maps table only exists in MySQL
+- [x] Fix createMapFile to use proper Drizzle ORM instead of raw SQL
+- [x] Use .insert().values().returning() for correct database connection
+- [x] Run Drizzle migration to create maps table in Supabase PostgreSQL
+- [x] Add missing columns (job_id, file_size, uploaded_by) to Supabase maps table
+- [ ] Test KML upload works with complete Supabase schema
+
+
+## MVP CRITICAL TASKS - Production Readiness
+
+### 1. Robust REST API System (NEW REQUIREMENT)
+**Priority: CRITICAL | Est: 12-16 hours**
+
+#### Database Schema
+- [ ] Create api_keys table (id, org_id, user_id, name, key_hash, key_prefix, last_used_at, created_at, revoked_at)
+- [ ] Create api_usage_logs table (id, api_key_id, endpoint, method, status_code, response_time_ms, ip_address, created_at)
+- [ ] Add indexes for performance (org_id, user_id, created_at)
+
+#### API Key Management Backend
+- [ ] Add generateApiKey function with bcrypt hashing
+- [ ] Add listApiKeys function for user's organization
+- [ ] Add revokeApiKey function to invalidate keys
+- [ ] Add validateApiKey middleware for authentication
+- [ ] Create apiKeys tRPC router with CRUD endpoints
+- [ ] Add API usage logging function
+
+#### API Key Management UI
+- [ ] Create APIKeys.tsx component for Settings page
+- [ ] Add "Generate API Key" button with name input dialog
+- [ ] Display generated key once with copy-to-clipboard
+- [ ] Show masked keys in list (e.g., "rsk_live_abc...xyz")
+- [ ] Add revoke/delete button for each key
+- [ ] Show last used timestamp and usage stats
+- [ ] Add API Keys tab to Settings page
+
+#### REST API Endpoints
+- [ ] Create /api/v1 router with authentication middleware
+- [ ] Implement rate limiting (100 requests/minute per key)
+- [ ] Add CORS configuration for web integrations
+- [ ] Organizations: GET /api/v1/organizations, POST /api/v1/organizations
+- [ ] Jobs: GET /api/v1/jobs, POST /api/v1/jobs, GET /api/v1/jobs/:id, PUT /api/v1/jobs/:id, DELETE /api/v1/jobs/:id
+- [ ] Sites: GET /api/v1/sites, POST /api/v1/sites, GET /api/v1/sites/:id, PUT /api/v1/sites/:id, DELETE /api/v1/sites/:id
+- [ ] Customers: GET /api/v1/customers, POST /api/v1/customers, GET /api/v1/customers/:id, PUT /api/v1/customers/:id, DELETE /api/v1/customers/:id
+- [ ] Personnel: GET /api/v1/personnel, POST /api/v1/personnel
+- [ ] Equipment: GET /api/v1/equipment, POST /api/v1/equipment
+- [ ] Products: GET /api/v1/products, GET /api/v1/products/:id
+
+#### API Documentation
+- [ ] Generate OpenAPI/Swagger specification
+- [ ] Create API documentation page for users
+- [ ] Add code examples for common integrations (curl, JavaScript, Python)
+- [ ] Document authentication flow
+- [ ] Document rate limiting and error codes
+
+#### Integration Testing
+- [ ] Test API with Postman/Thunder Client
+- [ ] Test Zapier integration (webhook triggers)
+- [ ] Test n8n integration (HTTP Request node)
+- [ ] Test Make.com integration
+- [ ] Create MCP server configuration for AI agents
+- [ ] Test API key revocation works immediately
+
+---
+
+### 2. Add "Viewer" Role (NEW REQUIREMENT)
+**Priority: CRITICAL | Est: 2-3 hours**
+
+#### Database & Backend
+- [ ] Add "viewer" to user_role enum in database schema
+- [ ] Run migration to update enum type
+- [ ] Update permissions matrix in usePermissions hook
+- [ ] Define viewer permissions (read-only access to all pages)
+
+#### Frontend UI
+- [ ] Add "Viewer" option to role dropdown in User Management
+- [ ] Update sidebar to show all pages for viewer role
+- [ ] Hide all action buttons (Create, Edit, Delete) for viewer role
+- [ ] Add read-only badges to pages when logged in as viewer
+- [ ] Disable form inputs for viewer role
+- [ ] Show "View Only" message on pages for viewers
+
+#### Testing
+- [ ] Test viewer can see Dashboard, Jobs, Customers, Sites, Equipment, Products
+- [ ] Test viewer cannot create, edit, or delete any records
+- [ ] Test viewer cannot access Settings, User Management, Audit Log
+- [ ] Test viewer cannot generate API keys
+- [ ] Verify all action buttons are hidden for viewer role
+
+---
+
+### 3. Reorganize Settings Page (NEW REQUIREMENT)
+**Priority: CRITICAL | Est: 2-3 hours**
+
+#### Settings Page Restructure
+- [ ] Create tabbed layout for Settings page
+- [ ] Add tabs: General, Status Management, User Management, API Keys, Audit Log, Email Test, Integrations
+- [ ] Move UserManagement component into Settings as tab
+- [ ] Move AuditLog component into Settings as tab
+- [ ] Move EmailTest component into Settings as tab
+- [ ] Add APIKeys component as new tab
+- [ ] Keep existing General, Status Management, Integrations tabs
+
+#### Navigation Updates
+- [ ] Remove "User Management" from sidebar
+- [ ] Remove "Audit Log" from sidebar
+- [ ] Remove "Email Test" from sidebar
+- [ ] Keep only "Settings" in sidebar (admin-only)
+- [ ] Update all internal links to Settings tabs
+- [ ] Update route structure (/settings?tab=users, /settings?tab=audit, etc.)
+
+#### Testing
+- [ ] Test all Settings tabs load correctly
+- [ ] Test navigation between tabs works
+- [ ] Test Settings is only visible to admin users
+- [ ] Verify removed items are no longer in sidebar
+- [ ] Test deep linking to specific Settings tabs
+
+---
+
+### 4. Remove Legacy Jobs Page (NEW REQUIREMENT)
+**Priority: CRITICAL | Est: 1-2 hours**
+
+#### File Cleanup
+- [ ] Delete client/src/pages/Jobs.tsx (old legacy page)
+- [ ] Rename client/src/pages/JobsV2.tsx to client/src/pages/Jobs.tsx
+- [ ] Rename client/src/pages/JobV2Detail.tsx to client/src/pages/JobDetail.tsx
+
+#### Route Updates
+- [ ] Update App.tsx: Change /jobs-v2 route to /jobs
+- [ ] Update App.tsx: Change /jobs-v2/:id route to /jobs/:id
+- [ ] Update sidebar navigation: Change "Jobs V2" to "Jobs"
+- [ ] Update all internal links from /jobs-v2 to /jobs
+
+#### Backend Cleanup (Optional - can keep jobs_v2 table name)
+- [ ] Consider renaming jobs_v2 table to jobs (or keep as-is for now)
+- [ ] Update backend function names if renaming table
+- [ ] Update tRPC router if renaming
+
+#### Testing
+- [ ] Test /jobs route loads Jobs page correctly
+- [ ] Test /jobs/:id route loads Job Detail page
+- [ ] Test all job CRUD operations work with new routes
+- [ ] Test navigation from sidebar works
+- [ ] Test all internal links to jobs work
+- [ ] Verify no references to old Jobs page remain
+
+---
+
+### 5. KML Visualization on Job Maps
+**Priority: HIGH | Est: 4-6 hours**
+
+#### File Parsing Libraries
+- [ ] Install togeojson library for KML/GPX parsing
+- [ ] Install xml2js library for XML parsing
+- [ ] Research GeoJSON parsing (native JSON.parse may be sufficient)
+
+#### Parser Utility Functions
+- [ ] Create parseKML function to extract polygons, polylines, markers
+- [ ] Create parseGPX function to extract tracks and waypoints
+- [ ] Create parseGeoJSON function to extract features
+- [ ] Add error handling for malformed files
+- [ ] Test parsers with real KML/GPX/GeoJSON files
+
+#### Map Visualization
+- [ ] Update JobDetail map to load linked map files
+- [ ] Use Google Maps Data Layer to render GeoJSON
+- [ ] Color-code different geometry types (polygons=blue, lines=red, markers=green)
+- [ ] Add info windows showing geometry metadata (name, description)
+- [ ] Add layer toggle controls for multiple map files
+- [ ] Add "View on Map" button to map files list
+
+#### Testing
+- [ ] Test with real KML file from agricultural operations
+- [ ] Test with GPX file from flight path
+- [ ] Test with GeoJSON file
+- [ ] Test multiple map files on same job
+- [ ] Test layer toggle controls
+- [ ] Handle parsing errors gracefully with user-friendly messages
+
+---
+
+### 6. End-to-End Testing & Bug Fixes
+**Priority: HIGH | Est: 4-6 hours**
+
+#### User Authentication & Organization
+- [ ] Test user registration and login flow
+- [ ] Test OAuth with Google/Microsoft/Apple
+- [ ] Test organization creation
+- [ ] Test user invitation and role assignment
+- [ ] Test all user roles (Admin, Manager, Technician, Pilot, Sales, Viewer)
+
+#### Core Workflows
+- [ ] Test create customer → create site → create job workflow
+- [ ] Test EPA product extraction from screenshot
+- [ ] Test product linking to job
+- [ ] Test KML file upload to job
+- [ ] Test KML visualization on job map
+- [ ] Test job editing with all fields
+- [ ] Test job deletion and cleanup
+
+#### Bulk Operations
+- [ ] Test bulk job import from CSV
+- [ ] Test bulk job export to CSV
+- [ ] Test CSV round-trip (export → edit → import)
+
+#### Automation & Notifications
+- [ ] Test service plan creation
+- [ ] Test automated job generation from service plans
+- [ ] Test email notification for service reminders
+- [ ] Test email notification for job completion
+
+#### API Testing
+- [ ] Test API key generation
+- [ ] Test API authentication with Bearer token
+- [ ] Test all API endpoints with Postman
+- [ ] Test rate limiting (exceed 100 requests/minute)
+- [ ] Test API key revocation
+
+#### Bug Fixes
+- [ ] Fix any bugs discovered during testing
+- [ ] Document known issues for post-MVP
+- [ ] Verify all critical bugs are resolved
+
+---
+
+### 7. Location Picker Testing & Polish
+**Priority: HIGH | Est: 2-3 hours**
+
+- [ ] Test LocationPicker in job create form
+- [ ] Test LocationPicker in job edit dialog
+- [ ] Test map display on job detail page
+- [ ] Verify latitude/longitude save correctly to database
+- [ ] Test address search with Google Places autocomplete
+- [ ] Test click-to-select location on map
+- [ ] Test map displays correct marker for job location
+- [ ] Fix any layout issues with map component
+
+---
+
+### 8. Complete Missing Audit Logging
+**Priority: MEDIUM | Est: 2-3 hours**
+
+- [ ] Add audit logging to personnel create operation
+- [ ] Add audit logging to personnel update operation
+- [ ] Add audit logging to personnel delete operation
+- [ ] Add audit logging to equipment create operation
+- [ ] Add audit logging to equipment update operation
+- [ ] Add audit logging to equipment delete operation
+- [ ] Add audit logging to site create operation
+- [ ] Add audit logging to site update operation
+- [ ] Add audit logging to site delete operation
+- [ ] Add audit logging to product create operation
+- [ ] Add audit logging to service plan operations
+- [ ] Add audit logging to API key generation and revocation
+- [ ] Test audit logs appear in Audit Log page with correct filters
+
+---
+
+### 9. Final Production Preparation
+**Priority: CRITICAL | Est: 2-3 hours**
+
+#### Code Quality
+- [ ] Run TypeScript compiler and fix all errors
+- [ ] Remove console.log statements
+- [ ] Remove commented-out code
+- [ ] Update code comments and documentation
+- [ ] Verify all environment variables are configured
+
+#### Documentation
+- [ ] Update README.md with setup instructions
+- [ ] Create USER_GUIDE.md with feature documentation
+- [ ] Create API_DOCUMENTATION.md with API reference
+- [ ] Document known limitations and post-MVP roadmap
+
+#### Database
+- [ ] Verify all database migrations are applied
+- [ ] Check database indexes for performance
+- [ ] Verify foreign key constraints are correct
+- [ ] Backup database schema
+
+#### Security
+- [ ] Verify API authentication works correctly
+- [ ] Test authorization for all user roles
+- [ ] Verify file upload security (file type validation, size limits)
+- [ ] Check for SQL injection vulnerabilities
+- [ ] Verify CORS configuration
+
+#### Performance
+- [ ] Test page load times
+- [ ] Optimize slow database queries
+- [ ] Verify S3 file uploads are fast
+- [ ] Test with large datasets (100+ jobs, customers, sites)
+
+#### Final Checkpoint
+- [ ] Save production checkpoint
+- [ ] Push all code to GitHub
+- [ ] Tag release as v1.0.0-mvp
+- [ ] Publish to production via Management UI
+- [ ] Monitor production logs for errors
+
+---
+
+## SUMMARY: MVP Task Breakdown
+
+### CRITICAL (Must Complete)
+1. **Robust API System** - 12-16 hours
+2. **Add Viewer Role** - 2-3 hours
+3. **Reorganize Settings** - 2-3 hours
+4. **Remove Legacy Jobs** - 1-2 hours
+5. **Production Prep** - 2-3 hours
+
+**Critical Subtotal: 19-27 hours**
+
+### HIGH PRIORITY (Important)
+6. **KML Visualization** - 4-6 hours
+7. **End-to-End Testing** - 4-6 hours
+8. **Location Picker Testing** - 2-3 hours
+9. **Missing Audit Logging** - 2-3 hours
+
+**High Priority Subtotal: 12-18 hours**
+
+### **TOTAL TO MVP: 31-45 hours (4-6 business days)**
+
+
+---
+
+## PRODUCTION INFRASTRUCTURE TASKS
+
+### Stripe Payment Integration
+**Priority: CRITICAL | Est: 8-12 hours**
+
+#### Business Setup
+- [ ] Decide on pricing model (per-user, per-org, tiered plans)
+- [ ] Define subscription tiers (Starter, Professional, Enterprise)
+- [ ] Set pricing for each tier
+- [ ] Decide on free trial period (14 days, 30 days, none)
+
+#### Stripe Account
+- [ ] Create Stripe account at stripe.com
+- [ ] Complete business verification (EIN, bank account)
+- [ ] Create products in Stripe dashboard for each tier
+- [ ] Create recurring price objects (monthly/annual)
+- [ ] Set up webhook endpoint URL
+
+#### Backend Integration
+- [ ] Install Stripe Node.js SDK
+- [ ] Add Stripe secret key to environment variables
+- [ ] Create Stripe webhook handler endpoint
+- [ ] Implement subscription creation flow
+- [ ] Implement subscription update flow (upgrade/downgrade)
+- [ ] Implement subscription cancellation flow
+- [ ] Add stripe_customer_id, stripe_subscription_id, subscription_status to organizations table
+
+#### Frontend UI
+- [ ] Create Pricing page showing all tiers
+- [ ] Create Checkout flow with Stripe Elements
+- [ ] Create Billing page in Settings showing current plan
+- [ ] Add "Upgrade Plan" button
+- [ ] Add "Update Payment Method" button
+- [ ] Show subscription status and next billing date
+
+#### Testing
+- [ ] Test subscription creation with test card
+- [ ] Test subscription upgrade/downgrade
+- [ ] Test failed payment handling
+- [ ] Switch to Stripe live mode for production
+
+---
+
+### Custom Domain Setup
+**Priority: CRITICAL | Est: 2-4 hours**
+
+- [ ] Purchase custom domain (e.g., ready2spray.com)
+- [ ] Configure DNS CNAME record via Manus Management UI
+- [ ] Wait for DNS propagation (1-48 hours)
+- [ ] Verify SSL certificate is auto-provisioned
+- [ ] Test HTTPS access on custom domain
+- [ ] Update OAuth callback URLs if needed
+
+---
+
+### Email Service Production Setup
+**Priority: CRITICAL | Est: 2-3 hours**
+
+- [ ] Add custom domain to Mailgun account
+- [ ] Add DNS records (TXT, CNAME, MX) to domain registrar
+- [ ] Verify domain in Mailgun dashboard
+- [ ] Update FROM_EMAIL to use custom domain
+- [ ] Configure DKIM, SPF, DMARC for deliverability
+- [ ] Create welcome email template
+- [ ] Create invoice/receipt email template
+- [ ] Test email sending to Gmail, Outlook, Yahoo
+
+---
+
+### Database Production Readiness
+**Priority: CRITICAL | Est: 2-3 hours**
+
+- [ ] Upgrade Supabase to Pro plan ($25/month minimum)
+- [ ] Enable automated daily backups
+- [ ] Test database restore process
+- [ ] Add indexes for frequently queried columns
+- [ ] Enable Row Level Security (RLS) on all tables
+- [ ] Rotate database password
+- [ ] Set up database performance monitoring
+- [ ] Configure alerts for high CPU/memory usage
+
+---
+
+### Security & Compliance
+**Priority: CRITICAL | Est: 4-6 hours**
+
+- [ ] Implement session timeout (30 minutes of inactivity)
+- [ ] Add two-factor authentication (2FA) for admin users
+- [ ] Create privacy policy page
+- [ ] Create terms of service page
+- [ ] Add cookie consent banner
+- [ ] Run npm audit and fix vulnerabilities
+- [ ] Implement dependency scanning (Dependabot)
+- [ ] Add file size limits on backend
+- [ ] Implement rate limiting on API endpoints
+
+---
+
+### Monitoring & Analytics
+**Priority: HIGH | Est: 3-4 hours**
+
+- [ ] Set up error tracking (Sentry or similar)
+- [ ] Configure error alerting (email, Slack)
+- [ ] Set up uptime monitoring (UptimeRobot, Pingdom)
+- [ ] Verify analytics tracking is working
+- [ ] Create analytics dashboard
+- [ ] Monitor subscription metrics (MRR, churn rate)
+- [ ] Set up cost alerts for AWS services
+
+---
+
+### Performance Optimization
+**Priority: MEDIUM | Est: 4-6 hours**
+
+- [ ] Implement code splitting for faster initial load
+- [ ] Optimize images (WebP format, lazy loading)
+- [ ] Minimize JavaScript bundle size
+- [ ] Enable browser caching for static assets
+- [ ] Optimize database queries (add indexes, reduce N+1)
+- [ ] Test application with 100 concurrent users
+- [ ] Identify bottlenecks and optimize
+
+---
+
+### Backup & Disaster Recovery
+**Priority: HIGH | Est: 2-3 hours**
+
+- [ ] Enable S3 versioning for file recovery
+- [ ] Test file restore process
+- [ ] Document recovery procedures
+- [ ] Test disaster recovery process
+- [ ] Maintain offsite backups
+
+---
+
+### Legal & Documentation
+**Priority: HIGH | Est: 4-6 hours**
+
+- [ ] Create Privacy Policy page
+- [ ] Create Terms of Service page
+- [ ] Create Cookie Policy page
+- [ ] Create Acceptable Use Policy
+- [ ] Add legal pages to footer navigation
+- [ ] Create user guide / help center
+- [ ] Create FAQ page
+- [ ] Create API documentation for developers
+
+---
+
+### Production Deployment Checklist
+
+#### Pre-Deployment (1 Week Before)
+- [ ] Upgrade Supabase to Pro plan
+- [ ] Configure custom domain
+- [ ] Set up production email domain
+- [ ] Configure Stripe live mode
+- [ ] Set up monitoring and alerting
+- [ ] Complete all MVP features
+- [ ] Fix all critical bugs
+- [ ] Run security audit
+- [ ] Complete end-to-end testing
+- [ ] Finalize privacy policy and terms
+
+#### Deployment Day
+- [ ] Create final database backup
+- [ ] Tag release in GitHub (v1.0.0)
+- [ ] Deploy to production via Manus UI
+- [ ] Verify deployment successful
+- [ ] Test critical user flows
+- [ ] Monitor error logs
+- [ ] Test payment processing
+- [ ] Test email delivery
+- [ ] Announce launch
+
+#### Post-Deployment (First Week)
+- [ ] Monitor error rates daily
+- [ ] Monitor user signups and churn
+- [ ] Respond to support tickets
+- [ ] Fix bugs as reported
+- [ ] Review analytics and metrics weekly
+- [ ] Collect user feedback
+- [ ] Plan next sprint
+
+
+---
+
+## AI CREDIT TRACKING SYSTEM
+
+### Database Schema
+**Priority: HIGH | Est: 2-3 hours**
+
+- [ ] Create ai_credit_balance table (org_id, monthly_allocation, credits_used, credits_remaining, overage_credits, reset_date)
+- [ ] Create ai_credit_purchases table (org_id, credits_purchased, amount_paid, stripe_payment_id, expires_at)
+- [ ] Add monthly_allocation column to organizations table (default based on subscription plan)
+- [ ] Add indexes for performance (org_id, reset_date, expires_at)
+- [ ] Migrate existing organizations with default credit allocations
+
+### Backend Implementation
+**Priority: HIGH | Est: 4-6 hours**
+
+- [ ] Create getCreditBalance function to fetch org's current balance
+- [ ] Create deductCredits function to subtract credits after AI usage
+- [ ] Create purchaseCredits function to add purchased credits
+- [ ] Create resetMonthlyCredits cron job (runs on 1st of each month)
+- [ ] Update invokeLLM wrapper to check credit balance before API call
+- [ ] Update invokeLLM wrapper to deduct credits after API call
+- [ ] Add credit tracking to product extraction endpoint
+- [ ] Add credit tracking to AI chat endpoint
+- [ ] Create getCreditUsageHistory function for reporting
+- [ ] Add credit exhaustion error handling (return 402 Payment Required)
+
+### Frontend UI
+**Priority: HIGH | Est: 6-8 hours**
+
+#### Credit Balance Display
+- [ ] Create CreditBalance component for Settings → Billing page
+- [ ] Show monthly allocation, used, remaining, overage credits
+- [ ] Add progress bar visualization
+- [ ] Show next reset date
+- [ ] Add "Buy More Credits" button
+- [ ] Add "View Usage History" button
+
+#### Credit Usage History
+- [ ] Create CreditUsageHistory component
+- [ ] Display table with date, feature, user, tokens, credits, balance
+- [ ] Add filters (by user, by feature, by date range)
+- [ ] Add CSV export functionality
+- [ ] Show charts/graphs of usage trends
+
+#### Credit Warnings & Blocking
+- [ ] Add low credit warning toast (when < 20% remaining)
+- [ ] Create credit exhausted modal dialog
+- [ ] Block AI features when credits exhausted
+- [ ] Show upgrade/purchase options in blocking modal
+- [ ] Add remaining credits indicator to AI chat widget header
+- [ ] Add remaining credits indicator to product lookup page
+
+#### Credit Purchase Flow
+- [ ] Create BuyCredits dialog component
+- [ ] Show credit pack options (100, 500, 1000 credits)
+- [ ] Integrate with Stripe for one-time payments
+- [ ] Show confirmation after successful purchase
+- [ ] Update credit balance immediately after purchase
+- [ ] Send confirmation email with purchase receipt
+
+### Stripe Integration
+**Priority: HIGH | Est: 3-4 hours**
+
+- [ ] Create Stripe products for credit packs (100, 500, 1000)
+- [ ] Set up one-time payment checkout flow
+- [ ] Create webhook handler for credit purchase events
+- [ ] Add credits to organization balance after successful payment
+- [ ] Handle failed payments and refunds
+- [ ] Test credit purchase end-to-end
+
+### Testing
+**Priority: HIGH | Est: 2-3 hours**
+
+- [ ] Test credit deduction on product extraction (verify 6-12 credits deducted)
+- [ ] Test credit deduction on AI chat (verify 0.5-2 credits deducted)
+- [ ] Test credit balance updates correctly after usage
+- [ ] Test credit exhaustion blocks AI features
+- [ ] Test low credit warning appears at 20%
+- [ ] Test credit purchase flow with test card
+- [ ] Test monthly reset cron job (manually trigger)
+- [ ] Test overage credit expiration after 12 months
+- [ ] Load test with 100 concurrent AI requests
+
+### Documentation
+**Priority: MEDIUM | Est: 1-2 hours**
+
+- [ ] Update pricing page to show credit allocations
+- [ ] Create "What are AI Credits?" help article
+- [ ] Document credit usage for each AI feature
+- [ ] Add credit balance to API documentation
+- [ ] Create FAQ for common credit questions
+
+---
+
+## TOTAL AI CREDIT SYSTEM: 18-26 hours
+
+
+---
+
+## 3-DAY MVP SPRINT - REORDERED PRIORITIES
+
+### PHASE 1: UI Reorganization (Hours 1-8)
+**Priority: CRITICAL | Starting NOW**
+
+#### Remove Legacy Jobs Page
+- [x] Delete `client/src/pages/Jobs.tsx` (old page)
+- [x] Rename `client/src/pages/JobsV2.tsx` → `Jobs.tsx`
+- [x] Rename `client/src/pages/JobV2Detail.tsx` → `JobDetail.tsx`
+- [x] Update `App.tsx` routes: `/jobs-v2` → `/jobs`
+- [x] Update `App.tsx` routes: `/jobs-v2/:id` → `/jobs/:id`
+- [x] Update sidebar navigation: "Jobs V2" → "Jobs"
+- [x] Update all internal links to use `/jobs`
+- [x] Test navigation works correctly
+
+#### Settings Page Reorganization
+- [x] Create tabbed layout for Settings page
+- [x] Add tabs: General, Users, Audit Log, Email Test, API Keys, Billing
+- [x] Move UserManagement component into Settings as tab
+- [x] Move AuditLog component into Settings as tab
+- [x] Move EmailTest component into Settings as tab
+- [x] Create APIKeys tab (placeholder for Phase 3)
+- [x] Create Billing tab (placeholder for Phase 5)
+- [x] Remove "User Management" from sidebar navigation
+- [x] Remove "Audit Log" from sidebar navigation
+- [x] Remove "Email Test" from sidebar navigation
+- [x] Update sidebar "Settings" link to go to Settings page
+- [x] Test all Settings tabs work correctly
+
+#### Add Viewer Role
+- [ ] Add "viewer" to user_role enum in database (if not exists)
+- [ ] Update permissions matrix in `usePermissions` hook
+- [ ] Add "Viewer" option to User Management role dropdown
+- [ ] Hide all action buttons (Create, Edit, Delete) for viewers
+- [ ] Add read-only badges to pages for viewers
+- [ ] Test viewer can see all pages but cannot modify data
+- [ ] Test viewer cannot access User Management tab
+
+---
+
+### PHASE 2: Hybrid AI Models (Hours 9-11)
+**Priority: CRITICAL**
+
+- [ ] Update `server/claude.ts` to support model parameter
+- [ ] Add `getClaudeResponseWithModel(model, options)` function
+- [ ] Update AI chat endpoint to use Haiku (`claude-3-5-haiku-20241022`)
+- [ ] Keep product extraction using Sonnet (`claude-3-7-sonnet-20250219`)
+- [ ] Test AI chat with Haiku model
+- [ ] Test product extraction with Sonnet model
+- [ ] Verify both work correctly
+- [ ] Update cost calculations in documentation
+
+---
+
+### PHASE 3: REST API System (Hours 12-16)
+**Priority: CRITICAL**
+
+- [ ] Create `api_keys` table in Supabase
+- [ ] Create `api_usage_logs` table in Supabase
+- [ ] Add `generateApiKey()` function (bcrypt hashing)
+- [ ] Add `validateApiKey()` middleware
+- [ ] Create `/api/v1` router with authentication
+- [ ] Implement GET /api/v1/jobs (list)
+- [ ] Implement POST /api/v1/jobs (create)
+- [ ] Implement GET /api/v1/jobs/:id (get)
+- [ ] Implement PUT /api/v1/jobs/:id (update)
+- [ ] Implement DELETE /api/v1/jobs/:id (delete)
+- [ ] Implement GET /api/v1/customers (list)
+- [ ] Implement POST /api/v1/customers (create)
+- [ ] Implement GET /api/v1/sites (list)
+- [ ] Implement POST /api/v1/sites (create)
+- [ ] Add rate limiting (100 req/min)
+- [ ] Test with Postman
+- [ ] Create API Keys management UI in Settings
+- [ ] Test key generation and usage
+
+---
+
+**CHECKPOINT: End of Day 1** ✅
+
+
+#### Dashboard Keyboard Shortcuts
+- [ ] Add keyboard shortcut listener to Dashboard page
+- [ ] Ctrl+J / Cmd+J: Open "Create New Job" dialog
+- [ ] Ctrl+C / Cmd+C: Open "Create New Customer" dialog
+- [ ] Ctrl+P / Cmd+P: Open "Create New Personnel" dialog
+- [ ] Ctrl+Shift+P / Cmd+Shift+P: Open "Create New Product" dialog
+- [ ] Show keyboard shortcuts hint on Dashboard
+- [ ] Test shortcuts work on Windows and Mac
+
+#### Products Page
+- [x] Create Products page to show all uploaded EPA products
+- [x] Display products in table with columns: Name, EPA Reg #, Brand Name, Signal Word, Actions
+- [x] Add search and filter functionality
+- [x] Add "Upload Product" button (opens product lookup)
+- [x] Add Products to sidebar navigation (icon: Pill)
+- [x] Add Products route to App.tsx
+- [x] Test Products page displays all uploaded products

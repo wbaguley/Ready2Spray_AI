@@ -1,716 +1,442 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Calendar, ArrowLeft, Search, Eye, Edit, Trash2, History, Download, Upload } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { useLocation } from "wouter";
-import { AgrianProductLookup } from "@/components/AgrianProductLookup";
-import { StatusHistory } from "@/components/StatusHistory";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { exportJobsToCSV } from "@/lib/pdfExport";
+import { Loader2, Plus, Briefcase, Calendar, MapPin, User, Wrench } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { LocationPicker } from "@/components/LocationPicker";
 
-export default function Jobs() {
-  const [location, setLocation] = useLocation();
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showAgrianLookup, setShowAgrianLookup] = useState(false);
-  const [editingJob, setEditingJob] = useState<any>(null);
-  const [viewingHistoryJobId, setViewingHistoryJobId] = useState<number | null>(null);
+export default function JobsV2() {
+  const [, navigate] = useLocation();
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // Form state
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [jobType, setJobType] = useState<string>("");
+  const [priority, setPriority] = useState<string>("medium");
+  const [status, setStatus] = useState<string>("pending");
+  const [customerId, setCustomerId] = useState<string>("");
+  const [personnelId, setPersonnelId] = useState<string>("");
+  const [equipmentId, setEquipmentId] = useState<string>("");
+  const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [scheduledStart, setScheduledStart] = useState("");
+  const [scheduledEnd, setScheduledEnd] = useState("");
 
-  // Products are now linked AFTER job creation via the job detail page
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    jobType: "crop_dusting" as const,
-    status: "",
-    priority: "medium" as const,
-    locationAddress: "",
-    customerId: "",
-    siteId: "",
-    assignedPersonnelId: "",
-    equipmentId: "",
-    scheduledStart: "",
-    scheduledEnd: "",
-    notes: "",
-  });
-
-  const { data: jobs, isLoading } = trpc.jobs.list.useQuery();
-  const { data: customers } = trpc.customers.list.useQuery();
-  const { data: personnel } = trpc.personnel.list.useQuery();
-  const { data: equipment } = trpc.equipment.list.useQuery();
-  const { data: jobStatuses } = trpc.jobStatuses.list.useQuery();
   const utils = trpc.useUtils();
   
-  // Get default status ID
-  const defaultStatus = jobStatuses?.find(s => s.isDefault);
-  const defaultStatusId = defaultStatus?.id.toString() || jobStatuses?.[0]?.id.toString() || "";
+  // Queries
+  const { data: jobs, isLoading } = trpc.jobsV2.list.useQuery();
+  const { data: customers } = trpc.jobsV2.getCustomers.useQuery();
+  const { data: personnel } = trpc.jobsV2.getPersonnel.useQuery();
+  const { data: equipment } = trpc.jobsV2.getEquipment.useQuery();
+  
+  const createMutation = trpc.jobsV2.create.useMutation({
+    onSuccess: () => {
+      toast.success("Job created successfully!");
+      resetForm();
+      setIsCreating(false);
+      utils.jobsV2.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create job");
+    },
+  });
 
   const resetForm = () => {
-    setFormData({
-      title: "",
-      description: "",
-      jobType: "crop_dusting",
-      status: "pending",
-      priority: "medium",
-      locationAddress: "",
-      customerId: "",
-      siteId: "",
-      assignedPersonnelId: "",
-      equipmentId: "",
-      scheduledStart: "",
-      scheduledEnd: "",
-      notes: "",
-    });
-    setEditingJob(null);
+    setTitle("");
+    setDescription("");
+    setJobType("");
+    setPriority("medium");
+    setStatus("pending");
+    setCustomerId("");
+    setPersonnelId("");
+    setEquipmentId("");
+    setLocation("");
+    setLatitude(null);
+    setLongitude(null);
+    setScheduledStart("");
+    setScheduledEnd("");
   };
-
-  const handleOpenForm = (job?: any) => {
-    if (job) {
-      setEditingJob(job);
-      setFormData({
-        title: job.title || "",
-        description: job.description || "",
-        jobType: job.jobType || "crop_dusting",
-        status: job.statusId?.toString() || "",
-        priority: job.priority || "medium",
-        locationAddress: job.locationAddress || "",
-        customerId: job.customerId?.toString() || "",
-        siteId: job.siteId?.toString() || "",
-        assignedPersonnelId: job.assignedPersonnelId?.toString() || "",
-        equipmentId: job.equipmentId?.toString() || "",
-        scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
-        scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
-        notes: job.notes || "",
-      });
-    } else {
-      resetForm();
-    }
-    setShowCreateForm(true);
-  };
-
-  const createMutation = trpc.jobs.create.useMutation({
-    onSuccess: () => {
-      utils.jobs.list.invalidate();
-      toast.success("Job created successfully!");
-      setShowCreateForm(false);
-      resetForm();
-    },
-    onError: (error) => {
-      toast.error(`Failed to create job: ${error.message}`);
-    },
-  });
-
-  const updateMutation = trpc.jobs.update.useMutation({
-    onSuccess: () => {
-      utils.jobs.list.invalidate();
-      toast.success("Job updated successfully!");
-      setShowCreateForm(false);
-      resetForm();
-    },
-    onError: (error) => {
-      toast.error(`Failed to update job: ${error.message}`);
-    },
-  });
-
-  const deleteMutation = trpc.jobs.delete.useMutation({
-    onSuccess: () => {
-      utils.jobs.list.invalidate();
-      toast.success("Job deleted successfully!");
-    },
-  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const submitData: any = { ...formData };
-    
-    // Convert string IDs to numbers if they exist
-    if (submitData.customerId) {
-      submitData.customerId = parseInt(submitData.customerId);
-    } else {
-      delete submitData.customerId;
+    if (!title.trim()) {
+      toast.error("Please enter a job title");
+      return;
     }
     
-    if (submitData.assignedPersonnelId) {
-      submitData.assignedPersonnelId = parseInt(submitData.assignedPersonnelId);
-    } else {
-      delete submitData.assignedPersonnelId;
-    }
-    
-    if (submitData.equipmentId) {
-      submitData.equipmentId = parseInt(submitData.equipmentId);
-    } else {
-      delete submitData.equipmentId;
-    }
-    
-    if (submitData.siteId) {
-      submitData.siteId = parseInt(submitData.siteId);
-    } else {
-      delete submitData.siteId;
-    }
-    
-    // Convert date strings to Date objects if they exist
-    if (submitData.scheduledStart) {
-      submitData.scheduledStart = new Date(submitData.scheduledStart);
-    } else {
-      delete submitData.scheduledStart;
-    }
-    
-    if (submitData.scheduledEnd) {
-      submitData.scheduledEnd = new Date(submitData.scheduledEnd);
-    } else {
-      delete submitData.scheduledEnd;
-    }
-    
-    if (editingJob) {
-      updateMutation.mutate({ id: editingJob.id, ...submitData });
-    } else {
-      createMutation.mutate(submitData);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-yellow-100 text-yellow-800";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent":
-        return "text-red-600";
-      case "high":
-        return "text-orange-600";
-      case "low":
-        return "text-gray-600";
-      default:
-        return "text-blue-600";
-    }
-  };
-
-  if (showCreateForm) {
-    return (
-      <div className="space-y-6 max-w-4xl">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowCreateForm(false)}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Jobs
-          </Button>
-        </div>
-
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{editingJob ? "Edit Job" : "Create New Job"}</h1>
-          <p className="text-muted-foreground">
-            {editingJob ? "Update job information" : "Schedule a new service job for your team"}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Job Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Job Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Job Title *</Label>
-                  <Input
-                    id="title"
-                    placeholder="e.g., Corn Field Spraying - Section A"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="jobType">Job Type</Label>
-                    <Select
-                      value={formData.jobType}
-                      onValueChange={(value: any) =>
-                        setFormData({ ...formData, jobType: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="crop_dusting">Crop Dusting</SelectItem>
-                        <SelectItem value="pest_control">Pest Control</SelectItem>
-                        <SelectItem value="fertilization">Fertilization</SelectItem>
-                        <SelectItem value="herbicide">Herbicide</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="priority">Priority</Label>
-                    <Select
-                      value={formData.priority}
-                      onValueChange={(value: any) =>
-                        setFormData({ ...formData, priority: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status || defaultStatusId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobStatuses?.map((status) => (
-                        <SelectItem key={status.id} value={status.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: status.color }}
-                            />
-                            {status.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Job details, special instructions, etc."
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Customer Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="customer">Customer</Label>
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    onClick={() => setLocation("/customers")}
-                  >
-                    + Add New Customer
-                  </Button>
-                </div>
-                <Select
-                  value={formData.customerId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, customerId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select customer (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers?.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id.toString()}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Assignment & Scheduling */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Assignment & Scheduling</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="personnel">Assigned Personnel</Label>
-                  <Select
-                    value={formData.assignedPersonnelId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, assignedPersonnelId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select personnel (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {personnel?.map((person) => (
-                        <SelectItem key={person.id} value={person.id.toString()}>
-                          {person.name} - {person.role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="equipment">Assigned Equipment</Label>
-                  <Select
-                    value={formData.equipmentId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, equipmentId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select equipment (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {equipment?.filter(e => e.status === 'active').map((equip) => (
-                        <SelectItem key={equip.id} value={equip.id.toString()}>
-                          {equip.name} ({equip.equipmentType.replace('_', ' ')})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location">Job Location</Label>
-                  <Input
-                    id="location"
-                    placeholder="Address or field description"
-                    value={formData.locationAddress}
-                    onChange={(e) =>
-                      setFormData({ ...formData, locationAddress: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="scheduledStart">Scheduled Start</Label>
-                  <Input
-                    id="scheduledStart"
-                    type="datetime-local"
-                    value={formData.scheduledStart}
-                    onChange={(e) =>
-                      setFormData({ ...formData, scheduledStart: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="scheduledEnd">Scheduled End</Label>
-                  <Input
-                    id="scheduledEnd"
-                    type="datetime-local"
-                    value={formData.scheduledEnd}
-                    onChange={(e) =>
-                      setFormData({ ...formData, scheduledEnd: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-
-
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowCreateForm(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-              {(createMutation.isPending || updateMutation.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {editingJob ? "Update Job" : "Create Job"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Jobs</h1>
-          <p className="text-muted-foreground">
-            Manage your agricultural spray jobs
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/bulk-import")}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Import
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => exportJobsToCSV(jobs || [])}
-            disabled={!jobs || jobs.length === 0}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-          <Button onClick={() => handleOpenForm()}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Job
-          </Button>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      ) : jobs && jobs.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => (
-            <Card key={job.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{job.title}</CardTitle>
-                    <CardDescription>
-                      {job.jobType.replace("_", " ")}
-                    </CardDescription>
-                  </div>
-                  <span
-                    className={`text-xs font-medium ${getPriorityColor(job.priority)}`}
-                  >
-                    {job.priority.toUpperCase()}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: job.statusColor ? `${job.statusColor}20` : '#FEF3C7',
-                      color: job.statusColor || '#92400E'
-                    }}
-                  >
-                    {job.statusName || 'Unknown'}
-                  </span>
-                </div>
-                {job.locationAddress && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {job.locationAddress}
-                  </p>
-                )}
-                {job.equipmentId && equipment && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <span className="font-medium">Equipment:</span>
-                    {equipment.find(e => e.id === job.equipmentId)?.name || 'Unknown'}
-                  </p>
-                )}
-                {job.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {job.description}
-                  </p>
-                )}
-                {/* Status Transition Button */}
-                {job.statusCategory !== 'completed' && job.statusCategory !== 'cancelled' && (
-                  <StatusTransitionButton job={job} jobStatuses={jobStatuses} />
-                )}
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setLocation(`/jobs/${job.id}`)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleOpenForm(job)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setViewingHistoryJobId(job.id)}
-                  >
-                    History
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => deleteMutation.mutate({ id: job.id })}
-                    disabled={deleteMutation.isPending}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">
-              No jobs yet. Create your first job to get started!
-            </p>
-            <Button onClick={() => handleOpenForm()}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create First Job
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-      {/* Agrian Product Lookup Dialog */}
-      {/* Temporarily commented out to debug
-      <AgrianProductLookup
-        open={showAgrianLookup}
-        onClose={() => setShowAgrianLookup(false)}
-        onSelectProduct={(product) => {
-          setFormData({
-            ...formData,
-            chemicalProduct: product.name || "",
-            epaNumber: product.epaNumber || product.epaRegistrationNumber || "",
-            state: product.state || formData.state,
-            commodityCrop: formData.commodityCrop,
-            applicationRate: product.rate || "",
-            reEntryInterval: product.reEntryInterval || "",
-            preharvestInterval: product.preharvestInterval || "",
-            maxApplicationsPerSeason: product.maxApplicationsPerSeason || "",
-            maxRatePerSeason: product.maxRatePerSeason || "",
-            methodsAllowed: product.methodsAllowed || "",
-            rate: product.rate || "",
-            diluentAerial: product.diluentAerial || "",
-            diluentGround: product.diluentGround || "",
-            diluentChemigation: product.diluentChemigation || "",
-          });
-          setShowAgrianLookup(false);
-        }}
-        defaultCountry="United States"
-        defaultState={formData.state}
-        defaultCommodity={formData.commodityCrop}
-      />
-      */}
-      
-      {/* Status History Dialog */}
-      <Dialog open={viewingHistoryJobId !== null} onOpenChange={(open) => !open && setViewingHistoryJobId(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Job Status History</DialogTitle>
-          </DialogHeader>
-          {viewingHistoryJobId && <StatusHistory jobId={viewingHistoryJobId} />}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-// Status Transition Button Component
-function StatusTransitionButton({ job, jobStatuses }: { job: any; jobStatuses: any[] | undefined }) {
-  const utils = trpc.useUtils();
-  
-  const updateMutation = trpc.jobs.update.useMutation({
-    onSuccess: () => {
-      utils.jobs.list.invalidate();
-      toast.success("Job status updated!");
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update status: ${error.message}`);
-    },
-  });
-
-  if (!jobStatuses || jobStatuses.length === 0) return null;
-
-  // Find the next logical status based on current category
-  const currentCategory = job.statusCategory;
-  let nextStatus;
-
-  if (currentCategory === 'pending') {
-    // Move to first 'active' status
-    nextStatus = jobStatuses.find(s => s.category === 'active');
-  } else if (currentCategory === 'active') {
-    // Move to first 'completed' status
-    nextStatus = jobStatuses.find(s => s.category === 'completed');
-  }
-
-  if (!nextStatus) return null;
-
-  const handleTransition = () => {
-    updateMutation.mutate({
-      id: job.id,
-      statusId: nextStatus.id,
+    createMutation.mutate({
+      title,
+      description: description || undefined,
+      jobType: jobType as any || undefined,
+      priority: priority as any,
+      status: status as any,
+      customerId: customerId ? parseInt(customerId) : undefined,
+      personnelId: personnelId ? parseInt(personnelId) : undefined,
+      equipmentId: equipmentId ? parseInt(equipmentId) : undefined,
+      location: location || undefined,
+      latitude: latitude || undefined,
+      longitude: longitude || undefined,
+      scheduledStart: scheduledStart || undefined,
+      scheduledEnd: scheduledEnd || undefined,
     });
   };
 
-  const getButtonText = () => {
-    if (currentCategory === 'pending') return `Start: ${nextStatus.name}`;
-    if (currentCategory === 'active') return `Complete: ${nextStatus.name}`;
-    return `Move to ${nextStatus.name}`;
-  };
-
   return (
-    <Button
-      variant="default"
-      size="sm"
-      className="w-full"
-      onClick={handleTransition}
-      disabled={updateMutation.isPending}
-      style={{
-        backgroundColor: nextStatus.color,
-        borderColor: nextStatus.color,
-      }}
-    >
-      {updateMutation.isPending && (
-        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-      )}
-      {getButtonText()}
-    </Button>
+    <DashboardLayout>
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Jobs V2</h1>
+            <p className="text-muted-foreground mt-1">
+              Comprehensive job management system
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              setIsCreating(!isCreating);
+              if (isCreating) resetForm();
+            }}
+            variant={isCreating ? "outline" : "default"}
+          >
+            {isCreating ? (
+              "Cancel"
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                New Job
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Create Job Form */}
+        {isCreating && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Create New Job</CardTitle>
+              <CardDescription>
+                Schedule a new service job for your team
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Job Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Job Information</h3>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Job Title *</Label>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g., Corn Field Spraying - Section A"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="jobType">Job Type</Label>
+                      <Select value={jobType} onValueChange={setJobType}>
+                        <SelectTrigger id="jobType">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="crop_dusting">Crop Dusting</SelectItem>
+                          <SelectItem value="pest_control">Pest Control</SelectItem>
+                          <SelectItem value="fertilization">Fertilization</SelectItem>
+                          <SelectItem value="herbicide">Herbicide</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="priority">Priority</Label>
+                      <Select value={priority} onValueChange={setPriority}>
+                        <SelectTrigger id="priority">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger id="status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="ready">Ready</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Job details, special instructions, etc."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                {/* Customer Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Customer Information</h3>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="customer">Customer</Label>
+                    <Select value={customerId} onValueChange={setCustomerId}>
+                      <SelectTrigger id="customer">
+                        <SelectValue placeholder="Select customer (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers?.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id.toString()}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Assignment & Scheduling Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Assignment & Scheduling</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="personnel">Assigned Personnel</Label>
+                      <Select value={personnelId} onValueChange={setPersonnelId}>
+                        <SelectTrigger id="personnel">
+                          <SelectValue placeholder="Select personnel (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {personnel?.map((person) => (
+                            <SelectItem key={person.id} value={person.id.toString()}>
+                              {person.name} {person.role && `(${person.role})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="equipment">Assigned Equipment</Label>
+                      <Select value={equipmentId} onValueChange={setEquipmentId}>
+                        <SelectTrigger id="equipment">
+                          <SelectValue placeholder="Select equipment (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {equipment?.map((equip) => (
+                            <SelectItem key={equip.id} value={equip.id.toString()}>
+                              {equip.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Job Location</Label>
+                    <LocationPicker
+                      value={{ address: location, latitude, longitude }}
+                      onChange={(loc) => {
+                        setLocation(loc.address);
+                        setLatitude(loc.latitude);
+                        setLongitude(loc.longitude);
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledStart">Scheduled Start</Label>
+                      <Input
+                        id="scheduledStart"
+                        type="datetime-local"
+                        value={scheduledStart}
+                        onChange={(e) => setScheduledStart(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledEnd">Scheduled End</Label>
+                      <Input
+                        id="scheduledEnd"
+                        type="datetime-local"
+                        value={scheduledEnd}
+                        onChange={(e) => setScheduledEnd(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={createMutation.isPending}
+                    className="flex-1"
+                  >
+                    {createMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Job"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsCreating(false);
+                      resetForm();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Jobs List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>All Jobs</CardTitle>
+            <CardDescription>
+              View and manage your spray jobs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : jobs && jobs.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {jobs.map((job) => (
+                  <Card
+                    key={job.id}
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => navigate(`/jobs-v2/${job.id}`)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg line-clamp-2">
+                            {job.title}
+                          </CardTitle>
+                          {job.customerName && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {job.customerName}
+                            </p>
+                          )}
+                        </div>
+                        {job.status && (
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            job.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            job.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {job.status?.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {job.jobType && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Briefcase className="w-4 h-4 mr-2" />
+                          {job.jobType?.replace('_', ' ')}
+                        </div>
+                      )}
+                      {job.location && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          {job.location}
+                        </div>
+                      )}
+                      {job.scheduledStart && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          {new Date(job.scheduledStart).toLocaleDateString()}
+                        </div>
+                      )}
+                      {job.personnelName && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <User className="w-4 h-4 mr-2" />
+                          {job.personnelName}
+                        </div>
+                      )}
+                      {job.equipmentName && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Wrench className="w-4 h-4 mr-2" />
+                          {job.equipmentName}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground pt-2">
+                        Created {new Date(job.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Briefcase className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No jobs yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Create your first job to get started
+                </p>
+                <Button onClick={() => setIsCreating(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create First Job
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO maps (org_id, job_id, name, file_url, file_key, file_type, file_size, uploaded_by) VALUES (2, 4, 'test', 'https://test.com/file.kml', 'test/file.kml', 'kml', 1000, 1)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute INSERT INTO maps (org_id, job_id, name, file_url, file_key, file_type, file_size, uploaded_by) VALUES (2, 4, 'test', 'https://test.com/file.kml', 'test/file.kml', 'kml', 1000, 1)",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key constraint fails (`6adcecxv2yg38ygq7gdrsu`.`maps`, CONSTRAINT `maps_org_id_organizations_id_fk` FOREIGN KEY (`org_id`) REFERENCES `organizations` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION)"
+  ]
+}

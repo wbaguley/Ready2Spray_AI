@@ -14,20 +14,19 @@ import Chat from "./pages/Chat";
 import Maps from "./pages/Maps";
 import ProductLookup from "./pages/ProductLookup";
 import Settings from "./pages/Settings";
-import JobDetail from "@/pages/JobDetail";
 import FlightBoard from "@/pages/FlightBoard";
+import JobDetail from "@/pages/JobDetail";
 import Calendar from "@/pages/Calendar";
 import Equipment from "@/pages/Equipment";
 import EquipmentDashboard from "@/pages/EquipmentDashboard";
 import Sites from "./pages/Sites";
+import Products from "./pages/Products";
 import ServicePlans from "./pages/ServicePlans";
 import EmailTest from "./pages/EmailTest";
 import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
 import AuditLog from "./pages/AuditLog";
 import BulkJobImport from "./pages/BulkJobImport";
-import JobsV2 from "./pages/JobsV2";
-import JobV2Detail from "./pages/JobV2Detail";
 
 function Router() {
   return (
@@ -44,12 +43,11 @@ function Router() {
         {() => <ProtectedRoute requiredPermission="view_equipment_analytics"><EquipmentDashboard /></ProtectedRoute>}
       </Route>
         <Route path="/sites" component={Sites} />
+        <Route path="/products" component={Products} />
       <Route path="/service-plans">
         {() => <ProtectedRoute requiredPermission="view_service_plans"><ServicePlans /></ProtectedRoute>}
       </Route>
         <Route path="/jobs" component={Jobs} />
-        <Route path="/jobs-v2" component={JobsV2} />
-        <Route path="/jobs-v2/:id" component={JobV2Detail} />
         <Route path="/customers" component={Customers} />
         <Route path="/personnel">
           {() => <ProtectedRoute requiredPermission="view_personnel"><Personnel /></ProtectedRoute>}

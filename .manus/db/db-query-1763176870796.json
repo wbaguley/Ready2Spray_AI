@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, owner_id FROM organizations WHERE owner_id = 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT id, name, owner_id FROM organizations WHERE owner_id = 1",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Organization 1",
+      "owner_id": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\towner_id\n1\tOrganization 1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

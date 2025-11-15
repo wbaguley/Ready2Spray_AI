@@ -27,6 +27,10 @@ export type Permission =
   | "create_customers"
   | "edit_customers"
   | "delete_customers"
+  | "view_products"
+  | "create_products"
+  | "edit_products"
+  | "delete_products"
   | "view_personnel"
   | "create_personnel"
   | "edit_personnel"
@@ -67,6 +71,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "create_customers",
     "edit_customers",
     "delete_customers",
+    "view_products",
+    "create_products",
+    "edit_products",
+    "delete_products",
     "view_personnel",
     "create_personnel",
     "edit_personnel",
@@ -105,6 +113,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "create_customers",
     "edit_customers",
     "delete_customers",
+    "view_products",
+    "create_products",
+    "edit_products",
+    "delete_products",
     "view_personnel",
     "create_personnel",
     "edit_personnel",
@@ -139,6 +151,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "create_customers",
     "edit_customers",
     "delete_customers",
+    "view_products",
+    "create_products",
+    "edit_products",
+    "delete_products",
     "view_personnel",
     "create_personnel",
     "edit_personnel",
@@ -173,6 +189,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "create_customers",
     "edit_customers",
     "delete_customers",
+    "view_products",
+    "create_products",
+    "edit_products",
+    "delete_products",
     "view_personnel",
     "create_personnel",
     "edit_personnel",
@@ -207,6 +227,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "create_customers",
     "edit_customers",
     "delete_customers",
+    "view_products",
+    "create_products",
+    "edit_products",
+    "delete_products",
     "view_personnel",
     "create_personnel",
     "edit_personnel",
