@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, Plus, Briefcase, Calendar, MapPin, User, Wrench } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { LocationPicker } from "@/components/LocationPicker";
 
 export default function JobsV2() {
   const [, navigate] = useLocation();
@@ -31,6 +32,8 @@ export default function JobsV2() {
   const [personnelId, setPersonnelId] = useState<string>("");
   const [equipmentId, setEquipmentId] = useState<string>("");
   const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [scheduledStart, setScheduledStart] = useState("");
   const [scheduledEnd, setScheduledEnd] = useState("");
 
@@ -64,6 +67,8 @@ export default function JobsV2() {
     setPersonnelId("");
     setEquipmentId("");
     setLocation("");
+    setLatitude(null);
+    setLongitude(null);
     setScheduledStart("");
     setScheduledEnd("");
   };
@@ -85,6 +90,8 @@ export default function JobsV2() {
       personnelId: personnelId ? parseInt(personnelId) : undefined,
       equipmentId: equipmentId ? parseInt(equipmentId) : undefined,
       location: location || undefined,
+      latitude: latitude || undefined,
+      longitude: longitude || undefined,
       scheduledStart: scheduledStart || undefined,
       scheduledEnd: scheduledEnd || undefined,
     });
@@ -265,12 +272,14 @@ export default function JobsV2() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location">Job Location</Label>
-                    <Input
-                      id="location"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Address or field description"
+                    <Label>Job Location</Label>
+                    <LocationPicker
+                      value={{ address: location, latitude, longitude }}
+                      onChange={(loc) => {
+                        setLocation(loc.address);
+                        setLatitude(loc.latitude);
+                        setLongitude(loc.longitude);
+                      }}
                     />
                   </div>
 

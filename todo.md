@@ -394,3 +394,16 @@
 - [x] Create confirmation dialog for delete action
 - [x] Navigate back to Jobs V2 list after successful deletion
 - [ ] Test delete functionality end-to-end
+
+
+## Jobs V2 - Map Integration for Location Selection
+- [ ] Add latitude and longitude columns to jobs_v2 table
+- [ ] Apply database migration for coordinate fields
+- [ ] Update backend to handle coordinate storage
+- [ ] Import Map component into JobsV2 create form
+- [ ] Add map picker UI to location section of create form
+- [ ] Implement location selection with marker placement
+- [ ] Add address autocomplete/geocoding integration
+- [ ] Update Edit Job dialog with map picker
+- [ ] Display map with existing location on job detail page
+- [ ] Test complete map workflow (select location, save, view)

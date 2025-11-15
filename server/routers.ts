@@ -1288,6 +1288,8 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         personnelId: z.number().optional(),
         equipmentId: z.number().optional(),
         location: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
         scheduledStart: z.string().optional(), // ISO date string
         scheduledEnd: z.string().optional(), // ISO date string
       }))
@@ -1305,6 +1307,8 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           personnelId: input.personnelId || null,
           equipmentId: input.equipmentId || null,
           location: input.location || null,
+          latitude: input.latitude ? input.latitude.toString() : null,
+          longitude: input.longitude ? input.longitude.toString() : null,
           scheduledStart: input.scheduledStart ? new Date(input.scheduledStart) : null,
           scheduledEnd: input.scheduledEnd ? new Date(input.scheduledEnd) : null,
         });
@@ -1321,6 +1325,8 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         personnelId: z.number().nullable().optional(),
         equipmentId: z.number().nullable().optional(),
         location: z.string().nullable().optional(),
+        latitude: z.number().nullable().optional(),
+        longitude: z.number().nullable().optional(),
         scheduledStart: z.string().nullable().optional(),
         scheduledEnd: z.string().nullable().optional(),
       }))

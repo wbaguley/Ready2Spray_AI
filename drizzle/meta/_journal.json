@@ -134,6 +134,13 @@
       "when": 1763166609343,
       "tag": "0018_useful_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1763173612474,
+      "tag": "0019_tough_gabe_jones",
+      "breakpoints": true
     }
   ]
 }

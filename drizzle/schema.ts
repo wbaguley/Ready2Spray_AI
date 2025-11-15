@@ -1,4 +1,4 @@
-import { boolean, integer, json, numeric, pgEnum, pgTable, text, timestamp, varchar, date, time } from "drizzle-orm/pg-core";
+import { boolean, integer, json, numeric, pgEnum, pgTable, text, timestamp, varchar, date, time, real } from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
@@ -64,6 +64,8 @@ export const jobsV2 = pgTable("jobs_v2", {
   personnelId: integer("personnel_id"),
   equipmentId: integer("equipment_id"),
   location: text("location"),
+  latitude: numeric("latitude", { precision: 10, scale: 7 }),
+  longitude: numeric("longitude", { precision: 10, scale: 7 }),
   scheduledStart: timestamp("scheduled_start"),
   scheduledEnd: timestamp("scheduled_end"),
   productId: integer("product_id"),

@@ -1467,6 +1467,8 @@ export async function updateJobV2(id: number, updates: Partial<{
   personnelId: number | null;
   equipmentId: number | null;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   scheduledStart: Date | null;
   scheduledEnd: Date | null;
 }>) {
@@ -1489,6 +1491,8 @@ export async function updateJobV2(id: number, updates: Partial<{
   if (updates.personnelId !== undefined) updateData.personnelId = updates.personnelId;
   if (updates.equipmentId !== undefined) updateData.equipmentId = updates.equipmentId;
   if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.latitude !== undefined) updateData.latitude = updates.latitude;
+  if (updates.longitude !== undefined) updateData.longitude = updates.longitude;
   if (updates.scheduledStart !== undefined) updateData.scheduledStart = updates.scheduledStart;
   if (updates.scheduledEnd !== undefined) updateData.scheduledEnd = updates.scheduledEnd;
   

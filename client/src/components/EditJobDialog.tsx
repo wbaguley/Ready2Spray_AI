@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { LocationPicker } from "@/components/LocationPicker";
 
 interface EditJobDialogProps {
   job: any;
@@ -27,6 +28,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
     personnelId: job.personnelId || "",
     equipmentId: job.equipmentId || "",
     location: job.location || "",
+    latitude: job.latitude || null,
+    longitude: job.longitude || null,
     scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
     scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
   });
@@ -58,6 +61,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
         personnelId: job.personnelId || "",
         equipmentId: job.equipmentId || "",
         location: job.location || "",
+        latitude: job.latitude || null,
+        longitude: job.longitude || null,
         scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
         scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
       });
@@ -78,6 +83,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
       personnelId: formData.personnelId ? parseInt(formData.personnelId) : null,
       equipmentId: formData.equipmentId ? parseInt(formData.equipmentId) : null,
       location: formData.location || null,
+      latitude: formData.latitude || null,
+      longitude: formData.longitude || null,
       scheduledStart: formData.scheduledStart || null,
       scheduledEnd: formData.scheduledEnd || null,
     });
@@ -247,12 +254,10 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
             </div>
 
             <div>
-              <Label htmlFor="location">Job Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="Address or field description"
+              <Label>Job Location</Label>
+              <LocationPicker
+                value={{ address: formData.location, latitude: formData.latitude, longitude: formData.longitude }}
+                onChange={(loc) => setFormData({ ...formData, location: loc.address, latitude: loc.latitude, longitude: loc.longitude })}
               />
             </div>
 
