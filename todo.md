@@ -374,3 +374,14 @@
 - [x] Add Scheduled Start and End datetime pickers
 - [x] Update JobV2Detail page to display all new fields
 - [ ] Test creating job with all fields populated
+
+
+## Jobs V2 - Missing Features & Improvements
+- [x] Add PPE Requirements display to job detail page (from linked product)
+- [x] Add Safety & PPE Information section showing Label Signal Word and PPE text
+- [x] Add Assignment & Scheduling section to job detail page
+- [x] Display assigned personnel, equipment, location, scheduled dates on detail page
+- [x] Implement Edit Job functionality with dialog form
+- [x] Add "Edit Job" button to job detail page
+- [x] Create edit job mutation in backend
+- [ ] Test editing job updates all fields correctly

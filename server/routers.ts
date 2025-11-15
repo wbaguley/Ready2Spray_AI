@@ -1309,6 +1309,30 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           scheduledEnd: input.scheduledEnd ? new Date(input.scheduledEnd) : null,
         });
       }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1, "Job title is required").optional(),
+        description: z.string().optional(),
+        jobType: z.enum(["crop_dusting", "pest_control", "fertilization", "herbicide"]).optional(),
+        priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+        status: z.enum(["pending", "ready", "in_progress", "completed", "cancelled"]).optional(),
+        customerId: z.number().nullable().optional(),
+        personnelId: z.number().nullable().optional(),
+        equipmentId: z.number().nullable().optional(),
+        location: z.string().nullable().optional(),
+        scheduledStart: z.string().nullable().optional(),
+        scheduledEnd: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateJobV2 } = await import("./db");
+        const { id, ...updates } = input;
+        return await updateJobV2(id, {
+          ...updates,
+          scheduledStart: updates.scheduledStart ? new Date(updates.scheduledStart) : undefined,
+          scheduledEnd: updates.scheduledEnd ? new Date(updates.scheduledEnd) : undefined,
+        });
+      }),
     linkProduct: protectedProcedure
       .input(z.object({
         jobId: z.number(),

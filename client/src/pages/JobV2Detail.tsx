@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { 
   Loader2, 
@@ -19,15 +25,18 @@ import {
   Wrench,
   Calendar,
   Briefcase,
-  Flag
+  Flag,
+  Pencil
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { EditJobDialog } from "@/components/EditJobDialog";
 
 export default function JobV2Detail() {
   const params = useParams();
   const [, navigate] = useLocation();
   const jobId = params.id ? parseInt(params.id) : 0;
   const { data: job, isLoading, refetch } = trpc.jobsV2.getById.useQuery({ id: jobId });
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleLinkProduct = () => {
     navigate(`/product-lookup?jobV2Id=${jobId}`);
@@ -121,7 +130,19 @@ export default function JobV2Detail() {
               </p>
             </div>
           </div>
+          <Button onClick={() => setShowEditDialog(true)}>
+            <Pencil className="w-4 h-4 mr-2" />
+            Edit Job
+          </Button>
         </div>
+
+        {/* Edit Job Dialog */}
+        <EditJobDialog
+          job={job}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSuccess={() => refetch()}
+        />
 
         {/* Job Information Card */}
         <Card>
@@ -339,7 +360,29 @@ export default function JobV2Detail() {
 
                 <Separator />
 
-
+                {/* Safety & PPE Information */}
+                {(job.product.labelSignalWord || job.product.reentryPpe) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-orange-500" />
+                      Safety & PPE Information
+                    </h3>
+                    <div className="space-y-4">
+                      {job.product.labelSignalWord && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Label Signal Word</label>
+                          <p className="text-lg font-semibold uppercase text-orange-600">{job.product.labelSignalWord}</p>
+                        </div>
+                      )}
+                      {job.product.reentryPpe && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">PPE Requirements</label>
+                          <p className="text-base whitespace-pre-wrap bg-muted p-4 rounded-md">{job.product.reentryPpe}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12">

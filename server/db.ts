@@ -1455,3 +1455,48 @@ export async function getJobsV2WithRelations(orgId: number) {
   
   return result;
 }
+
+
+export async function updateJobV2(id: number, updates: Partial<{
+  title: string;
+  description: string | null;
+  jobType: string | null;
+  priority: string;
+  status: string;
+  customerId: number | null;
+  personnelId: number | null;
+  equipmentId: number | null;
+  location: string | null;
+  scheduledStart: Date | null;
+  scheduledEnd: Date | null;
+}>) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { jobsV2 } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  // Build update object with only provided fields
+  const updateData: any = { updatedAt: new Date() };
+  if (updates.title !== undefined) updateData.title = updates.title;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.jobType !== undefined) updateData.jobType = updates.jobType;
+  if (updates.priority !== undefined) updateData.priority = updates.priority;
+  if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.customerId !== undefined) updateData.customerId = updates.customerId;
+  if (updates.personnelId !== undefined) updateData.personnelId = updates.personnelId;
+  if (updates.equipmentId !== undefined) updateData.equipmentId = updates.equipmentId;
+  if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.scheduledStart !== undefined) updateData.scheduledStart = updates.scheduledStart;
+  if (updates.scheduledEnd !== undefined) updateData.scheduledEnd = updates.scheduledEnd;
+  
+  const result = await db
+    .update(jobsV2)
+    .set(updateData)
+    .where(eq(jobsV2.id, id))
+    .returning();
+  
+  return result[0];
+}
