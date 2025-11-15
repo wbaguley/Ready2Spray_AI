@@ -1538,28 +1538,16 @@ export async function createMapFile(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const { maps } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
   
-  // Build insert object with only user-provided fields
-  const insertData: any = {
-    orgId: data.orgId,
-    name: data.name,
-    fileUrl: data.fileUrl,
-    fileKey: data.fileKey,
-    fileType: data.fileType,
-  };
+  // Use raw SQL to insert only the fields we provide
+  const result = await db.execute(sql`
+    INSERT INTO maps (org_id, job_id, name, file_url, file_key, file_type, file_size, uploaded_by)
+    VALUES (${data.orgId}, ${data.jobId}, ${data.name}, ${data.fileUrl}, ${data.fileKey}, ${data.fileType}, ${data.fileSize || null}, ${data.uploadedBy || null})
+    RETURNING *
+  `);
   
-  // Add optional fields if provided
-  if (data.jobId !== undefined) insertData.jobId = data.jobId;
-  if (data.fileSize !== undefined) insertData.fileSize = data.fileSize;
-  if (data.uploadedBy !== undefined) insertData.uploadedBy = data.uploadedBy;
-  
-  const result = await db
-    .insert(maps)
-    .values(insertData)
-    .returning();
-  
-  return result[0];
+  return result[0] as any;
 }
 
 export async function getMapFilesByJobId(jobId: number) {

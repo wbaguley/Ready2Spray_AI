@@ -428,3 +428,9 @@
 - [x] Fix column mismatch in upload mutation
 - [x] Ensure S3 upload works correctly
 - [x] Test KML file upload end-to-end with real file
+
+
+## CRITICAL: Maps Upload Still Failing
+- [x] Verify actual code in createMapFile function in server/db.ts
+- [x] Properly fix the function to exclude auto-generated columns (using raw SQL)
+- [ ] Test upload works end-to-end
