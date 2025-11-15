@@ -30,6 +30,19 @@ export const applicationMethodEnum = pgEnum("application_method", ["aerial", "gr
 export const servicePlanTypeEnum = pgEnum("service_plan_type", ["monthly", "quarterly", "bi_monthly", "annual", "one_off"]);
 export const servicePlanStatusEnum = pgEnum("service_plan_status", ["active", "paused", "cancelled", "completed"]);
 
+export const waitlist = pgTable("waitlist", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  company: varchar("company", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  message: text("message"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Waitlist = typeof waitlist.$inferSelect;
+export type InsertWaitlist = typeof waitlist.$inferInsert;
+
 export const users = pgTable("users", {
   /**
    * Surrogate primary key. Auto-incremented numeric value managed by the database.

@@ -6,6 +6,22 @@ import { z } from "zod";
 import { updateOrganizationSchema, createSiteSchema, updateSiteSchema, deleteSiteSchema, createEquipmentSchema, updateEquipmentSchema, deleteEquipmentSchema } from "./validation";
 
 export const appRouter = router({
+  // Waitlist router (public)
+  waitlist: router({
+    join: publicProcedure
+      .input(z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email format"),
+        company: z.string().optional(),
+        phone: z.string().optional(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { createWaitlistEntry } = await import("./db");
+        return await createWaitlistEntry(input);
+      }),
+  }),
+
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({

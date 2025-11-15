@@ -1,7 +1,7 @@
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobsV2, InsertJobV2 } from "../drizzle/schema";
+import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobsV2, InsertJobV2, waitlist, InsertWaitlist } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1597,5 +1597,15 @@ export async function deleteMapFile(id: number) {
     .where(eq(maps.id, id))
     .returning();
   
+  return result[0];
+}
+
+
+// Waitlist functions
+export async function createWaitlistEntry(data: InsertWaitlist) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(waitlist).values(data).returning();
   return result[0];
 }

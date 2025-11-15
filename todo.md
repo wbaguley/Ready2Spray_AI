@@ -1191,3 +1191,21 @@
 - [x] New Personnel button - navigates to /personnel?action=create
 - [x] New Product button - navigates to /product-lookup
 - [x] Style buttons with Plus icons for visual clarity
+
+
+## URGENT: OAuth Callback Failure on Published Domain
+- [ ] Fix OAuth callback error on ready2spray-6adcecxv.manus.space
+- [ ] Check OAuth redirect URI configuration
+- [ ] Verify environment variables are correctly set for published domain
+
+
+## Marketing Website with Early Access Waitlist
+- [x] Add Ready2Spray logo to project assets (client/public/)
+- [x] Create marketing landing page component (LandingPage.tsx)
+- [x] Build early access waitlist modal with form
+- [x] Create waitlist database table (name, email, company, phone, message, created_at)
+- [x] Add backend API to save waitlist signups
+- [x] Update App.tsx routing for public marketing pages
+- [x] Apply GTM Planetary brand colors (purple/magenta and cyan)
+- [ ] Test waitlist form submission (pending server restart)
+- [x] Save checkpoint with marketing website

@@ -27,52 +27,202 @@ import CustomerPortal from "./pages/CustomerPortal";
 import UserManagement from "./pages/UserManagement";
 import AuditLog from "./pages/AuditLog";
 import BulkJobImport from "./pages/BulkJobImport";
+import LandingPage from "./pages/LandingPage";
 
 function Router() {
   return (
-    <DashboardLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/jobs/:id" component={JobDetail} />
+    <Switch>
+      {/* Public marketing page */}
+      <Route path="/" component={LandingPage} />
+      
+      {/* Protected app routes - all wrapped in DashboardLayout */}
+      <Route path="/dashboard">
+        {() => (
+          <DashboardLayout>
+            <Dashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/jobs/:id">
+        {() => (
+          <DashboardLayout>
+            <JobDetail />
+          </DashboardLayout>
+        )}
+      </Route>
+      
       <Route path="/flight-board">
-        {() => <ProtectedRoute requiredPermission="view_flight_board"><FlightBoard /></ProtectedRoute>}
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_flight_board">
+              <FlightBoard />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
       </Route>
-      <Route path="/calendar" component={Calendar} />
-      <Route path="/equipment" component={Equipment} />
+      
+      <Route path="/calendar">
+        {() => (
+          <DashboardLayout>
+            <Calendar />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/equipment">
+        {() => (
+          <DashboardLayout>
+            <Equipment />
+          </DashboardLayout>
+        )}
+      </Route>
+      
       <Route path="/equipment-dashboard">
-        {() => <ProtectedRoute requiredPermission="view_equipment_analytics"><EquipmentDashboard /></ProtectedRoute>}
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_equipment_analytics">
+              <EquipmentDashboard />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
       </Route>
-        <Route path="/sites" component={Sites} />
-        <Route path="/products" component={Products} />
+      
+      <Route path="/sites">
+        {() => (
+          <DashboardLayout>
+            <Sites />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/products">
+        {() => (
+          <DashboardLayout>
+            <Products />
+          </DashboardLayout>
+        )}
+      </Route>
+      
       <Route path="/service-plans">
-        {() => <ProtectedRoute requiredPermission="view_service_plans"><ServicePlans /></ProtectedRoute>}
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_service_plans">
+              <ServicePlans />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
       </Route>
-        <Route path="/jobs" component={Jobs} />
-        <Route path="/customers" component={Customers} />
-        <Route path="/personnel">
-          {() => <ProtectedRoute requiredPermission="view_personnel"><Personnel /></ProtectedRoute>}
-        </Route>
-        <Route path="/chat" component={Chat} />
-        <Route path="/maps" component={Maps} />
-        <Route path="/product-lookup" component={ProductLookup} />
-        <Route path="/settings">
-          {() => <ProtectedRoute requiredPermission="view_settings"><Settings /></ProtectedRoute>}
-        </Route>
-        <Route path="/email-test" component={EmailTest} />
-        <Route path="/customer-portal" component={CustomerPortal} />
-        <Route path="/user-management">
-          {() => <ProtectedRoute requiredPermission="view_user_management"><UserManagement /></ProtectedRoute>}
-        </Route>
-        <Route path="/audit-log">
-          {() => <ProtectedRoute requiredPermission="view_settings"><AuditLog /></ProtectedRoute>}
-        </Route>
-        <Route path="/bulk-import">
-          {() => <ProtectedRoute requiredPermission="create_jobs"><BulkJobImport /></ProtectedRoute>}
-        </Route>
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+      
+      <Route path="/jobs">
+        {() => (
+          <DashboardLayout>
+            <Jobs />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/customers">
+        {() => (
+          <DashboardLayout>
+            <Customers />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/personnel">
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_personnel">
+              <Personnel />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/chat">
+        {() => (
+          <DashboardLayout>
+            <Chat />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/maps">
+        {() => (
+          <DashboardLayout>
+            <Maps />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/product-lookup">
+        {() => (
+          <DashboardLayout>
+            <ProductLookup />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/settings">
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_settings">
+              <Settings />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/email-test">
+        {() => (
+          <DashboardLayout>
+            <EmailTest />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/customer-portal">
+        {() => (
+          <DashboardLayout>
+            <CustomerPortal />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/user-management">
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_user_management">
+              <UserManagement />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/audit-log">
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="view_settings">
+              <AuditLog />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/bulk-import">
+        {() => (
+          <DashboardLayout>
+            <ProtectedRoute requiredPermission="create_jobs">
+              <BulkJobImport />
+            </ProtectedRoute>
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/404" component={NotFound} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
