@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { EditJobDialog } from "@/components/EditJobDialog";
+import { MapView } from "@/components/Map";
 
 export default function JobV2Detail() {
   const params = useParams();
@@ -279,12 +280,41 @@ export default function JobV2Detail() {
           </CardHeader>
           <CardContent className="space-y-4">
             {job.location && (
-              <div>
+              <div className="space-y-3">
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   Job Location
                 </label>
                 <p className="text-lg">{job.location}</p>
+                
+                {/* Show map if coordinates are available */}
+                {job.latitude && job.longitude && (
+                  <div className="mt-4 rounded-lg overflow-hidden border">
+                    <MapView
+                      initialCenter={{ lat: parseFloat(job.latitude.toString()), lng: parseFloat(job.longitude.toString()) }}
+                      initialZoom={15}
+                      onMapReady={(map) => {
+                        // Add marker at job location
+                        const position = { lat: parseFloat(job.latitude!.toString()), lng: parseFloat(job.longitude!.toString()) };
+                        
+                        new google.maps.Marker({
+                          position,
+                          map,
+                          title: job.title,
+                          icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: "#8b5cf6",
+                            fillOpacity: 1,
+                            strokeColor: "#ffffff",
+                            strokeWeight: 2,
+                          },
+                        });
+                      }}
+                      className="h-[300px] w-full"
+                    />
+                  </div>
+                )}
               </div>
             )}
             
