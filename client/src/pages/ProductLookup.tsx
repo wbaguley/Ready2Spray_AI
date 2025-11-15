@@ -20,7 +20,6 @@ export default function ProductLookup() {
   const urlParams = new URLSearchParams(window.location.search);
   const jobId = urlParams.get('jobId') ? parseInt(urlParams.get('jobId')!) : null;
   const jobV2Id = urlParams.get('jobV2Id') ? parseInt(urlParams.get('jobV2Id')!) : null;
-  const fromProducts = urlParams.get('from') === 'products';
   
   // Product data form fields
   const [productData, setProductData] = useState({
@@ -215,22 +214,14 @@ export default function ProductLookup() {
           }
         );
       } else {
-        // No jobId - check if we came from Products page
-        const referrer = urlParams.get('from');
-        if (referrer === 'products') {
-          // Return to Products page
-          toast.success("Product saved to library!");
-          navigate('/products');
-        } else {
-          // Navigate to job form with product data
-          const params = new URLSearchParams();
-          params.set('productId', String(product.id || ''));
-          params.set('productName', String(product.nickname || ''));
-          params.set('epaNumber', String(product.epaNumber || ''));
-          params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
-          params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
-          navigate(`/jobs/new?${params.toString()}`);
-        }
+        // No jobId, navigate to job form with product data
+        const params = new URLSearchParams();
+        params.set('productId', String(product.id || ''));
+        params.set('productName', String(product.nickname || ''));
+        params.set('epaNumber', String(product.epaNumber || ''));
+        params.set('reEntryInterval', product.hoursReentry ? `${product.hoursReentry} hours` : '');
+        params.set('preharvestInterval', product.daysPreharvest ? `${product.daysPreharvest} days` : '');
+        navigate(`/jobs/new?${params.toString()}`);
       }
     },
     onError: (error) => {
@@ -272,7 +263,7 @@ export default function ProductLookup() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Chemical Product Lookup</h1>
+          <h1 className="text-3xl font-bold">EPA Product Lookup</h1>
           <p className="text-muted-foreground">Search Agrian Label Center and extract product details with AI</p>
         </div>
       </div>
@@ -400,7 +391,7 @@ export default function ProductLookup() {
           <CardHeader>
             <CardTitle>Product Information</CardTitle>
             <CardDescription>
-              AI-extracted or manually entered chemical product details
+              AI-extracted or manually entered EPA-registered product details
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -520,12 +511,12 @@ export default function ProductLookup() {
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSave} className="flex-1">
                 <Save className="h-4 w-4 mr-2" />
-                {(jobId || jobV2Id) ? 'Save & Link to Job' : fromProducts ? 'Save Product' : 'Save & Return to Job Form'}
+                {(jobId || jobV2Id) ? 'Save & Link to Job' : 'Save & Return to Job Form'}
               </Button>
               <Button onClick={handleClear} variant="outline">
                 Clear Form
               </Button>
-              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs/${jobV2Id}` : fromProducts ? "/products" : "/jobs")} variant="ghost">
+              <Button onClick={() => navigate(jobId ? `/jobs/${jobId}` : jobV2Id ? `/jobs/${jobV2Id}` : "/jobs")} variant="ghost">
                 Cancel
               </Button>
             </div>

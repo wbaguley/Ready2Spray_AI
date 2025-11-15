@@ -61,12 +61,12 @@ export default function Products() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Chemical Products</h1>
+          <h1 className="text-3xl font-bold tracking-tight">EPA Products</h1>
           <p className="text-muted-foreground">
-            Manage all chemical product labels and compliance data
+            Manage all uploaded EPA product labels and compliance data
           </p>
         </div>
-        <Button onClick={() => setLocation("/product-lookup?from=products")}>
+        <Button onClick={() => setLocation("/product-lookup")}>
           <Plus className="mr-2 h-4 w-4" />
           Upload Product
         </Button>
@@ -164,7 +164,7 @@ export default function Products() {
                   : "No products uploaded yet"}
               </div>
               {!searchTerm && (
-                <Button onClick={() => setLocation("/product-lookup?from=products")}>
+                <Button onClick={() => setLocation("/product-lookup")}>
                   <Plus className="mr-2 h-4 w-4" />
                   Upload Your First Product
                 </Button>

@@ -33,7 +33,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { MapView } from "@/components/Map";
 import { MapFilesSection } from "@/components/MapFilesSection";
-import { ProductSelector } from "@/components/ProductSelector";
 
 export default function JobV2Detail() {
   const params = useParams();
@@ -52,25 +51,6 @@ export default function JobV2Detail() {
       toast.error(`Failed to delete job: ${error.message}`);
     },
   });
-
-  const linkProductMutation = trpc.jobsV2.linkProduct.useMutation({
-    onSuccess: () => {
-      toast.success("Product linked successfully");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(`Failed to link product: ${error.message}`);
-    },
-  });
-
-  const handleProductChange = (productId: number | null) => {
-    if (productId) {
-      linkProductMutation.mutate({
-        jobId,
-        productId,
-      });
-    }
-  };
 
   const handleDelete = () => {
     deleteJobMutation.mutate({ id: jobId });
@@ -383,16 +363,10 @@ export default function JobV2Detail() {
                   Link a product to view EPA compliance and agricultural details
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <ProductSelector
-                  value={job.productId || null}
-                  onChange={handleProductChange}
-                />
-                <Button onClick={handleLinkProduct} variant="outline">
-                  <LinkIcon className="w-4 h-4 mr-2" />
-                  Upload New
-                </Button>
-              </div>
+              <Button onClick={handleLinkProduct}>
+                <LinkIcon className="w-4 h-4 mr-2" />
+                {job.productId ? "Change Product" : "Link Product"}
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
