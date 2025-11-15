@@ -26,7 +26,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
     lng: number;
   } | null>(
     value?.latitude && value?.longitude
-      ? { lat: value.latitude, lng: value.longitude }
+      ? { lat: Number(value.latitude), lng: Number(value.longitude) }
       : null
   );
   
@@ -39,7 +39,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
       setSearchQuery(value.address);
     }
     if (value?.latitude && value?.longitude) {
-      setSelectedLocation({ lat: value.latitude, lng: value.longitude });
+      setSelectedLocation({ lat: Number(value.latitude), lng: Number(value.longitude) });
     }
   }, [value]);
 

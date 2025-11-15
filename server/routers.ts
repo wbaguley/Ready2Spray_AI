@@ -1370,6 +1370,49 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
         const { deleteJobV2 } = await import("./db");
         return await deleteJobV2(input.id);
       }),
+    // Map Files endpoints
+    uploadMapFile: protectedProcedure
+      .input(z.object({
+        jobId: z.number(),
+        name: z.string(),
+        fileType: z.enum(["kml", "gpx", "geojson"]),
+        fileContent: z.string(), // Base64 encoded file content
+        fileSize: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getOrCreateUserOrganization, createMapFile } = await import("./db");
+        const { storagePut } = await import("./storage");
+        const org = await getOrCreateUserOrganization(ctx.user.id);
+        
+        // Decode base64 and upload to S3
+        const fileBuffer = Buffer.from(input.fileContent, 'base64');
+        const fileKey = `org-${org.id}/jobs/${input.jobId}/maps/${Date.now()}-${input.name}`;
+        const { url } = await storagePut(fileKey, fileBuffer, `application/${input.fileType}`);
+        
+        return await createMapFile({
+          jobId: input.jobId,
+          orgId: org.id,
+          name: input.name,
+          fileType: input.fileType,
+          fileUrl: url,
+          fileKey,
+          fileSize: input.fileSize,
+          uploadedBy: ctx.user.id,
+        });
+      }),
+    getMapFiles: protectedProcedure
+      .input(z.object({ jobId: z.number() }))
+      .query(async ({ input }) => {
+        const { getMapFilesByJobId } = await import("./db");
+        return await getMapFilesByJobId(input.jobId);
+      }),
+    deleteMapFile: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteMapFile } = await import("./db");
+        // TODO: Also delete from S3 using fileKey
+        return await deleteMapFile(input.id);
+      }),
   }),
 });
 

@@ -32,6 +32,7 @@ import {
 import DashboardLayout from "@/components/DashboardLayout";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { MapView } from "@/components/Map";
+import { MapFilesSection } from "@/components/MapFilesSection";
 
 export default function JobV2Detail() {
   const params = useParams();
@@ -345,6 +346,9 @@ export default function JobV2Detail() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Map Files Section */}
+        <MapFilesSection jobId={job.id} />
 
         {/* Product Section */}
         <Card>

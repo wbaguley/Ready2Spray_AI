@@ -518,10 +518,13 @@ export type InsertAiUsage = typeof aiUsage.$inferInsert;
 export const maps = pgTable("maps", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   orgId: integer("org_id").notNull().references(() => organizations.id),
+  jobId: integer("job_id").references(() => jobsV2.id, { onDelete: "cascade" }), // Optional: for job-specific maps
   name: varchar("name", { length: 255 }).notNull(),
   fileUrl: text("file_url").notNull(),
   fileKey: varchar("file_key", { length: 500 }).notNull(),
   fileType: fileTypeEnum("file_type").notNull(),
+  fileSize: integer("file_size"), // Size in bytes
+  uploadedBy: integer("uploaded_by").references(() => users.id),
   publicUrl: text("public_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -732,3 +735,4 @@ export const productsComplete = pgTable("products_complete", {
 
 export type ProductComplete = typeof productsComplete.$inferSelect;
 export type InsertProductComplete = typeof productsComplete.$inferInsert;
+

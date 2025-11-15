@@ -1522,3 +1522,56 @@ export async function deleteJobV2(id: number) {
   
   return result[0];
 }
+
+// ==================== Map Files Functions ====================
+
+export async function createMapFile(data: {
+  jobId: number;
+  name: string;
+  fileType: "kml" | "gpx" | "geojson";
+  fileUrl: string;
+  fileKey: string;
+  fileSize?: number;
+  uploadedBy?: number;
+  orgId: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { maps } = await import("../drizzle/schema");
+  
+  const result = await db
+    .insert(maps)
+    .values(data)
+    .returning();
+  
+  return result[0];
+}
+
+export async function getMapFilesByJobId(jobId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { maps } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .select()
+    .from(maps)
+    .where(eq(maps.jobId, jobId));
+}
+
+export async function deleteMapFile(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { maps } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  const result = await db
+    .delete(maps)
+    .where(eq(maps.id, id))
+    .returning();
+  
+  return result[0];
+}
