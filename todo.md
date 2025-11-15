@@ -1191,3 +1191,13 @@
 - [x] New Personnel button - navigates to /personnel?action=create
 - [x] New Product button - navigates to /product-lookup
 - [x] Style buttons with Plus icons for visual clarity
+
+
+---
+
+## RENAME EPA PRODUCTS TO CHEMICAL PRODUCTS
+
+- [x] Update Dashboard.tsx stats card description
+- [x] Update Products.tsx page title and descriptions
+- [x] Update ProductLookup.tsx page title and descriptions
+- [x] Test all changes display correctly

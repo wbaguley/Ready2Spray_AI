@@ -61,9 +61,9 @@ export default function Products() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">EPA Products</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Chemical Products</h1>
           <p className="text-muted-foreground">
-            Manage all uploaded EPA product labels and compliance data
+            Manage all chemical product labels and compliance data
           </p>
         </div>
         <Button onClick={() => setLocation("/product-lookup")}>

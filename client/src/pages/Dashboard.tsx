@@ -37,7 +37,7 @@ export default function Dashboard() {
       title: "Products",
       value: products?.length || 0,
       icon: Package,
-      description: "EPA-registered products",
+      description: "Chemical products",
       loading: productsLoading,
     },
   ];

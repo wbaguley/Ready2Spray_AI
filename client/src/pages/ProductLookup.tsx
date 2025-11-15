@@ -263,7 +263,7 @@ export default function ProductLookup() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">EPA Product Lookup</h1>
+          <h1 className="text-3xl font-bold">Chemical Product Lookup</h1>
           <p className="text-muted-foreground">Search Agrian Label Center and extract product details with AI</p>
         </div>
       </div>
@@ -391,7 +391,7 @@ export default function ProductLookup() {
           <CardHeader>
             <CardTitle>Product Information</CardTitle>
             <CardDescription>
-              AI-extracted or manually entered EPA-registered product details
+              AI-extracted or manually entered chemical product details
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
