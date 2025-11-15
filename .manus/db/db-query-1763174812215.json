@@ -1,0 +1,19 @@
+{
+  "query": "SELECT column_name FROM information_schema.columns WHERE table_name = 'maps' AND column_name IN ('job_id', 'file_size', 'uploaded_by');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.cb88ed38e99c --database 6adCeCxV2Yg38ygq7gdRsu --execute SELECT column_name FROM information_schema.columns WHERE table_name = 'maps' AND column_name IN ('job_id', 'file_size', 'uploaded_by');",
+  "rows": [
+    {
+      "column_name": "job_id"
+    },
+    {
+      "column_name": "file_size"
+    },
+    {
+      "column_name": "uploaded_by"
+    }
+  ],
+  "messages": [],
+  "stdout": "column_name\njob_id\nfile_size\nuploaded_by\n",
+  "stderr": "",
+  "execution_time_ms": 168
+}
