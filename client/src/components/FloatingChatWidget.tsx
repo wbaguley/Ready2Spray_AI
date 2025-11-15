@@ -108,7 +108,7 @@ export function FloatingChatWidget() {
       setUnreadCount(0);
       setLastReadTimestamp(Date.now());
     }
-  }, [messages, isOpen, lastReadTimestamp]);
+  }, [messages, isOpen]); // Removed lastReadTimestamp from dependencies to prevent infinite loop
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -168,7 +168,8 @@ export function FloatingChatWidget() {
       {!isOpen && (
         <Button
           onClick={handleOpen}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 hover:scale-110 transition-transform relative"
+          className="h-14 w-14 rounded-full shadow-lg hover:scale-110 transition-transform"
+          style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 9999 }}
           size="icon"
         >
           <MessageSquare className="h-6 w-6" />
@@ -186,7 +187,7 @@ font-semibold"
 
       {/* Chat Modal - Minimized State */}
       {isOpen && isMinimized && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 bg-card border rounded-lg shadow-lg">
+        <div className="w-80 bg-card border rounded-lg shadow-lg" style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 9999 }}>
           <div className="flex items-center justify-between px-4 py-3 border-b cursor-pointer hover:bg-accent/50 transition-colors">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-sm">
@@ -219,7 +220,7 @@ font-semibold"
       {/* Chat Modal - Full State */}
       {isOpen && !isMinimized && (
         <Dialog open={true} onOpenChange={handleClose}>
-          <DialogContent className="max-w-md h-[600px] p-0 flex flex-col fixed bottom-6 right-6 top-auto left-auto translate-x-0 translate-y-0 m-0 data-[state=open]:slide-in-from-bottom-2 data-[state=open]:slide-in-from-right-2">
+          <DialogContent className="max-w-md h-[600px] p-0 flex flex-col top-auto left-auto translate-x-0 translate-y-0 m-0 data-[state=open]:slide-in-from-bottom-2 data-[state=open]:slide-in-from-right-2" style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 9999 }}>
             <DialogHeader className="px-6 py-4 border-b">
               <div className="flex items-center justify-between">
                 <DialogTitle className="flex items-center gap-2">

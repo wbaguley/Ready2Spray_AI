@@ -1171,3 +1171,10 @@
 - [ ] Identify missing columns causing query failure
 - [ ] Add missing columns to Supabase or update query to handle missing columns
 - [ ] Test jobs list query works without errors
+
+
+### AI Chat Bugs
+- [x] Fix infinite loop causing "Maximum update depth exceeded" error
+- [x] Fix AI chat button positioning - moved to bottom-right corner
+- [x] Use inline styles for fixed positioning to prevent CSS conflicts
+- [x] Applied consistent positioning to button, minimized, and full chat states
