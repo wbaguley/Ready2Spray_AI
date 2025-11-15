@@ -103,7 +103,7 @@ export default function JobsV2() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Jobs V2</h1>
+            <h1 className="text-3xl font-bold">Jobs</h1>
             <p className="text-muted-foreground mt-1">
               Comprehensive job management system
             </p>
@@ -357,7 +357,7 @@ export default function JobsV2() {
                   <Card
                     key={job.id}
                     className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => navigate(`/jobs-v2/${job.id}`)}
+                    onClick={() => navigate(`/jobs/${job.id}`)}
                   >
                     <CardHeader>
                       <div className="flex items-start justify-between">

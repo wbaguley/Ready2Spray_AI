@@ -683,23 +683,33 @@ export async function getIntegrationConnections(organizationId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const { integrationConnections } = await import("../drizzle/schema");
-  return await db.select().from(integrationConnections).where(eq(integrationConnections.organizationId, organizationId));
+  try {
+    const { integrationConnections } = await import("../drizzle/schema");
+    return await db.select().from(integrationConnections).where(eq(integrationConnections.organizationId, organizationId));
+  } catch (error) {
+    console.warn('[getIntegrationConnections] Table may not exist yet:', error);
+    return [];
+  }
 }
 
 export async function getIntegrationConnection(organizationId: number, integrationType: string) {
   const db = await getDb();
   if (!db) return null;
   
-  const { integrationConnections } = await import("../drizzle/schema");
-  const { and } = await import("drizzle-orm");
-  const result = await db.select().from(integrationConnections).where(
-    and(
-      eq(integrationConnections.organizationId, organizationId),
-      sql`${integrationConnections.integrationType} = ${integrationType}`
-    )
-  ).limit(1);
-  return result[0] || null;
+  try {
+    const { integrationConnections } = await import("../drizzle/schema");
+    const { and } = await import("drizzle-orm");
+    const result = await db.select().from(integrationConnections).where(
+      and(
+        eq(integrationConnections.organizationId, organizationId),
+        sql`${integrationConnections.integrationType} = ${integrationType}`
+      )
+    ).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.warn('[getIntegrationConnection] Table may not exist yet:', error);
+    return null;
+  }
 }
 
 export async function createIntegrationConnection(data: any) {

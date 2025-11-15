@@ -1145,3 +1145,18 @@
 - [x] Add Products to sidebar navigation (icon: Pill)
 - [x] Add Products route to App.tsx
 - [x] Test Products page displays all uploaded products
+
+
+---
+
+## BUG FIXES - CRITICAL
+
+### Job Detail Page 404 Error
+- [x] Check Jobs page - ensure it links to `/jobs/:id` not `/jobs-v2/:id`
+- [x] Verify App.tsx route is correct
+- [x] Test clicking a job from Jobs list navigates correctly
+
+### Database Schema Missing Tables
+- [x] Add error handling for missing `integration_connections` table
+- [x] Test job queries work without errors
+- [x] Job detail page loads successfully
