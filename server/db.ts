@@ -1,15 +1,30 @@
-import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobsV2, InsertJobV2, waitlist, InsertWaitlist } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  // Build Supabase connection string with password from secret (using Session Pooler for IPv4 compatibility)
+  const supabasePassword = process.env.R2S_Supabase;
+  const supabaseUrl = supabasePassword 
+    ? `postgresql://postgres.yqimcvatzaldidmqmvtr:${encodeURIComponent(supabasePassword)}@aws-1-us-west-1.pooler.supabase.com:5432/postgres`
+    : null;
+  
+  const connectionString = supabaseUrl || process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
+  
+  if (!_db && connectionString) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(connectionString, {
+        ssl: { rejectUnauthorized: false },
+        max: 1,
+        idle_timeout: 20, // 20 seconds
+        max_lifetime: 60 * 30,
+      });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -59,6 +74,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = 'admin';
       updateSet.role = 'admin';
     }
+    
+    // Set userRole for owner to 'admin' for permissions system
+    if (user.openId === ENV.ownerOpenId) {
+      values.userRole = 'admin';
+      updateSet.userRole = 'admin';
+    }
 
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
@@ -68,7 +89,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    // PostgreSQL upsert syntax
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -89,4 +112,1612 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Organization helpers
+export async function getOrCreateUserOrganization(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { organizations } = await import("../drizzle/schema");
+  
+  // Check if user already has an organization
+  const existing = await db.select().from(organizations).where(eq(organizations.ownerId, userId)).limit(1);
+  
+  if (existing.length > 0) {
+    return existing[0];
+  }
+  
+  // Create new organization for user - PostgreSQL returns the inserted row
+  const result = await db.insert(organizations).values({
+    name: `Organization ${userId}`,
+    ownerId: userId,
+  }).returning();
+  
+  return result[0];
+}
+
+export async function updateOrganization(orgId: number, data: Partial<{
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  phone: string;
+  email: string;
+  website: string;
+  notes: string;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { organizations } = await import("../drizzle/schema");
+  
+  const result = await db.update(organizations)
+    .set(data)
+    .where(eq(organizations.id, orgId))
+    .returning();
+  
+  return result[0];
+}
+
+export async function getOrganizationById(orgId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { organizations } = await import("../drizzle/schema");
+  const result = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+// Customer helpers
+export async function getCustomersByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { customers } = await import("../drizzle/schema");
+  return await db.select().from(customers).where(eq(customers.orgId, orgId));
+}
+
+export async function createCustomer(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { customers } = await import("../drizzle/schema");
+  const result = await db.insert(customers).values(data).returning();
+  return result[0];
+}
+
+export async function updateCustomer(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { customers } = await import("../drizzle/schema");
+  const result = await db.update(customers).set(data).where(eq(customers.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteCustomer(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { customers } = await import("../drizzle/schema");
+  await db.delete(customers).where(eq(customers.id, id));
+}
+
+// Job helpers
+export async function getJobsByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobsV2: jobs, customers, personnel } = await import("../drizzle/schema");
+  
+  // Join jobs with customers and personnel to get display names
+  const result = await db
+    .select({
+      id: jobs.id,
+      orgId: jobs.orgId,
+      customerId: jobs.customerId,
+      personnelId: jobs.personnelId,
+      equipmentId: jobs.equipmentId,
+      productId: jobs.productId,
+      title: jobs.title,
+      description: jobs.description,
+      jobType: jobs.jobType,
+      status: jobs.status,
+      priority: jobs.priority,
+      location: jobs.location,
+      latitude: jobs.latitude,
+      longitude: jobs.longitude,
+      scheduledStart: jobs.scheduledStart,
+      scheduledEnd: jobs.scheduledEnd,
+      createdAt: jobs.createdAt,
+      updatedAt: jobs.updatedAt,
+      // Customer name from customers table
+      customerName: customers.name,
+      // Personnel name from personnel table
+      personnelName: personnel.name,
+    })
+    .from(jobs)
+    .leftJoin(customers, eq(jobs.customerId, customers.id))
+    .leftJoin(personnel, eq(jobs.personnelId, personnel.id))
+    .where(eq(jobs.orgId, orgId));
+  
+  return result;
+}
+
+export async function createJob(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Use raw SQL to avoid Drizzle trying to insert into columns that don't exist
+  const { sql } = await import("drizzle-orm");
+  
+  const result = await db.execute(sql`
+    INSERT INTO jobs_v2 (
+      org_id,
+      title,
+      description,
+      job_type,
+      priority,
+      status,
+      customer_id,
+      personnel_id,
+      equipment_id,
+      product_id,
+      location,
+      latitude,
+      longitude,
+      scheduled_start,
+      scheduled_end,
+      created_at,
+      updated_at
+    ) VALUES (
+      ${data.orgId},
+      ${data.title},
+      ${data.description || null},
+      ${data.jobType || null},
+      ${data.priority || 'medium'},
+      ${data.status || 'pending'},
+      ${data.customerId || null},
+      ${data.personnelId || null},
+      ${data.equipmentId || null},
+      ${data.productId || null},
+      ${data.location || null},
+      ${data.latitude || null},
+      ${data.longitude || null},
+      ${data.scheduledStart || null},
+      ${data.scheduledEnd || null},
+      NOW(),
+      NOW()
+    )
+    RETURNING *
+  `);
+  
+  return result[0];
+}
+
+export async function getJobById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { jobsV2: jobs } = await import("../drizzle/schema");
+  const result = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateJob(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobsV2: jobs } = await import("../drizzle/schema");
+  const result = await db.update(jobs).set(data).where(eq(jobs.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteJob(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobs } = await import("../drizzle/schema");
+  await db.delete(jobs).where(eq(jobs.id, id));
+}
+
+// Job Status helpers
+export async function getJobStatusesByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const { asc } = await import("drizzle-orm");
+  return await db.select().from(jobStatuses).where(eq(jobStatuses.orgId, orgId)).orderBy(asc(jobStatuses.displayOrder));
+}
+
+export async function createJobStatus(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const result = await db.insert(jobStatuses).values(data).returning();
+  return result[0];
+}
+
+export async function updateJobStatus(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const result = await db.update(jobStatuses).set(data).where(eq(jobStatuses.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteJobStatus(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  await db.delete(jobStatuses).where(eq(jobStatuses.id, id));
+}
+
+export async function reorderJobStatuses(statusIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  
+  // Update each status with its new display order
+  for (let i = 0; i < statusIds.length; i++) {
+    await db.update(jobStatuses)
+      .set({ displayOrder: i })
+      .where(eq(jobStatuses.id, statusIds[i]));
+  }
+}
+
+export async function getDefaultJobStatus(orgId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { jobStatuses } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  const result = await db.select().from(jobStatuses).where(
+    and(eq(jobStatuses.orgId, orgId), eq(jobStatuses.isDefault, true))
+  ).limit(1);
+  return result[0] || null;
+}
+
+// Job Status History helpers
+export async function createJobStatusHistory(data: {
+  jobId: number;
+  fromStatusId: number | null;
+  toStatusId: number;
+  changedByUserId: number;
+  notes?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobStatusHistory } = await import("../drizzle/schema");
+  const result = await db.insert(jobStatusHistory).values(data).returning();
+  return result[0];
+}
+
+export async function getJobStatusHistory(jobId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobStatusHistory, jobStatuses, users } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  
+  // Join with job_statuses and users to get status names and user names
+  const result = await db
+    .select({
+      id: jobStatusHistory.id,
+      jobId: jobStatusHistory.jobId,
+      fromStatusId: jobStatusHistory.fromStatusId,
+      toStatusId: jobStatusHistory.toStatusId,
+      changedByUserId: jobStatusHistory.changedByUserId,
+      notes: jobStatusHistory.notes,
+      createdAt: jobStatusHistory.createdAt,
+      fromStatusName: jobStatuses.name,
+      toStatusName: jobStatuses.name,
+      changedByUserName: users.name,
+    })
+    .from(jobStatusHistory)
+    .leftJoin(jobStatuses, eq(jobStatusHistory.fromStatusId, jobStatuses.id))
+    .leftJoin(jobStatuses, eq(jobStatusHistory.toStatusId, jobStatuses.id))
+    .leftJoin(users, eq(jobStatusHistory.changedByUserId, users.id))
+    .where(eq(jobStatusHistory.jobId, jobId))
+    .orderBy(desc(jobStatusHistory.createdAt));
+    
+  return result;
+}
+
+// Personnel helpers
+export async function getPersonnelByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { personnel } = await import("../drizzle/schema");
+  return await db.select().from(personnel).where(eq(personnel.orgId, orgId));
+}
+
+export async function createPersonnel(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { personnel } = await import("../drizzle/schema");
+  const result = await db.insert(personnel).values(data).returning();
+  return result[0];
+}
+
+export async function updatePersonnel(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { personnel } = await import("../drizzle/schema");
+  const result = await db.update(personnel).set(data).where(eq(personnel.id, id)).returning();
+  return result[0];
+}
+
+export async function deletePersonnel(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { personnel } = await import("../drizzle/schema");
+  await db.delete(personnel).where(eq(personnel.id, id));
+}
+
+// Product helpers
+export async function getProductsByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { products } = await import("../drizzle/schema");
+  return await db.select().from(products).where(eq(products.orgId, orgId));
+}
+
+// AI Conversation helpers
+export async function getConversationsByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { aiConversations } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  return await db.select().from(aiConversations).where(eq(aiConversations.orgId, orgId)).orderBy(desc(aiConversations.createdAt));
+}
+
+export async function createConversation(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { aiConversations } = await import("../drizzle/schema");
+  const result = await db.insert(aiConversations).values(data).returning();
+  return result[0];
+}
+
+export async function deleteConversation(conversationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { aiConversations, aiMessages } = await import("../drizzle/schema");
+  
+  // Delete all messages in the conversation first
+  await db.delete(aiMessages).where(eq(aiMessages.conversationId, conversationId));
+  
+  // Delete the conversation
+  await db.delete(aiConversations).where(eq(aiConversations.id, conversationId));
+}
+
+// AI Message helpers
+export async function getMessagesByConversationId(conversationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { aiMessages } = await import("../drizzle/schema");
+  const { asc } = await import("drizzle-orm");
+  return await db.select().from(aiMessages).where(eq(aiMessages.conversationId, conversationId)).orderBy(asc(aiMessages.createdAt));
+}
+
+export async function createMessage(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { aiMessages } = await import("../drizzle/schema");
+  const result = await db.insert(aiMessages).values(data).returning();
+  return result[0];
+}
+
+// Map helpers
+export async function getMapsByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { maps } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  return await db.select().from(maps).where(eq(maps.orgId, orgId)).orderBy(desc(maps.createdAt));
+}
+
+export async function createMap(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { maps } = await import("../drizzle/schema");
+  const result = await db.insert(maps).values(data).returning();
+  return result[0];
+}
+
+export async function deleteMap(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { maps } = await import("../drizzle/schema");
+  await db.delete(maps).where(eq(maps.id, id));
+}
+
+// Sites functions
+export async function getSitesByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { sites, customers } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  
+  // Join with customers to get customer name
+  const result = await db
+    .select({
+      id: sites.id,
+      orgId: sites.orgId,
+      customerId: sites.customerId,
+      customerName: customers.name,
+      name: sites.name,
+      siteType: sites.siteType,
+      address: sites.address,
+      city: sites.city,
+      state: sites.state,
+      zipCode: sites.zipCode,
+      polygon: sites.polygon,
+      centerLat: sites.centerLat,
+      centerLng: sites.centerLng,
+      acres: sites.acres,
+      crop: sites.crop,
+      variety: sites.variety,
+      growthStage: sites.growthStage,
+      sensitiveAreas: sites.sensitiveAreas,
+      propertyType: sites.propertyType,
+      units: sites.units,
+      notes: sites.notes,
+      createdAt: sites.createdAt,
+      updatedAt: sites.updatedAt,
+    })
+    .from(sites)
+    .leftJoin(customers, eq(sites.customerId, customers.id))
+    .where(eq(sites.orgId, orgId))
+    .orderBy(desc(sites.createdAt));
+  
+  return result;
+}
+
+export async function getSiteById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { sites, customers } = await import("../drizzle/schema");
+  
+  const result = await db
+    .select({
+      id: sites.id,
+      orgId: sites.orgId,
+      customerId: sites.customerId,
+      customerName: customers.name,
+      name: sites.name,
+      siteType: sites.siteType,
+      address: sites.address,
+      city: sites.city,
+      state: sites.state,
+      zipCode: sites.zipCode,
+      polygon: sites.polygon,
+      centerLat: sites.centerLat,
+      centerLng: sites.centerLng,
+      acres: sites.acres,
+      crop: sites.crop,
+      variety: sites.variety,
+      growthStage: sites.growthStage,
+      sensitiveAreas: sites.sensitiveAreas,
+      propertyType: sites.propertyType,
+      units: sites.units,
+      notes: sites.notes,
+      createdAt: sites.createdAt,
+      updatedAt: sites.updatedAt,
+    })
+    .from(sites)
+    .leftJoin(customers, eq(sites.customerId, customers.id))
+    .where(eq(sites.id, id))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function createSite(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sites } = await import("../drizzle/schema");
+  const result = await db.insert(sites).values(data).returning();
+  return result[0];
+}
+
+export async function updateSite(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sites } = await import("../drizzle/schema");
+  const result = await db.update(sites).set(data).where(eq(sites.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteSite(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sites } = await import("../drizzle/schema");
+  await db.delete(sites).where(eq(sites.id, id));
+}
+
+
+// ============================================
+// Integration Procedures
+// ============================================
+
+export async function getIntegrationConnections(organizationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const { integrationConnections } = await import("../drizzle/schema");
+    return await db.select().from(integrationConnections).where(eq(integrationConnections.organizationId, organizationId));
+  } catch (error) {
+    console.warn('[getIntegrationConnections] Table may not exist yet:', error);
+    return [];
+  }
+}
+
+export async function getIntegrationConnection(organizationId: number, integrationType: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const { integrationConnections } = await import("../drizzle/schema");
+    const { and } = await import("drizzle-orm");
+    const result = await db.select().from(integrationConnections).where(
+      and(
+        eq(integrationConnections.organizationId, organizationId),
+        sql`${integrationConnections.integrationType} = ${integrationType}`
+      )
+    ).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.warn('[getIntegrationConnection] Table may not exist yet:', error);
+    return null;
+  }
+}
+
+export async function createIntegrationConnection(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  const result = await db.insert(integrationConnections).values(data).returning();
+  return result[0];
+}
+
+export async function updateIntegrationConnection(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  const result = await db.update(integrationConnections).set(data).where(eq(integrationConnections.id, id)).returning();
+  return result[0];
+}
+
+export async function deleteIntegrationConnection(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationConnections } = await import("../drizzle/schema");
+  await db.delete(integrationConnections).where(eq(integrationConnections.id, id));
+}
+
+export async function createSyncLog(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationSyncLogs } = await import("../drizzle/schema");
+  const result = await db.insert(integrationSyncLogs).values(data).returning();
+  return result[0];
+}
+
+export async function getSyncLogs(connectionId: number, limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { integrationSyncLogs } = await import("../drizzle/schema");
+  const { desc } = await import("drizzle-orm");
+  return await db.select().from(integrationSyncLogs)
+    .where(eq(integrationSyncLogs.connectionId, connectionId))
+    .orderBy(desc(integrationSyncLogs.syncedAt))
+    .limit(limit);
+}
+
+export async function getEntityMapping(connectionId: number, entityType: string, ready2sprayId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { integrationEntityMappings } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  const result = await db.select().from(integrationEntityMappings).where(
+    and(
+      eq(integrationEntityMappings.connectionId, connectionId),
+      sql`${integrationEntityMappings.entityType} = ${entityType}`,
+      eq(integrationEntityMappings.ready2sprayId, ready2sprayId)
+    )
+  ).limit(1);
+  return result[0] || null;
+}
+
+export async function createEntityMapping(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { integrationEntityMappings } = await import("../drizzle/schema");
+  const { and } = await import("drizzle-orm");
+  
+  // Check if mapping already exists
+  const existing = await db.select().from(integrationEntityMappings).where(
+    and(
+      eq(integrationEntityMappings.connectionId, data.connectionId),
+      sql`${integrationEntityMappings.entityType} = ${data.entityType}`,
+      eq(integrationEntityMappings.ready2sprayId, data.ready2sprayId)
+    )
+  ).limit(1);
+  
+  if (existing.length > 0) {
+    // Update existing mapping
+    const result = await db.update(integrationEntityMappings)
+      .set({ externalId: data.externalId, lastSyncedAt: new Date() })
+      .where(eq(integrationEntityMappings.id, existing[0].id))
+      .returning();
+    return result[0];
+  } else {
+    // Create new mapping
+    const result = await db.insert(integrationEntityMappings).values({
+      ...data,
+      lastSyncedAt: new Date()
+    }).returning();
+    return result[0];
+  }
+}
+
+
+// ============================================================================
+// Equipment Functions
+// ============================================================================
+
+export async function getEquipmentByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(equipment).where(eq(equipment.orgId, orgId));
+  return result;
+}
+
+export async function getEquipmentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(equipment).where(eq(equipment.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createEquipment(data: InsertEquipment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(equipment).values(data);
+}
+
+export async function updateEquipment(id: number, data: Partial<InsertEquipment>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(equipment).set(data).where(eq(equipment.id, id));
+}
+
+export async function deleteEquipment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(equipment).where(eq(equipment.id, id));
+}
+
+
+// ============================================================================
+// Maintenance Tasks
+// ============================================================================
+
+export async function getMaintenanceTasksByEquipmentId(equipmentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(maintenanceTasks)
+    .where(eq(maintenanceTasks.equipmentId, equipmentId))
+    .orderBy(maintenanceTasks.nextDueDate);
+  
+  return result;
+}
+
+export async function getAllMaintenanceTasks(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all equipment for this org first
+  const orgEquipment = await getEquipmentByOrgId(orgId);
+  const equipmentIds = orgEquipment.map(e => e.id);
+  
+  if (equipmentIds.length === 0) return [];
+  
+  const result = await db
+    .select()
+    .from(maintenanceTasks)
+    .where(sql`${maintenanceTasks.equipmentId} IN (${sql.join(equipmentIds.map(id => sql`${id}`), sql`, `)})`)
+    .orderBy(maintenanceTasks.nextDueDate);
+  
+  return result;
+}
+
+export async function getMaintenanceTaskById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select()
+    .from(maintenanceTasks)
+    .where(eq(maintenanceTasks.id, id))
+    .limit(1);
+  
+  return result[0];
+}
+
+export async function createMaintenanceTask(task: InsertMaintenanceTask) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(maintenanceTasks).values(task).returning();
+  return result[0];
+}
+
+export async function updateMaintenanceTask(id: number, updates: Partial<InsertMaintenanceTask>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .update(maintenanceTasks)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(maintenanceTasks.id, id))
+    .returning();
+  
+  return result[0];
+}
+
+export async function completeMaintenanceTask(id: number, actualCost?: string, notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const task = await getMaintenanceTaskById(id);
+  if (!task) throw new Error("Task not found");
+  
+  const now = new Date();
+  let nextDueDate: Date | null = null;
+  
+  // Calculate next due date if recurring
+  if (task.isRecurring && task.frequencyType && task.frequencyValue) {
+    switch (task.frequencyType) {
+      case "hours":
+        // For hours-based, we'd need equipment hours tracking
+        // For now, skip automatic calculation
+        break;
+      case "days":
+        nextDueDate = new Date(now);
+        nextDueDate.setDate(nextDueDate.getDate() + task.frequencyValue);
+        break;
+      case "months":
+        nextDueDate = new Date(now);
+        nextDueDate.setMonth(nextDueDate.getMonth() + task.frequencyValue);
+        break;
+    }
+  }
+  
+  const updates: Partial<InsertMaintenanceTask> = {
+    status: "completed",
+    lastCompletedDate: now,
+    nextDueDate: nextDueDate,
+    updatedAt: now,
+  };
+  
+  if (actualCost) updates.actualCost = actualCost;
+  if (notes) updates.notes = notes;
+  
+  const result = await db
+    .update(maintenanceTasks)
+    .set(updates)
+    .where(eq(maintenanceTasks.id, id))
+    .returning();
+  
+  return result[0];
+}
+
+export async function deleteMaintenanceTask(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(maintenanceTasks).where(eq(maintenanceTasks.id, id));
+}
+
+
+// ============= Service Plans =============
+
+export async function getServicePlansByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(servicePlans)
+    .where(eq(servicePlans.orgId, orgId))
+    .orderBy(desc(servicePlans.createdAt));
+  
+  return result;
+}
+
+export async function getServicePlanById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select()
+    .from(servicePlans)
+    .where(eq(servicePlans.id, id))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createServicePlan(plan: InsertServicePlan) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(servicePlans).values(plan).returning();
+  return result[0];
+}
+
+export async function updateServicePlan(id: number, plan: Partial<InsertServicePlan>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .update(servicePlans)
+    .set({ ...plan, updatedAt: new Date() })
+    .where(eq(servicePlans.id, id))
+    .returning();
+  
+  return result[0];
+}
+
+export async function deleteServicePlan(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(servicePlans).where(eq(servicePlans.id, id));
+}
+
+// User Management functions
+export async function getUsersByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Return all users for now (organization association will be added in future)
+  const result = await db.select().from(users);
+  return result;
+}
+
+export async function createUser(user: { name: string; email: string; userRole: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Create a placeholder openId based on email until they sign in
+  const placeholderOpenId = `placeholder_${user.email}_${Date.now()}`;
+  
+  const result = await db.insert(users).values({
+    openId: placeholderOpenId,
+    name: user.name,
+    email: user.email,
+    userRole: user.userRole,
+    role: 'user',
+  }).returning();
+  
+  return result[0];
+}
+
+export async function updateUserRole(userId: number, userRole: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users).set({ userRole }).where(eq(users.id, userId));
+}
+
+// ==================== Audit Log Functions ====================
+
+export async function createAuditLog(auditLog: InsertAuditLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(auditLogs).values(auditLog).returning();
+  return result[0];
+}
+
+export async function getAuditLogs(
+  orgId: number,
+  filters?: {
+    userId?: number;
+    action?: string;
+    entityType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Build where conditions
+  const conditions = [eq(auditLogs.organizationId, orgId)];
+  
+  if (filters?.userId) {
+    conditions.push(eq(auditLogs.userId, filters.userId));
+  }
+  if (filters?.action) {
+    conditions.push(eq(auditLogs.action, filters.action as any));
+  }
+  if (filters?.entityType) {
+    conditions.push(eq(auditLogs.entityType, filters.entityType as any));
+  }
+  if (filters?.startDate) {
+    conditions.push(gte(auditLogs.createdAt, filters.startDate));
+  }
+  if (filters?.endDate) {
+    conditions.push(lte(auditLogs.createdAt, filters.endDate));
+  }
+  
+  const baseQuery = db
+    .select({
+      id: auditLogs.id,
+      organizationId: auditLogs.organizationId,
+      userId: auditLogs.userId,
+      userName: users.name,
+      userEmail: users.email,
+      action: auditLogs.action,
+      entityType: auditLogs.entityType,
+      entityId: auditLogs.entityId,
+      entityName: auditLogs.entityName,
+      changes: auditLogs.changes,
+      ipAddress: auditLogs.ipAddress,
+      userAgent: auditLogs.userAgent,
+      metadata: auditLogs.metadata,
+      createdAt: auditLogs.createdAt,
+    })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .where(and(...conditions))
+    .orderBy(desc(auditLogs.createdAt));
+  
+  // Apply pagination
+  const limit = filters?.limit || 100;
+  const offset = filters?.offset || 0;
+  
+  const result = await baseQuery.limit(limit).offset(offset);
+  return result;
+}
+
+export async function getAuditLogsByEntity(
+  orgId: number,
+  entityType: string,
+  entityId: number
+) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: auditLogs.id,
+      organizationId: auditLogs.organizationId,
+      userId: auditLogs.userId,
+      userName: users.name,
+      userEmail: users.email,
+      action: auditLogs.action,
+      entityType: auditLogs.entityType,
+      entityId: auditLogs.entityId,
+      entityName: auditLogs.entityName,
+      changes: auditLogs.changes,
+      ipAddress: auditLogs.ipAddress,
+      userAgent: auditLogs.userAgent,
+      metadata: auditLogs.metadata,
+      createdAt: auditLogs.createdAt,
+    })
+    .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.userId, users.id))
+    .where(
+      sql`${auditLogs.organizationId} = ${orgId} AND ${auditLogs.entityType} = ${entityType} AND ${auditLogs.entityId} = ${entityId}`
+    )
+    .orderBy(desc(auditLogs.createdAt));
+  
+  return result;
+}
+
+// ==================== Bulk Job Import Functions ====================
+
+export async function bulkImportJobs(
+  orgId: number,
+  jobsData: Array<{
+    title: string;
+    description?: string;
+    jobType: 'crop_dusting' | 'pest_control' | 'fertilization' | 'herbicide';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    statusId?: number;
+    customerId?: number;
+    assignedPersonnelId?: number;
+    equipmentId?: number;
+    scheduledStart?: Date;
+    locationAddress?: string;
+    acres?: number;
+    chemicalProduct?: string;
+    epaNumber?: string;
+    targetPest?: string;
+    applicationRate?: string;
+    notes?: string;
+  }>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobs } = await import("../drizzle/schema");
+  
+  // Get default status for the organization if not provided
+  const defaultStatus = await getJobStatusesByOrgId(orgId);
+  const defaultStatusId = defaultStatus.find(s => s.isDefault)?.id || defaultStatus[0]?.id;
+  
+  const results: Array<{ success: boolean; job?: any; error?: string }> = [];
+  
+  for (const jobData of jobsData) {
+    try {
+      const jobToInsert = {
+        ...jobData,
+        orgId,
+        statusId: jobData.statusId || defaultStatusId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      const result = await db.insert(jobs).values(jobToInsert as any).returning();
+      results.push({ success: true, job: result[0] });
+    } catch (error: any) {
+      results.push({ success: false, error: error.message });
+    }
+  }
+  
+  return results;
+}
+
+export async function findCustomerByName(orgId: number, name: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { customers } = await import("../drizzle/schema");
+  const result = await db
+    .select()
+    .from(customers)
+    .where(sql`${customers.orgId} = ${orgId} AND LOWER(${customers.name}) = LOWER(${name})`)
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function findPersonnelByName(orgId: number, name: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { personnel } = await import("../drizzle/schema");
+  const result = await db
+    .select()
+    .from(personnel)
+    .where(sql`${personnel.orgId} = ${orgId} AND LOWER(${personnel.name}) = LOWER(${name})`)
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function findEquipmentByName(orgId: number, name: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { equipment } = await import("../drizzle/schema");
+  const result = await db
+    .select()
+    .from(equipment)
+    .where(sql`${equipment.orgId} = ${orgId} AND LOWER(${equipment.name}) = LOWER(${name})`)
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+
+// Product functions
+export async function createProduct(productData: any) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { productsComplete } = await import("../drizzle/schema");
+  
+  // Map extracted product data to schema columns
+  const insertData: any = {
+    orgId: productData.orgId,
+    nickname: productData.productName || "Unnamed Product",
+    epaNumber: productData.epaNumber || null,
+    manufacturer: productData.registrant || null,
+    activeIngredients: productData.activeIngredients || null,
+    labelSignalWord: productData.labelSignalWord || null,
+    reentryPpe: productData.ppeInformation || null,
+    additionalRestrictions: productData.genericConditions || null,
+    extractedFromScreenshot: true,
+  };
+  
+  // Parse re-entry interval (convert "48 hours" to numeric)
+  if (productData.reEntryInterval) {
+    const hoursMatch = productData.reEntryInterval.match(/(\d+)\s*hours?/i);
+    if (hoursMatch) {
+      insertData.hoursReentry = parseFloat(hoursMatch[1]);
+    }
+  }
+  
+  // Parse pre-harvest interval (convert "7 days" to numeric)
+  if (productData.preharvestInterval) {
+    const daysMatch = productData.preharvestInterval.match(/(\d+)\s*days?/i);
+    if (daysMatch) {
+      insertData.daysPreharvest = parseFloat(daysMatch[1]);
+    }
+  }
+  
+  const result = await db.insert(productsComplete).values(insertData).returning();
+  return result[0];
+}
+
+export async function getProductById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { productsComplete } = await import("../drizzle/schema");
+  const result = await db.select().from(productsComplete).where(eq(productsComplete.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function searchProducts(searchTerm: string) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { productsComplete } = await import("../drizzle/schema");
+  const { or, ilike } = await import("drizzle-orm");
+  
+  const result = await db
+    .select({
+      id: productsComplete.id,
+      nickname: productsComplete.nickname,
+      epaNumber: productsComplete.epaNumber,
+      manufacturer: productsComplete.manufacturer,
+      activeIngredients: productsComplete.activeIngredients,
+    })
+    .from(productsComplete)
+    .where(
+      or(
+        ilike(productsComplete.nickname, `%${searchTerm}%`),
+        ilike(productsComplete.epaNumber, `%${searchTerm}%`),
+        ilike(productsComplete.manufacturer, `%${searchTerm}%`)
+      )
+    )
+    .limit(50);
+
+  return result;
+}
+
+// ============================================================================
+// Jobs V2 helpers - Simplified job management
+// ============================================================================
+
+export async function createJobV2(data: InsertJobV2) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(jobsV2).values(data).returning();
+  return result[0];
+}
+
+export async function getJobsV2ByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { desc } = await import("drizzle-orm");
+  
+  const result = await db
+    .select()
+    .from(jobsV2)
+    .where(eq(jobsV2.orgId, orgId))
+    .orderBy(desc(jobsV2.createdAt));
+  
+  return result;
+}
+
+export async function getJobV2ById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(jobsV2)
+    .where(eq(jobsV2.id, id))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function updateJobV2Product(jobId: number, productId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .update(jobsV2)
+    .set({ productId, updatedAt: new Date() })
+    .where(eq(jobsV2.id, jobId))
+    .returning();
+  
+  return result[0];
+}
+
+export async function getJobV2WithProduct(jobId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const job = await getJobV2ById(jobId);
+  if (!job) return null;
+  
+  if (job.productId) {
+    const product = await getProductById(job.productId);
+    return { ...job, product };
+  }
+  
+  return { ...job, product: null };
+}
+
+
+// Get Jobs V2 with related data (customer, personnel, equipment, product)
+export async function getJobsV2WithRelations(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: jobsV2.id,
+      orgId: jobsV2.orgId,
+      title: jobsV2.title,
+      description: jobsV2.description,
+      jobType: jobsV2.jobType,
+      priority: jobsV2.priority,
+      status: jobsV2.status,
+      location: jobsV2.location,
+      scheduledStart: jobsV2.scheduledStart,
+      scheduledEnd: jobsV2.scheduledEnd,
+      createdAt: jobsV2.createdAt,
+      updatedAt: jobsV2.updatedAt,
+      // Customer info
+      customerId: jobsV2.customerId,
+      customerName: customers.name,
+      // Personnel info
+      personnelId: jobsV2.personnelId,
+      personnelName: personnel.name,
+      // Equipment info
+      equipmentId: jobsV2.equipmentId,
+      equipmentName: equipment.name,
+      // Product info
+      productId: jobsV2.productId,
+    })
+    .from(jobsV2)
+    .leftJoin(customers, eq(jobsV2.customerId, customers.id))
+    .leftJoin(personnel, eq(jobsV2.personnelId, personnel.id))
+    .leftJoin(equipment, eq(jobsV2.equipmentId, equipment.id))
+    .where(eq(jobsV2.orgId, orgId))
+    .orderBy(desc(jobsV2.createdAt));
+  
+  return result;
+}
+
+
+export async function updateJobV2(id: number, updates: Partial<{
+  title: string;
+  description: string | null;
+  jobType: string | null;
+  priority: string;
+  status: string;
+  customerId: number | null;
+  personnelId: number | null;
+  equipmentId: number | null;
+  location: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  scheduledStart: Date | null;
+  scheduledEnd: Date | null;
+}>) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { jobsV2 } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  // Build update object with only provided fields
+  const updateData: any = { updatedAt: new Date() };
+  if (updates.title !== undefined) updateData.title = updates.title;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.jobType !== undefined) updateData.jobType = updates.jobType;
+  if (updates.priority !== undefined) updateData.priority = updates.priority;
+  if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.customerId !== undefined) updateData.customerId = updates.customerId;
+  if (updates.personnelId !== undefined) updateData.personnelId = updates.personnelId;
+  if (updates.equipmentId !== undefined) updateData.equipmentId = updates.equipmentId;
+  if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.latitude !== undefined) updateData.latitude = updates.latitude;
+  if (updates.longitude !== undefined) updateData.longitude = updates.longitude;
+  if (updates.scheduledStart !== undefined) updateData.scheduledStart = updates.scheduledStart;
+  if (updates.scheduledEnd !== undefined) updateData.scheduledEnd = updates.scheduledEnd;
+  
+  const result = await db
+    .update(jobsV2)
+    .set(updateData)
+    .where(eq(jobsV2.id, id))
+    .returning();
+  
+  return result[0];
+}
+
+
+export async function deleteJobV2(id: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const { jobsV2 } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  const result = await db
+    .delete(jobsV2)
+    .where(eq(jobsV2.id, id))
+    .returning();
+  
+  return result[0];
+}
+
+// ==================== Map Files Functions ====================
+
+export async function createMapFile(data: {
+  jobId: number;
+  name: string;
+  fileType: "kml" | "gpx" | "geojson";
+  fileUrl: string;
+  fileKey: string;
+  fileSize?: number;
+  uploadedBy?: number;
+  orgId: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { maps } = await import("../drizzle/schema");
+  
+  // Build insert data with only the fields we want to provide
+  const insertData: any = {
+    orgId: data.orgId,
+    jobId: data.jobId,
+    name: data.name,
+    fileUrl: data.fileUrl,
+    fileKey: data.fileKey,
+    fileType: data.fileType,
+  };
+  
+  // Add optional fields only if provided
+  if (data.fileSize !== undefined) {
+    insertData.fileSize = data.fileSize;
+  }
+  if (data.uploadedBy !== undefined) {
+    insertData.uploadedBy = data.uploadedBy;
+  }
+  
+  const result = await db.insert(maps).values(insertData).returning();
+  return result[0];
+}
+
+export async function getMapFilesByJobId(jobId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { maps } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  return await db
+    .select()
+    .from(maps)
+    .where(eq(maps.jobId, jobId));
+}
+
+export async function deleteMapFile(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { maps } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  
+  const result = await db
+    .delete(maps)
+    .where(eq(maps.id, id))
+    .returning();
+  
+  return result[0];
+}
+
+
+// Waitlist functions
+export async function createWaitlistEntry(data: InsertWaitlist) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(waitlist).values(data).returning();
+  return result[0];
+}
+
+// API Key Management
+export async function createApiKey(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { apiKeys } = await import("../drizzle/schema");
+  const result = await db.insert(apiKeys).values(data).returning();
+  return result[0];
+}
+
+export async function getApiKeysByOrgId(orgId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { apiKeys } = await import("../drizzle/schema");
+  return await db.select().from(apiKeys).where(eq(apiKeys.organizationId, orgId));
+}
+
+export async function getApiKeyByHash(keyHash: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const { apiKeys } = await import("../drizzle/schema");
+  const result = await db.select().from(apiKeys).where(eq(apiKeys.keyHash, keyHash)).limit(1);
+  return result[0];
+}
+
+export async function updateApiKeyUsage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { apiKeys } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
+  await db.update(apiKeys)
+    .set({ 
+      lastUsedAt: new Date(), 
+      usageCount: sql`${apiKeys.usageCount} + 1`
+    })
+    .where(eq(apiKeys.id, id));
+}
+
+export async function deleteApiKey(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { apiKeys } = await import("../drizzle/schema");
+  await db.delete(apiKeys).where(eq(apiKeys.id, id));
+}
+
+export async function logApiUsage(data: any) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { apiUsageLogs } = await import("../drizzle/schema");
+  await db.insert(apiUsageLogs).values(data);
+}
+
+// Job Sharing
+export async function createJobShare(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobShares } = await import("../drizzle/schema");
+  const result = await db.insert(jobShares).values(data).returning();
+  return result[0];
+}
+
+export async function getJobSharesByJobId(jobId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { jobShares } = await import("../drizzle/schema");
+  return await db.select().from(jobShares).where(eq(jobShares.jobId, jobId));
+}
+
+export async function getJobShareByToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const { jobShares } = await import("../drizzle/schema");
+  const result = await db.select().from(jobShares).where(eq(jobShares.shareToken, token)).limit(1);
+  return result[0];
+}
+
+export async function updateJobShareAccess(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobShares } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
+  await db.update(jobShares)
+    .set({ 
+      lastAccessedAt: new Date(), 
+      viewCount: sql`${jobShares.viewCount} + 1`
+    })
+    .where(eq(jobShares.id, id));
+}
+
+export async function deleteJobShare(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { jobShares } = await import("../drizzle/schema");
+  await db.delete(jobShares).where(eq(jobShares.id, id));
+}
+
+// Helper functions for webhook API
+export async function getCustomerById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const { customers } = await import("../drizzle/schema");
+  const result = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getPersonnelById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const { personnel } = await import("../drizzle/schema");
+  const result = await db.select().from(personnel).where(eq(personnel.id, id)).limit(1);
+  return result[0];
+}

@@ -30,11 +30,40 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  
+  // Stripe webhook MUST be registered BEFORE express.json() to preserve raw body
+  const { handleStripeWebhook } = await import("../webhookStripe");
+  app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
+  
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // Webhook API for external integrations (n8n, Zapier, etc.)
+  const {
+    authenticateApiKey,
+    logApiRequest,
+    handleJobWebhook,
+    handleCustomerWebhook,
+    handleSiteWebhook,
+    handlePersonnelWebhook,
+    handleEquipmentWebhook,
+  } = await import("../webhookApi");
+  
+  app.use("/api/webhook", authenticateApiKey, logApiRequest);
+  app.post("/api/webhook/jobs/:action", handleJobWebhook);
+  app.get("/api/webhook/jobs/:action", handleJobWebhook);
+  app.post("/api/webhook/customers/:action", handleCustomerWebhook);
+  app.get("/api/webhook/customers/:action", handleCustomerWebhook);
+  app.post("/api/webhook/sites/:action", handleSiteWebhook);
+  app.get("/api/webhook/sites/:action", handleSiteWebhook);
+  app.post("/api/webhook/personnel/:action", handlePersonnelWebhook);
+  app.get("/api/webhook/personnel/:action", handlePersonnelWebhook);
+  app.post("/api/webhook/equipment/:action", handleEquipmentWebhook);
+  app.get("/api/webhook/equipment/:action", handleEquipmentWebhook);
+  
   // tRPC API
   app.use(
     "/api/trpc",

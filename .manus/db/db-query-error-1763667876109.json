@@ -1,0 +1,17 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS \"organization_invitations\" (\n\t\"id\" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n\t\"organization_id\" integer NOT NULL,\n\t\"email\" varchar(320) NOT NULL,\n\t\"role\" \"org_member_role\" DEFAULT 'member' NOT NULL,\n\t\"invited_by\" integer NOT NULL,\n\t\"token\" varchar(255) NOT NULL,\n\t\"status\" \"invitation_status\" DEFAULT 'pending' NOT NULL,\n\t\"expires_at\" timestamp NOT NULL,\n\t\"accepted_at\" timestamp,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\tCONSTRAINT \"organization_invitations_token_unique\" UNIQUE(\"token\")\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.5d8fe448309f --database fujBVFVpwsUYDSw4DyaMmw --execute CREATE TABLE IF NOT EXISTS \"organization_invitations\" (\n\t\"id\" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n\t\"organization_id\" integer NOT NULL,\n\t\"email\" varchar(320) NOT NULL,\n\t\"role\" \"org_member_role\" DEFAULT 'member' NOT NULL,\n\t\"invited_by\" integer NOT NULL,\n\t\"token\" varchar(255) NOT NULL,\n\t\"status\" \"invitation_status\" DEFAULT 'pending' NOT NULL,\n\t\"expires_at\" timestamp NOT NULL,\n\t\"accepted_at\" timestamp,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\tCONSTRAINT \"organization_invitations_token_unique\" UNIQUE(\"token\")\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 53 near \"\"organization_invitations\" (",
+    "\t\"id\" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,",
+    "\t\"organization_id\" integer NOT NULL,",
+    "\t\"email\" varchar(320) NOT NULL,",
+    "\t\"role\" \"org_member_role\" DEFAULT 'member' NOT NULL,",
+    "\t\"invited_by\" integer NOT NULL,",
+    "\t\"token\" varchar(255) NOT NULL,",
+    "\t\"status\" \"invitation_status\" DEFAULT 'pending' NOT NULL,",
+    "\t\"expires_at\" timestamp NOT NULL,",
+    "\t\"ac"
+  ]
+}

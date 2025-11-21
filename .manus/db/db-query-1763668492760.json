@@ -1,0 +1,9 @@
+{
+  "query": "SHOW TABLES LIKE 'organization%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.5d8fe448309f --database fujBVFVpwsUYDSw4DyaMmw --execute SHOW TABLES LIKE 'organization%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 963
+}

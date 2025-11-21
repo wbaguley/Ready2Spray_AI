@@ -1,0 +1,9 @@
+{
+  "query": "-- Create enums only if they don't exist\nDO $$ BEGIN\n CREATE TYPE \"public\".\"invitation_status\" AS ENUM('pending', 'accepted', 'declined', 'expired');\nEXCEPTION\n WHEN duplicate_object THEN null;\nEND $$;\n\nDO $$ BEGIN\n CREATE TYPE \"public\".\"org_member_role\" AS ENUM('owner', 'admin', 'member', 'viewer');\nEXCEPTION\n WHEN duplicate_object THEN null;\nEND $$;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.5d8fe448309f --database fujBVFVpwsUYDSw4DyaMmw --execute -- Create enums only if they don't exist\nDO $$ BEGIN\n CREATE TYPE \"public\".\"invitation_status\" AS ENUM('pending', 'accepted', 'declined', 'expired');\nEXCEPTION\n WHEN duplicate_object THEN null;\nEND $$;\n\nDO $$ BEGIN\n CREATE TYPE \"public\".\"org_member_role\" AS ENUM('owner', 'admin', 'member', 'viewer');\nEXCEPTION\n WHEN duplicate_object THEN null;\nEND $$;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 2: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 11 near \"BEGIN",
+    " CREATE TYPE \"public\".\"invitation_status\" AS ENUM('pending', 'accepted', 'declined', 'expired')\""
+  ]
+}

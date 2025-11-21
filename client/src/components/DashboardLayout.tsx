@@ -21,15 +21,31 @@ import {
 } from "@/components/ui/sidebar";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { usePermissions, Permission } from "@/hooks/usePermissions";
+import { LayoutDashboard, LogOut, PanelLeft, Users, UserPlus, Briefcase, UserCheck, Package, MessageSquare, MapPin, Settings as SettingsIcon, Building2, Plane, CalendarDays, Wrench, BarChart3, CalendarCheck, Pill, Key } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import { FloatingChatWidget } from "./FloatingChatWidget";
+import { useSubscription } from "@/hooks/useSubscription";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+const menuItems: Array<{ icon: any; label: string; path: string; permission?: Permission }> = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Briefcase, label: "Jobs", path: "/jobs", permission: "view_jobs" },
+  { icon: CalendarDays, label: "Calendar", path: "/calendar", permission: "view_calendar" },
+  { icon: Plane, label: "Flight Board", path: "/flight-board", permission: "view_flight_board" },
+  { icon: Building2, label: "Sites", path: "/sites", permission: "view_sites" },
+  { icon: CalendarCheck, label: "Service Plans", path: "/service-plans", permission: "view_service_plans" },
+  { icon: Wrench, label: "Equipment", path: "/equipment", permission: "view_equipment" },
+  { icon: BarChart3, label: "Equipment Analytics", path: "/equipment-dashboard", permission: "view_equipment_analytics" },
+  { icon: Users, label: "Customers", path: "/customers", permission: "view_customers" },
+  { icon: Pill, label: "Products", path: "/products", permission: "view_products" },
+  { icon: MessageSquare, label: "AI Chat", path: "/chat", permission: "view_ai_chat" },
+  { icon: MapPin, label: "Maps", path: "/maps", permission: "view_maps" },
+  { icon: UserPlus, label: "Team", path: "/team", permission: "manage_team" },
+  { icon: SettingsIcon, label: "Settings", path: "/settings", permission: "view_settings" },
+
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -46,7 +62,19 @@ export default function DashboardLayout({
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
-  const { loading, user } = useAuth();
+  const { loading, user, refresh } = useAuth();
+  const [hasRefreshed, setHasRefreshed] = useState(false);
+  
+  // Check subscription status (will redirect if needed)
+  const { isLoading: subscriptionLoading } = useSubscription({ requireActive: false });
+
+  // Force refresh auth state once after mount to catch OAuth redirects
+  useEffect(() => {
+    if (!hasRefreshed) {
+      refresh();
+      setHasRefreshed(true);
+    }
+  }, [hasRefreshed, refresh]);
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -116,12 +144,20 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const { hasPermission } = usePermissions();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  
+  // Filter menu items based on user permissions
+  const visibleMenuItems = menuItems.filter(item => {
+    if (!item.permission) return true; // No permission required
+    return hasPermission(item.permission);
+  });
+  
+  const activeMenuItem = visibleMenuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -209,7 +245,7 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {visibleMenuItems.map(item => {
                 const isActive = location === item.path;
                 return (
                   <SidebarMenuItem key={item.path}>
@@ -288,6 +324,7 @@ function DashboardLayoutContent({
         )}
         <main className="flex-1 p-4">{children}</main>
       </SidebarInset>
+      <FloatingChatWidget />
     </>
   );
 }

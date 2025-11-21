@@ -1,0 +1,8 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS organization_members (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  organization_id INT NOT NULL,\n  user_id INT NOT NULL,\n  role ENUM('owner', 'admin', 'member', 'viewer') NOT NULL DEFAULT 'member',\n  invited_by INT,\n  invited_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  joined_at TIMESTAMP NULL,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (organization_id) REFERENCES organizations(id),\n  FOREIGN KEY (user_id) REFERENCES users(id),\n  FOREIGN KEY (invited_by) REFERENCES users(id)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.5d8fe448309f --database fujBVFVpwsUYDSw4DyaMmw --execute CREATE TABLE IF NOT EXISTS organization_members (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  organization_id INT NOT NULL,\n  user_id INT NOT NULL,\n  role ENUM('owner', 'admin', 'member', 'viewer') NOT NULL DEFAULT 'member',\n  invited_by INT,\n  invited_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  joined_at TIMESTAMP NULL,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (organization_id) REFERENCES organizations(id),\n  FOREIGN KEY (user_id) REFERENCES users(id),\n  FOREIGN KEY (invited_by) REFERENCES users(id)\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1824 (HY000) at line 1: Failed to open the referenced table 'organizations'"
+  ]
+}

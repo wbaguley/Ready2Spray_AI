@@ -42,9 +42,13 @@ export function registerOAuthRoutes(app: Express) {
       });
 
       const cookieOptions = getSessionCookieOptions(req);
+      console.log('[OAuth] Setting cookie with options:', cookieOptions);
+      console.log('[OAuth] Cookie name:', COOKIE_NAME);
+      console.log('[OAuth] Session token length:', sessionToken?.length);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      res.redirect(302, "/");
+      console.log('[OAuth] Redirecting to /dashboard');
+      res.redirect(302, "/dashboard");
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });
