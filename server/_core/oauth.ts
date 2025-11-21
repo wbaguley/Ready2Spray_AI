@@ -47,8 +47,34 @@ export function registerOAuthRoutes(app: Express) {
       console.log('[OAuth] Session token length:', sessionToken?.length);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      console.log('[OAuth] Redirecting to /dashboard');
-      res.redirect(302, "/dashboard");
+      // For mobile browsers, add a small delay to ensure cookie is set
+      const userAgent = req.headers["user-agent"] || "";
+      const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      
+      if (isMobile) {
+        console.log('[OAuth] Mobile browser detected, using delayed redirect');
+        // Send HTML with meta refresh for better mobile compatibility
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta http-equiv="refresh" content="0;url=/dashboard">
+            <title>Redirecting...</title>
+          </head>
+          <body>
+            <p>Logging you in...</p>
+            <script>
+              setTimeout(function() {
+                window.location.href = '/dashboard';
+              }, 100);
+            </script>
+          </body>
+          </html>
+        `);
+      } else {
+        console.log('[OAuth] Redirecting to /dashboard');
+        res.redirect(302, "/dashboard");
+      }
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });

@@ -6,6 +6,7 @@ import { teamRouter } from "./teamRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { updateOrganizationSchema, createSiteSchema, updateSiteSchema, deleteSiteSchema, createEquipmentSchema, updateEquipmentSchema, deleteEquipmentSchema } from "./validation";
+import { getCurrentWeather, getWeatherForecast, evaluateSprayConditions, getHistoricalWeather } from "./weather";
 
 export const appRouter = router({
   // Waitlist router (public)
@@ -28,6 +29,39 @@ export const appRouter = router({
   system: systemRouter,
   stripe: stripeRouter,
   team: teamRouter,
+  
+  // Weather router
+  weather: router({
+    current: protectedProcedure
+      .input(z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const weather = await getCurrentWeather(input.latitude, input.longitude);
+        const sprayWindow = evaluateSprayConditions(weather);
+        return { weather, sprayWindow };
+      }),
+    
+    forecast: protectedProcedure
+      .input(z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await getWeatherForecast(input.latitude, input.longitude);
+      }),
+    
+    historical: protectedProcedure
+      .input(z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+        date: z.date(),
+      }))
+      .query(async ({ input }) => {
+        return await getHistoricalWeather(input.latitude, input.longitude, input.date);
+      }),
+  }),
   auth: router({
     me: publicProcedure.query(opts => {
       console.log('[auth.me] User from context:', opts.ctx.user ? 'authenticated' : 'not authenticated');

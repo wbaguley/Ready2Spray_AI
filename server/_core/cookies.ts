@@ -21,28 +21,41 @@ function isSecureRequest(req: Request) {
   return protoList.some(proto => proto.trim().toLowerCase() === "https");
 }
 
+function isMobileBrowser(req: Request): boolean {
+  const userAgent = req.headers["user-agent"] || "";
+  return /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+}
+
 export function getSessionCookieOptions(
   req: Request
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
-  // const hostname = req.hostname;
-  // const shouldSetDomain =
-  //   hostname &&
-  //   !LOCAL_HOSTS.has(hostname) &&
-  //   !isIpAddress(hostname) &&
-  //   hostname !== "127.0.0.1" &&
-  //   hostname !== "::1";
+  const hostname = req.hostname;
+  const isSecure = isSecureRequest(req);
+  const isMobile = isMobileBrowser(req);
+  
+  // For mobile browsers, use more permissive settings
+  // Mobile Safari has strict cookie policies with sameSite=none
+  const sameSite: "lax" | "none" | "strict" = isMobile ? "lax" : "none";
+  
+  const shouldSetDomain =
+    hostname &&
+    !LOCAL_HOSTS.has(hostname) &&
+    !isIpAddress(hostname) &&
+    hostname !== "127.0.0.1" &&
+    hostname !== "::1";
 
-  // const domain =
-  //   shouldSetDomain && !hostname.startsWith(".")
-  //     ? `.${hostname}`
-  //     : shouldSetDomain
-  //       ? hostname
-  //       : undefined;
+  const domain =
+    shouldSetDomain && !hostname.startsWith(".")
+      ? `.${hostname}`
+      : shouldSetDomain
+        ? hostname
+        : undefined;
 
   return {
+    domain,
     httpOnly: true,
     path: "/",
-    sameSite: "none",
-    secure: isSecureRequest(req),
+    sameSite,
+    secure: isSecure,
   };
 }
