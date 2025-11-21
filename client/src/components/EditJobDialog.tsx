@@ -28,8 +28,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
     personnelId: job.personnelId || "",
     equipmentId: job.equipmentId || "",
     location: job.location || "",
-    latitude: job.latitude || null,
-    longitude: job.longitude || null,
+    latitude: job.locationLat || null,
+    longitude: job.locationLng || null,
     scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
     scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
   });
@@ -61,8 +61,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
         personnelId: job.personnelId || "",
         equipmentId: job.equipmentId || "",
         location: job.location || "",
-        latitude: job.latitude || null,
-        longitude: job.longitude || null,
+        latitude: job.locationLat || null,
+        longitude: job.locationLng || null,
         scheduledStart: job.scheduledStart ? new Date(job.scheduledStart).toISOString().slice(0, 16) : "",
         scheduledEnd: job.scheduledEnd ? new Date(job.scheduledEnd).toISOString().slice(0, 16) : "",
       });
@@ -83,8 +83,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
       personnelId: formData.personnelId ? parseInt(formData.personnelId) : null,
       equipmentId: formData.equipmentId ? parseInt(formData.equipmentId) : null,
       location: formData.location || null,
-      latitude: formData.latitude || null,
-      longitude: formData.longitude || null,
+      latitude: formData.locationLat || null,
+      longitude: formData.locationLng || null,
       scheduledStart: formData.scheduledStart || null,
       scheduledEnd: formData.scheduledEnd || null,
     });
@@ -256,8 +256,8 @@ export function EditJobDialog({ job, open, onOpenChange, onSuccess }: EditJobDia
             <div>
               <Label>Job Location</Label>
               <LocationPicker
-                value={{ address: formData.location, latitude: formData.latitude, longitude: formData.longitude }}
-                onChange={(loc) => setFormData({ ...formData, location: loc.address, latitude: loc.latitude, longitude: loc.longitude })}
+                value={{ address: formData.location, latitude: formData.locationLat, longitude: formData.locationLng }}
+                onChange={(loc) => setFormData({ ...formData, location: loc.address, latitude: loc.locationLat, longitude: loc.locationLng })}
               />
             </div>
 

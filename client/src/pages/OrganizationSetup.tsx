@@ -65,7 +65,9 @@ export default function OrganizationSetup() {
       // Store form data in sessionStorage so we can restore it after login
       sessionStorage.setItem('pendingOrgSetup', JSON.stringify(formData));
       // Redirect to OAuth login with return URL
-      window.location.href = getLoginUrl('/signup/organization');
+      // Store return path for after OAuth
+      sessionStorage.setItem('postLoginRedirect', '/signup/organization');
+      window.location.href = getLoginUrl();
       return;
     }
     

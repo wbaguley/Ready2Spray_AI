@@ -234,16 +234,18 @@ export const appRouter = router({
         const currentJob = await getJobById(input.id);
         
         // If status is being changed, log it to history
-        if (input.statusId !== undefined) {
-          if (currentJob && currentJob.statusId !== input.statusId) {
-            await createJobStatusHistory({
-              jobId: input.id,
-              fromStatusId: currentJob.statusId,
-              toStatusId: input.statusId,
-              changedByUserId: ctx.user.id,
-            });
-          }
-        }
+        // Status history tracking disabled - statusId field not in current schema
+        // TODO: Re-enable when status tracking is needed
+        // if (input.statusId !== undefined) {
+        //   if (currentJob && currentJob.statusId !== input.statusId) {
+        //     await createJobStatusHistory({
+        //       jobId: input.id,
+        //       fromStatusId: currentJob.statusId,
+        //       toStatusId: input.statusId,
+        //       changedByUserId: ctx.user.id,
+        //     });
+        //   }
+        // }
         
         const updatedJob = await updateJob(input.id, input);
         
@@ -1330,7 +1332,7 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           orgId: org.id,
           title: input.title,
           description: input.description || null,
-          jobType: input.jobType || null,
+          jobType: input.jobType || "crop_dusting",
           priority: input.priority || "medium",
           status: input.status || "pending",
           customerId: input.customerId || null,

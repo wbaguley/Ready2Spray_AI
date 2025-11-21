@@ -278,3 +278,9 @@
 - [x] Fix signup flow routing - "Continue to Plan Selection" should go to Stripe plan page, not OAuth login
 
 - [ ] Fix Stripe API key validation error - "Invalid prod secret key: must start with 'sk_live_'" even though live keys are configured
+
+- [x] Fix TypeScript error in SharedJob.tsx - Property 'notes' does not exist
+- [x] Fix TypeScript error in routers.ts - Property 'statusId' should be 'status'
+- [x] Fix all database queries to use 'jobs' table instead of 'jobsV2'
+- [x] Fix field name mismatches (status→statusId, location→locationAddress, personnelId→assignedPersonnelId)
+- [x] Resolve all 45 TypeScript compilation errors

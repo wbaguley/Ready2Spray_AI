@@ -397,14 +397,14 @@ export default function JobV2Detail() {
                 <p className="text-lg">{job.location}</p>
                 
                 {/* Show map if coordinates are available */}
-                {job.latitude && job.longitude && (
+                {job.locationLat && job.locationLng && (
                   <div className="mt-4 rounded-lg overflow-hidden border">
                     <MapView
-                      initialCenter={{ lat: parseFloat(job.latitude.toString()), lng: parseFloat(job.longitude.toString()) }}
+                      initialCenter={{ lat: parseFloat(job.locationLat.toString()), lng: parseFloat(job.locationLng.toString()) }}
                       initialZoom={15}
                       onMapReady={(map) => {
                         // Add marker at job location
-                        const position = { lat: parseFloat(job.latitude!.toString()), lng: parseFloat(job.longitude!.toString()) };
+                        const position = { lat: parseFloat(job.locationLat!.toString()), lng: parseFloat(job.locationLng!.toString()) };
                         
                         new google.maps.Marker({
                           position,

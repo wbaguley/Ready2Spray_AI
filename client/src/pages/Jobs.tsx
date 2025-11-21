@@ -274,11 +274,11 @@ export default function JobsV2() {
                   <div className="space-y-2">
                     <Label>Job Location</Label>
                     <LocationPicker
-                      value={{ address: location, latitude, longitude }}
+                      value={{ address: location, locationLat: latitude, locationLng: longitude }}
                       onChange={(loc) => {
                         setLocation(loc.address);
-                        setLatitude(loc.latitude);
-                        setLongitude(loc.longitude);
+                        setLatitude(loc.locationLat);
+                        setLongitude(loc.locationLng);
                       }}
                     />
                   </div>

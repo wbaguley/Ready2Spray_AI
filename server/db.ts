@@ -1,7 +1,7 @@
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobsV2, InsertJobV2, waitlist, InsertWaitlist } from "../drizzle/schema";
+import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobs, InsertJob, waitlist, InsertWaitlist } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -208,7 +208,7 @@ export async function getJobsByOrgId(orgId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const { jobsV2: jobs, customers, personnel } = await import("../drizzle/schema");
+  const { jobs: jobs, customers, personnel } = await import("../drizzle/schema");
   
   // Join jobs with customers and personnel to get display names
   const result = await db
@@ -216,17 +216,17 @@ export async function getJobsByOrgId(orgId: number) {
       id: jobs.id,
       orgId: jobs.orgId,
       customerId: jobs.customerId,
-      personnelId: jobs.personnelId,
+      personnelId: jobs.assignedPersonnelId,
       equipmentId: jobs.equipmentId,
       productId: jobs.productId,
       title: jobs.title,
       description: jobs.description,
       jobType: jobs.jobType,
-      status: jobs.status,
+      status: jobs.statusId,
       priority: jobs.priority,
-      location: jobs.location,
-      latitude: jobs.latitude,
-      longitude: jobs.longitude,
+      location: jobs.locationAddress,
+      latitude: jobs.locationLat,
+      longitude: jobs.locationLng,
       scheduledStart: jobs.scheduledStart,
       scheduledEnd: jobs.scheduledEnd,
       createdAt: jobs.createdAt,
@@ -238,7 +238,7 @@ export async function getJobsByOrgId(orgId: number) {
     })
     .from(jobs)
     .leftJoin(customers, eq(jobs.customerId, customers.id))
-    .leftJoin(personnel, eq(jobs.personnelId, personnel.id))
+    .leftJoin(personnel, eq(jobs.assignedPersonnelId, personnel.id))
     .where(eq(jobs.orgId, orgId));
   
   return result;
@@ -282,8 +282,8 @@ export async function createJob(data: any) {
       ${data.equipmentId || null},
       ${data.productId || null},
       ${data.location || null},
-      ${data.latitude || null},
-      ${data.longitude || null},
+      ${data.locationLat || null},
+      ${data.locationLng || null},
       ${data.scheduledStart || null},
       ${data.scheduledEnd || null},
       NOW(),
@@ -299,7 +299,7 @@ export async function getJobById(id: number) {
   const db = await getDb();
   if (!db) return null;
   
-  const { jobsV2: jobs } = await import("../drizzle/schema");
+  const { jobs } = await import("../drizzle/schema");
   const result = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
   return result[0] || null;
 }
@@ -308,7 +308,7 @@ export async function updateJob(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const { jobsV2: jobs } = await import("../drizzle/schema");
+  const { jobs } = await import("../drizzle/schema");
   const result = await db.update(jobs).set(data).where(eq(jobs.id, id)).returning();
   return result[0];
 }
@@ -1347,11 +1347,11 @@ export async function searchProducts(searchTerm: string) {
 // Jobs V2 helpers - Simplified job management
 // ============================================================================
 
-export async function createJobV2(data: InsertJobV2) {
+export async function createJobV2(data: InsertJob) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(jobsV2).values(data).returning();
+  const result = await db.insert(jobs).values(data).returning();
   return result[0];
 }
 
@@ -1363,9 +1363,9 @@ export async function getJobsV2ByOrgId(orgId: number) {
   
   const result = await db
     .select()
-    .from(jobsV2)
-    .where(eq(jobsV2.orgId, orgId))
-    .orderBy(desc(jobsV2.createdAt));
+    .from(jobs)
+    .where(eq(jobs.orgId, orgId))
+    .orderBy(desc(jobs.createdAt));
   
   return result;
 }
@@ -1376,8 +1376,8 @@ export async function getJobV2ById(id: number) {
   
   const result = await db
     .select()
-    .from(jobsV2)
-    .where(eq(jobsV2.id, id))
+    .from(jobs)
+    .where(eq(jobs.id, id))
     .limit(1);
   
   return result[0] || null;
@@ -1388,9 +1388,9 @@ export async function updateJobV2Product(jobId: number, productId: number) {
   if (!db) throw new Error("Database not available");
   
   const result = await db
-    .update(jobsV2)
+    .update(jobs)
     .set({ productId, updatedAt: new Date() })
-    .where(eq(jobsV2.id, jobId))
+    .where(eq(jobs.id, jobId))
     .returning();
   
   return result[0];
@@ -1419,36 +1419,36 @@ export async function getJobsV2WithRelations(orgId: number) {
   
   const result = await db
     .select({
-      id: jobsV2.id,
-      orgId: jobsV2.orgId,
-      title: jobsV2.title,
-      description: jobsV2.description,
-      jobType: jobsV2.jobType,
-      priority: jobsV2.priority,
-      status: jobsV2.status,
-      location: jobsV2.location,
-      scheduledStart: jobsV2.scheduledStart,
-      scheduledEnd: jobsV2.scheduledEnd,
-      createdAt: jobsV2.createdAt,
-      updatedAt: jobsV2.updatedAt,
+      id: jobs.id,
+      orgId: jobs.orgId,
+      title: jobs.title,
+      description: jobs.description,
+      jobType: jobs.jobType,
+      priority: jobs.priority,
+      status: jobs.statusId,
+      location: jobs.locationAddress,
+      scheduledStart: jobs.scheduledStart,
+      scheduledEnd: jobs.scheduledEnd,
+      createdAt: jobs.createdAt,
+      updatedAt: jobs.updatedAt,
       // Customer info
-      customerId: jobsV2.customerId,
+      customerId: jobs.customerId,
       customerName: customers.name,
       // Personnel info
-      personnelId: jobsV2.personnelId,
+      personnelId: jobs.assignedPersonnelId,
       personnelName: personnel.name,
       // Equipment info
-      equipmentId: jobsV2.equipmentId,
+      equipmentId: jobs.equipmentId,
       equipmentName: equipment.name,
       // Product info
-      productId: jobsV2.productId,
+      productId: jobs.productId,
     })
-    .from(jobsV2)
-    .leftJoin(customers, eq(jobsV2.customerId, customers.id))
-    .leftJoin(personnel, eq(jobsV2.personnelId, personnel.id))
-    .leftJoin(equipment, eq(jobsV2.equipmentId, equipment.id))
-    .where(eq(jobsV2.orgId, orgId))
-    .orderBy(desc(jobsV2.createdAt));
+    .from(jobs)
+    .leftJoin(customers, eq(jobs.customerId, customers.id))
+    .leftJoin(personnel, eq(jobs.assignedPersonnelId, personnel.id))
+    .leftJoin(equipment, eq(jobs.equipmentId, equipment.id))
+    .where(eq(jobs.orgId, orgId))
+    .orderBy(desc(jobs.createdAt));
   
   return result;
 }
@@ -1474,10 +1474,11 @@ export async function updateJobV2(id: number, updates: Partial<{
     throw new Error("Database not available");
   }
 
-  const { jobsV2 } = await import("../drizzle/schema");
+  const { jobs } = await import("../drizzle/schema");
   const { eq } = await import("drizzle-orm");
   
   // Build update object with only provided fields
+  const { InsertJob } = await import("../drizzle/schema");
   const updateData: any = { updatedAt: new Date() };
   if (updates.title !== undefined) updateData.title = updates.title;
   if (updates.description !== undefined) updateData.description = updates.description;
@@ -1488,15 +1489,15 @@ export async function updateJobV2(id: number, updates: Partial<{
   if (updates.personnelId !== undefined) updateData.personnelId = updates.personnelId;
   if (updates.equipmentId !== undefined) updateData.equipmentId = updates.equipmentId;
   if (updates.location !== undefined) updateData.location = updates.location;
-  if (updates.latitude !== undefined) updateData.latitude = updates.latitude;
-  if (updates.longitude !== undefined) updateData.longitude = updates.longitude;
+  if (updates.locationLat !== undefined) updateData.locationLat = updates.locationLat;
+  if (updates.locationLng !== undefined) updateData.locationLng = updates.locationLng;
   if (updates.scheduledStart !== undefined) updateData.scheduledStart = updates.scheduledStart;
   if (updates.scheduledEnd !== undefined) updateData.scheduledEnd = updates.scheduledEnd;
   
   const result = await db
-    .update(jobsV2)
+    .update(jobs)
     .set(updateData)
-    .where(eq(jobsV2.id, id))
+    .where(eq(jobs.id, id))
     .returning();
   
   return result[0];
@@ -1509,12 +1510,12 @@ export async function deleteJobV2(id: number) {
     throw new Error("Database not available");
   }
 
-  const { jobsV2 } = await import("../drizzle/schema");
+  const { jobs } = await import("../drizzle/schema");
   const { eq } = await import("drizzle-orm");
   
   const result = await db
-    .delete(jobsV2)
-    .where(eq(jobsV2.id, id))
+    .delete(jobs)
+    .where(eq(jobs.id, id))
     .returning();
   
   return result[0];
