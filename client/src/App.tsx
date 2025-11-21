@@ -34,6 +34,7 @@ import OrganizationSetup from "./pages/OrganizationSetup";
 import PlanSelection from "./pages/PlanSelection";
 import TeamManagement from "./pages/TeamManagement";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import Weather from "./pages/Weather";
 
 // Check if we're on the app subdomain
 const isAppSubdomain = () => {
@@ -87,6 +88,14 @@ function Router() {
         {() => (
           <DashboardLayout>
             <JobDetail />
+          </DashboardLayout>
+        )}
+      </Route>
+      
+      <Route path="/weather">
+        {() => (
+          <DashboardLayout>
+            <Weather />
           </DashboardLayout>
         )}
       </Route>
