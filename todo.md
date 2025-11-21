@@ -312,3 +312,17 @@
 - [ ] Test actual Docker build (not just pnpm build)
 - [ ] Check for environment-specific issues in Docker
 - [ ] Verify all dependencies are properly listed in package.json
+
+## CRITICAL: Missing Dockerfile - Deployment Blocked
+- [x] Create production-ready Dockerfile (multi-stage build)
+- [x] Stage 1 (Builder): Install build dependencies (python3, make, g++ for bcrypt)
+- [x] Stage 1: Install pnpm@10.4.1 and run frozen-lockfile install
+- [x] Stage 1: Copy all source code and run pnpm build
+- [x] Stage 2 (Production): Use node:20-alpine base
+- [x] Stage 2: Install production dependencies only
+- [x] Stage 2: Copy dist/ directory from builder
+- [x] Set NODE_ENV=production and expose port 3000
+- [x] Set CMD to run node dist/index.js
+- [x] Create .dockerignore to optimize build
+- [ ] Push Dockerfile to GitHub and create checkpoint
+- [ ] Verify deployment succeeds
