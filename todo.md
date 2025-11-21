@@ -676,3 +676,11 @@ Features:
 - [ ] AI-powered recommendations
 - [ ] Advanced GIS features
 - [ ] Marketplace development
+
+## Dockerfile bcrypt Fix - CRITICAL
+- [x] Fix Dockerfile production stage to copy node_modules from builder instead of reinstalling
+- [x] Remove `RUN pnpm install --frozen-lockfile --prod` from production stage
+- [x] Add `COPY --from=builder /app/node_modules ./node_modules` to production stage
+- [ ] Push fix to GitHub
+- [ ] Create checkpoint
+- [ ] Test deployment

@@ -32,8 +32,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml .npmrc ./
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Copy pre-compiled node_modules from builder (includes bcrypt already compiled)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
