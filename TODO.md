@@ -718,3 +718,52 @@ Features:
 - [x] Remove bcrypt from pnpm onlyBuiltDependencies config
 - [x] Test authentication functionality locally - build successful
 - [ ] Save checkpoint and attempt deployment
+
+
+## Troubleshooting for Deploy Issues
+### Most Likely Causes
+- [ ] Memory limits during build - 731MB node_modules might exceed Docker build memory allocation
+- [ ] Build timeout - Process takes too long and gets killed
+- [ ] Disk space - Not enough space in build container for dependencies
+- [ ] Network issues during pnpm install - Transient failures downloading packages
+- [ ] Platform-specific dependency compilation - Some dependency still has native bindings
+
+### Dependency-Related
+- [ ] Sharp/image processing libraries - Check if any deps use sharp, canvas, etc.
+- [ ] Playwright/Puppeteer - Browser automation tools that need system libraries
+- [ ] Native bindings in transitive dependencies - A dependency of a dependency has native code
+- [ ] Postinstall scripts failing - Some package's postinstall hook crashes
+- [ ] Peer dependency conflicts - Warnings about vite and zod might cause issues
+
+### Build Configuration
+- [ ] Missing .dockerignore - Copying too many files into build context
+- [ ] Vite build memory exhaustion - Frontend build runs out of memory
+- [ ] esbuild architecture mismatch - esbuild binary for wrong platform
+- [ ] TypeScript compilation issues - 45 errors might break production build
+- [ ] Missing environment variables - Build needs certain env vars to succeed
+
+### Manus Platform Specific
+- [ ] Build container resource limits - Platform enforces strict CPU/memory/time limits
+- [ ] Registry push failures - Image builds but fails to push to container registry
+- [ ] Base image issues - Node.js base image might be incompatible
+- [ ] Multi-stage build problems - One stage in Dockerfile fails
+- [ ] Build cache corruption - Previous failed builds left corrupted cache
+
+### Code/Configuration Issues
+- [ ] Package.json scripts - The build script itself has issues
+- [ ] Import path problems - Absolute imports work locally but fail in Docker
+- [ ] File system case sensitivity - Linux Docker is case-sensitive
+- [ ] Missing files in git - Files in .gitignore that build needs
+- [ ] Symlinks - Symlinks might break in Docker
+
+### Investigation Priority
+- [x] Check node_modules size (731MB - investigating now)
+- [x] Analyze largest dependencies - Found mermaid (65MB) via streamdown
+- [x] Remove streamdown and replace with react-markdown - Reduced to 492MB (33% reduction!)
+- [x] Updated all 4 files using Streamdown to use ReactMarkdown
+- [ ] Clean up duplicate lucide-react versions
+- [ ] Clean up duplicate date-fns versions
+- [ ] Look for build logs in Manus dashboard
+- [ ] Try deploying minimal version
+- [ ] Check for Dockerfile in project
+- [ ] Test with production-only dependencies

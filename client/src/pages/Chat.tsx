@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Send, Plus, Calendar, Briefcase, Users, UserPlus, Cloud } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Streamdown } from "streamdown";
+import ReactMarkdown from "react-markdown";
 
 export default function Chat() {
   const [input, setInput] = useState("");
@@ -187,7 +187,7 @@ export default function Chat() {
                       }`}
                     >
                       {message.role === "assistant" ? (
-                        <Streamdown>{message.content}</Streamdown>
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
                       ) : (
                         <p className="text-sm">{message.content}</p>
                       )}

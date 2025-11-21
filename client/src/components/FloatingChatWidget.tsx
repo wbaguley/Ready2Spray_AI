@@ -7,7 +7,7 @@ import { MessageSquare, X, Send, Loader2, Minus, Maximize2, Calendar, Briefcase,
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Streamdown } from "streamdown";
+import ReactMarkdown from "react-markdown";
 import {
   Dialog,
   DialogContent,
@@ -390,7 +390,7 @@ font-semibold"
                         }`}
                       >
                         {message.role === "assistant" ? (
-                          <Streamdown>{message.content}</Streamdown>
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
                         ) : (
                           <p className="text-sm">{message.content}</p>
                         )}
