@@ -710,3 +710,11 @@ Features:
 - [x] Create Weather page with location input and weather display
 - [x] Add Weather navigation link to dashboard sidebar
 - [x] Add Weather route to App.tsx
+
+
+## Docker Deployment Fix (Completed)
+- [x] Replace bcrypt with bcryptjs to fix Docker build failures
+- [x] Update all bcrypt imports in codebase to use bcryptjs
+- [x] Remove bcrypt from pnpm onlyBuiltDependencies config
+- [x] Test authentication functionality locally - build successful
+- [ ] Save checkpoint and attempt deployment
