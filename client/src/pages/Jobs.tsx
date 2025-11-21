@@ -274,11 +274,11 @@ export default function JobsV2() {
                   <div className="space-y-2">
                     <Label>Job Location</Label>
                     <LocationPicker
-                      value={{ address: location, locationLat: latitude, locationLng: longitude }}
+                      value={{ address: location, latitude: latitude, longitude: longitude }}
                       onChange={(loc) => {
                         setLocation(loc.address);
-                        setLatitude(loc.locationLat);
-                        setLongitude(loc.locationLng);
+                        setLatitude(loc.latitude);
+                        setLongitude(loc.longitude);
                       }}
                     />
                   </div>
@@ -371,14 +371,9 @@ export default function JobsV2() {
                             </p>
                           )}
                         </div>
-                        {job.status && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            job.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                            job.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {job.status?.replace('_', ' ')}
+                        {job.statusId && (
+                          <span className={`text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800`}>
+                            Status: {job.statusId}
                           </span>
                         )}
                       </div>

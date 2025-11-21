@@ -1334,7 +1334,7 @@ Be concise and practical. When presenting data from tools, format it clearly.`,
           description: input.description || null,
           jobType: input.jobType || "crop_dusting",
           priority: input.priority || "medium",
-          statusId: input.statusId || null,
+          statusId: input.status ? 1 : null, // Map status string to statusId number
           customerId: input.customerId || null,
           assignedPersonnelId: input.personnelId || null,
           equipmentId: input.equipmentId || null,

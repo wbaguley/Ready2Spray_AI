@@ -27,6 +27,7 @@ export type Permission =
   | "create_customers"
   | "edit_customers"
   | "delete_customers"
+  | "manage_team"
   | "view_products"
   | "create_products"
   | "edit_products"

@@ -18,8 +18,8 @@ export default function EquipmentDashboard() {
     // Calculate equipment usage from jobs
     const equipmentUsage = equipment.map(equip => {
       const assignedJobs = jobs.filter(j => j.equipmentId === equip.id);
-      const completedJobs = assignedJobs.filter(j => j.statusCategory === 'completed');
-      const activeJobs = assignedJobs.filter(j => j.statusCategory === 'in_progress');
+      const completedJobs = assignedJobs.filter(j => j.statusId === 3);
+      const activeJobs = assignedJobs.filter(j => j.statusId === 2);
       
       // Calculate estimated hours (simplified: 2 hours per job)
       const estimatedHours = completedJobs.length * 2;

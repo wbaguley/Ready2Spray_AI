@@ -163,7 +163,7 @@ export default function JobV2Detail() {
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold">{job.title}</h1>
                 {job.statusId && (
-                  <Badge className={getStatusColor(job.statusId)}>
+                  <Badge className={getStatusColor(String(job.statusId))}>
                     Status ID: {job.statusId}
                   </Badge>
                 )}
@@ -358,13 +358,13 @@ export default function JobV2Detail() {
                 </div>
               )}
               
-              {job.personnelId && (
+              {job.assignedPersonnelId && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <User className="w-4 h-4" />
+                    <User className="h-4 w-4" />
                     Assigned Personnel
                   </label>
-                  <p className="text-lg">Personnel #{job.personnelId}</p>
+                  <p className="text-lg">Personnel #{job.assignedPersonnelId}</p>
                 </div>
               )}
               
@@ -388,13 +388,13 @@ export default function JobV2Detail() {
             <CardDescription>Where and when this job takes place</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {job.location && (
+            {job.locationAddress && (
               <div className="space-y-3">
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="h-4 w-4" />
                   Job Location
                 </label>
-                <p className="text-lg">{job.location}</p>
+                <p className="text-lg">{job.locationAddress}</p>
                 
                 {/* Show map if coordinates are available */}
                 {job.locationLat && job.locationLng && (

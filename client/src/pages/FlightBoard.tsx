@@ -119,7 +119,7 @@ export default function FlightBoard() {
                       </CardTitle>
                       <CardDescription className="flex items-center gap-1 mt-1">
                         <MapPin className="h-3 w-3" />
-                        {job.locationAddress || "No location specified"}
+                        {job.location || "No location specified"}
                       </CardDescription>
                     </div>
                     <Badge 
@@ -145,10 +145,10 @@ export default function FlightBoard() {
                       <p className="text-muted-foreground">Acres</p>
                       <p className="font-medium">{job.acres || 'N/A'}</p>
                     </div>
-                    {job.commodity && (
+                    {job.commodityCrop && (
                       <div>
                         <p className="text-muted-foreground">Crop</p>
-                        <p className="font-medium">{job.commodity}</p>
+                        <p className="font-medium">{job.commodityCrop}</p>
                       </div>
                     )}
                     {job.targetPest && (

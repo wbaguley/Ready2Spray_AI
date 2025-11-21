@@ -292,11 +292,11 @@ export default function CustomerPortal() {
                               : "TBD"}
                           </span>
                         </div>
-                        {job.locationAddress && (
+                        {job.location && (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">
-                              {job.locationAddress}
+                              {job.location}
                             </span>
                           </div>
                         )}
@@ -347,11 +347,11 @@ export default function CustomerPortal() {
                               : "N/A"}
                           </span>
                         </div>
-                        {job.locationAddress && (
+                        {job.location && (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">
-                              {job.locationAddress}
+                              {job.location}
                             </span>
                           </div>
                         )}
