@@ -28,7 +28,7 @@ export async function updateInvitation(
       updatedAt: new Date(),
     })
     .where(eq(organizationInvitations.id, id))
-    .returning();
+    ;
 
   if (!invitation) throw new Error("Invitation not found");
   return invitation;

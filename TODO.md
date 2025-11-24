@@ -802,3 +802,29 @@ Features:
 - [ ] Consider removing Personnel module (non-MVP)
 - [ ] Consider removing Equipment module (non-MVP)
 - [ ] Contact Manus support for detailed build logs
+
+
+## CRITICAL: OAuth Authentication Failure (In Progress)
+- [ ] OAuth callback returning "OAuth callback failed" error
+- [ ] Check database connection in OAuth callback handler
+- [ ] Verify users table exists in Manus database
+- [ ] Check server logs for detailed error messages
+- [ ] Fix authentication flow
+- [ ] Test login functionality
+
+## Database Migration: PostgreSQL → MySQL (Manus Database)
+- [x] Migrate drizzle.config.ts from PostgreSQL to MySQL dialect
+- [x] Update server/db.ts to use mysql2 driver and Manus DATABASE_URL
+- [x] Convert drizzle/schema.ts from PostgreSQL to MySQL syntax (pgTable→mysqlTable, pgEnum→mysqlEnum, integer→int, generatedAlwaysAsIdentity→autoincrement)
+- [x] Convert drizzle/schema_org_members.ts from PostgreSQL to MySQL syntax
+- [x] Fix all .returning() calls in server/db.ts (48 occurrences) - MySQL doesn't support .returning() like PostgreSQL
+- [x] Fix all .returning() calls in server/dbOrganizations.ts (8 occurrences)
+- [x] Fix all .returning() calls in server/dbOrganizationsExtended.ts (1 occurrence)
+- [x] Fix all .returning() calls in server/servicePlanScheduler.ts (1 occurrence)
+- [x] Fix enum usage patterns - MySQL enums don't use function call syntax (roleEnum("role")→roleEnum)
+- [x] Remove postgres package, ensure mysql2 is installed
+- [x] Run pnpm db:push to migrate schema to Manus MySQL database
+- [x] Test server startup and verify no PostgreSQL syntax errors
+- [x] Test OAuth login flow to verify upsertUser with onDuplicateKeyUpdate works
+- [x] Verify homepage loads successfully (HTTP 200)
+- [x] Increase file watcher limits to resolve EMFILE errors

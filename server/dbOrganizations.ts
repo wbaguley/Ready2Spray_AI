@@ -26,7 +26,10 @@ export async function createOrganization(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const [org] = await db.insert(organizations).values(data).returning();
+  const result = await db.insert(organizations).values(data);
+  const insertId = Number(result.insertId);
+  const inserted = await db.select().from(organizations).where(eq(organizations.id, insertId)).limit(1);
+  const org = inserted[0];
   if (!org) throw new Error("Failed to create organization");
   
   return org;
@@ -103,7 +106,7 @@ export async function updateOrganization(
     .update(organizations)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(organizations.id, id))
-    .returning();
+    ;
 
   if (!org) throw new Error("Organization not found");
   return org;
@@ -121,7 +124,7 @@ export async function addOrganizationMember(
   const [member] = await db
     .insert(organizationMembers)
     .values(data)
-    .returning();
+    ;
 
   if (!member) throw new Error("Failed to add organization member");
   return member;
@@ -185,7 +188,7 @@ export async function createInvitation(
   const [invitation] = await db
     .insert(organizationInvitations)
     .values(data)
-    .returning();
+    ;
 
   if (!invitation) throw new Error("Failed to create invitation");
   return invitation;
@@ -228,7 +231,7 @@ export async function updateInvitationStatus(
       updatedAt: new Date(),
     })
     .where(eq(organizationInvitations.id, id))
-    .returning();
+    ;
 
   if (!invitation) throw new Error("Invitation not found");
   return invitation;
@@ -277,7 +280,7 @@ export async function updateAICredits(params: {
       updatedAt: new Date(),
     })
     .where(eq(organizations.id, params.organizationId))
-    .returning();
+    ;
 
   if (!updated) throw new Error("Failed to update AI credits");
   return updated;
@@ -305,7 +308,7 @@ export async function resetBillingPeriod(params: {
       updatedAt: new Date(),
     })
     .where(eq(organizations.id, params.organizationId))
-    .returning();
+    ;
 
   if (!updated) throw new Error("Failed to reset billing period");
   return updated;
@@ -333,7 +336,7 @@ export async function addRolloverCredits(params: {
       updatedAt: new Date(),
     })
     .where(eq(organizations.id, params.organizationId))
-    .returning();
+    ;
 
   if (!updated) throw new Error("Failed to add rollover credits");
   return updated;

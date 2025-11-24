@@ -89,7 +89,7 @@ async function generateJobFromServicePlan(plan: any) {
       scheduledEnd: new Date(new Date(plan.nextServiceDate).getTime() + 2 * 60 * 60 * 1000), // 2 hours later
       targetPest: targetPests,
       notes: plan.notes || "",
-    }).returning();
+    });
 
     console.log(`[ServicePlanScheduler] Generated job ${newJob[0].id} from service plan ${plan.id}`);
     return newJob[0];
