@@ -763,7 +763,20 @@ Features:
 - [x] Updated all 4 files using Streamdown to use ReactMarkdown
 - [ ] Clean up duplicate lucide-react versions
 - [ ] Clean up duplicate date-fns versions
+- [x] Attempted deployment after bcrypt fix - Still failing
+- [x] Attempted deployment after node_modules optimization - Still failing
+- [ ] Check for Dockerfile in project and build configuration
+- [ ] Test production build locally for errors
 - [ ] Look for build logs in Manus dashboard
-- [ ] Try deploying minimal version
-- [ ] Check for Dockerfile in project
-- [ ] Test with production-only dependencies
+- [ ] Contact Manus support with detailed troubleshooting history
+
+
+## Database Migration to Manus (Completed)
+- [x] Get Manus database connection credentials from environment
+- [x] Update DATABASE_URL to use Manus TiDB (automatic via env)
+- [x] Revert drizzle/schema.ts from PostgreSQL to MySQL syntax
+- [x] Update server/db.ts to use mysql2 driver instead of postgres
+- [x] Update drizzle.config.ts to use mysql2 dialect
+- [x] Run pnpm db:push to create tables in Manus database
+- [x] Test database connection - dev server responding with HTTP 200
+- [ ] Verify all core features work with Manus database

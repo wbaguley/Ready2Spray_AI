@@ -1,0 +1,35 @@
+# Dependencies (will be installed fresh in Docker)
+node_modules
+.pnpm-store
+
+# Build outputs (will be built in Docker)
+dist
+.vite
+
+# Development files
+.git
+.gitignore
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage
+.nyc_output
+
+# Misc
+.env.local
+.env.*.local
+*.md
+!README.md

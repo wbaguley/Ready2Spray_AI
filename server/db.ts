@@ -1,6 +1,5 @@
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, equipment, InsertEquipment, maintenanceTasks, InsertMaintenanceTask, servicePlans, InsertServicePlan, auditLogs, InsertAuditLog, personnel, customers, jobs, InsertJob, waitlist, InsertWaitlist } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -8,23 +7,9 @@ let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  // Build Supabase connection string with password from secret (using Session Pooler for IPv4 compatibility)
-  const supabasePassword = process.env.R2S_Supabase;
-  const supabaseUrl = supabasePassword 
-    ? `postgresql://postgres.yqimcvatzaldidmqmvtr:${encodeURIComponent(supabasePassword)}@aws-1-us-west-1.pooler.supabase.com:5432/postgres`
-    : null;
-  
-  const connectionString = supabaseUrl || process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
-  
-  if (!_db && connectionString) {
+  if (!_db && process.env.DATABASE_URL) {
     try {
-      const client = postgres(connectionString, {
-        ssl: { rejectUnauthorized: false },
-        max: 1,
-        idle_timeout: 20, // 20 seconds
-        max_lifetime: 60 * 30,
-      });
-      _db = drizzle(client);
+      _db = drizzle(process.env.DATABASE_URL);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
