@@ -788,3 +788,17 @@ Features:
 - [x] Widget no longer appears on every page
 - [ ] Test that AI chat page still works
 - [ ] Save checkpoint
+
+
+## Latest Deployment Troubleshooting (In Progress)
+- [x] Switched from Supabase PostgreSQL to Manus MySQL database
+- [x] Removed bcrypt (native dependency) → bcryptjs
+- [x] Removed streamdown/mermaid (65MB) → react-markdown
+- [x] Reduced node_modules from 731MB → 510MB (30% reduction)
+- [x] Added .dockerignore file
+- [x] Added Vite build optimizations (chunk splitting)
+- [ ] Still failing with "Failed to build Docker image: exit status 1"
+- [ ] Consider removing Weather module (non-MVP)
+- [ ] Consider removing Personnel module (non-MVP)
+- [ ] Consider removing Equipment module (non-MVP)
+- [ ] Contact Manus support for detailed build logs
