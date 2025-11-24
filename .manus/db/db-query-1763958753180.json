@@ -1,0 +1,112 @@
+{
+  "query": "SHOW TABLES",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.7ce7968d7659 --database dmpQCHmFJYDLuYDsnydHYb --execute SHOW TABLES",
+  "rows": [
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "ai_conversations"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "ai_messages"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "ai_usage"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "api_keys"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "api_usage_logs"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "applications"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "audit_logs"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "customers"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "equipment"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "integration_connections"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "integration_entity_mappings"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "integration_field_mappings"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "integration_sync_logs"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "job_shares"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "job_status_history"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "job_statuses"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "jobs"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "jobs_v2"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "maintenance_tasks"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "maps"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "organization_invitations"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "organization_members"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "organizations"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "personnel"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "product_use"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "products"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "products_complete"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "products_new"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "service_plans"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "sites"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "users"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "waitlist"
+    },
+    {
+      "Tables_in_dmpQCHmFJYDLuYDsnydHYb": "zones"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_dmpQCHmFJYDLuYDsnydHYb\n__drizzle_migrations\nai_conversations\nai_messages\nai_usage\napi_keys\napi_usage_logs\napplications\naudit_logs\ncustomers\nequipment\nintegration_connections\nintegration_entity_mappings\nintegration_field_mappings\nintegration_sync_logs\njob_shares\njob_status_history\njob_statuses\njobs\njobs_v2\nmaintenance_tasks\nmaps\norganization_invitations\norganization_members\norganizations\npersonnel\nproduct_use\nproducts\nproducts_complete\nproducts_new\nservice_plans\nsites\nusers\nwaitlist\nzones\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}
