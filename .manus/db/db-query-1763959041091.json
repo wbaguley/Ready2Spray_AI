@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users ADD COLUMN license_number varchar(50)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.7ce7968d7659 --database dmpQCHmFJYDLuYDsnydHYb --execute ALTER TABLE users ADD COLUMN license_number varchar(50)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 510
+}

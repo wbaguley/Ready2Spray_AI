@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE users \nADD COLUMN user_role varchar(20) AFTER role,\nADD COLUMN phone varchar(20) AFTER user_role,\nADD COLUMN license_number varchar(50) AFTER phone,\nADD COLUMN commission boolean DEFAULT false AFTER license_number",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.7ce7968d7659 --database dmpQCHmFJYDLuYDsnydHYb --execute ALTER TABLE users \nADD COLUMN user_role varchar(20) AFTER role,\nADD COLUMN phone varchar(20) AFTER user_role,\nADD COLUMN license_number varchar(50) AFTER phone,\nADD COLUMN commission boolean DEFAULT false AFTER license_number",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'user_role' in 'users'"
+  ]
+}

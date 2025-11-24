@@ -1,14 +1,15 @@
 # Ready2Spray TODO
 
-## Completed: PostgreSQL to MySQL Migration
+## Completed: Full Database Migration & OAuth Fix
 - [x] Converted schema.ts from PostgreSQL to MySQL syntax (pgTable → mysqlTable, pgEnum → mysqlEnum)
 - [x] Fixed all 58 `.returning()` calls across server files to use MySQL-compatible patterns
 - [x] Fixed enum usage patterns (removed function call syntax)
-- [x] Fixed drizzle initialization to use mysql2 connection object instead of connection string
+- [x] Fixed drizzle initialization to use mysql2 connection pool instead of single connection
 - [x] Generated fresh migrations for all 33 tables
-- [x] Created all 34 database tables (33 schema tables + 1 migrations table)
-- [x] Verified OAuth flow works without errors
-- [x] Resolved "onDuplicateKeyUpdate is not a function" error
+- [x] Created all 34 database tables (33 application tables + migrations table)
+- [x] Added missing columns to users table (user_role, phone, license_number, commission)
+- [x] Fixed ECONNREFUSED error by using mysql.createPool() instead of mysql.createConnection()
+- [x] Verified OAuth flow works end-to-end without errors
 
 ## Known Issues
 - [ ] TypeScript errors in SharedJob.tsx (missing 'notes' property)
