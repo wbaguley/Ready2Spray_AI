@@ -828,3 +828,11 @@ Features:
 - [x] Test OAuth login flow to verify upsertUser with onDuplicateKeyUpdate works
 - [x] Verify homepage loads successfully (HTTP 200)
 - [x] Increase file watcher limits to resolve EMFILE errors
+
+## OAuth Error Fix - "onDuplicateKeyUpdate is not a function"
+- [x] Identified root cause: drizzle() function requires mysql2 connection object, not connection string
+- [x] Fixed server/db.ts to import mysql2/promise and create connection before passing to drizzle()
+- [x] Fixed corrupted import statement in server/db.ts line 1
+- [x] Verified server starts successfully with HTTP 200
+- [x] Tested OAuth flow - successfully reaches Google login without server errors
+- [x] Confirmed "onDuplicateKeyUpdate is not a function" error is resolved
