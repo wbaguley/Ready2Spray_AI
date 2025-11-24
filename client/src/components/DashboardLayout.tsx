@@ -27,7 +27,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
-import { FloatingChatWidget } from "./FloatingChatWidget";
+
 import { useSubscription } from "@/hooks/useSubscription";
 
 const menuItems: Array<{ icon: any; label: string; path: string; permission?: Permission }> = [
@@ -325,7 +325,7 @@ function DashboardLayoutContent({
         )}
         <main className="flex-1 p-4">{children}</main>
       </SidebarInset>
-      <FloatingChatWidget />
+
     </>
   );
 }

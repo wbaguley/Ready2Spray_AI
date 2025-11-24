@@ -780,3 +780,11 @@ Features:
 - [x] Run pnpm db:push to create tables in Manus database
 - [x] Test database connection - dev server responding with HTTP 200
 - [ ] Verify all core features work with Manus database
+
+
+## MVP Simplification - Remove Floating AI Chat Widget (Completed)
+- [x] Remove FloatingChatWidget component from DashboardLayout
+- [x] Keep /chat page and all AI chat functionality intact
+- [x] Widget no longer appears on every page
+- [ ] Test that AI chat page still works
+- [ ] Save checkpoint
