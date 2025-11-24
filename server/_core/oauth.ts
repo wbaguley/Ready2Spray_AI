@@ -1,8 +1,10 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
+import { getUserOrganization } from "../dbOrganizations";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { ENV } from "./env";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -35,6 +37,18 @@ export function registerOAuthRoutes(app: Express) {
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
         lastSignedIn: new Date(),
       });
+
+      // Auto-create organization for owner
+      if (userInfo.openId === ENV.ownerOpenId) {
+        const user = await db.getUserByOpenId(userInfo.openId);
+        if (user) {
+          const existingOrg = await getUserOrganization(user.id);
+          if (!existingOrg) {
+            console.log('[OAuth] Auto-creating organization for owner');
+            await db.getOrCreateUserOrganization(user.id);
+          }
+        }
+      }
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",

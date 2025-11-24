@@ -1,0 +1,9 @@
+{
+  "query": "SELECT o.* \nFROM organizations o\nINNER JOIN organization_members om ON o.id = om.organization_id\nINNER JOIN users u ON om.user_id = u.id\nWHERE u.email = 'wyatt@gtmplanetary.com'\nLIMIT 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3LAnvSXMR8umuBe.7ce7968d7659 --database dmpQCHmFJYDLuYDsnydHYb --execute SELECT o.* \nFROM organizations o\nINNER JOIN organization_members om ON o.id = om.organization_id\nINNER JOIN users u ON om.user_id = u.id\nWHERE u.email = 'wyatt@gtmplanetary.com'\nLIMIT 1",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 60
+}

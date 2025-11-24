@@ -27,3 +27,14 @@
 - [x] User automatically redirected to signup page after 12 seconds on dashboard
 - [x] Database query errors for dashboard_v2, organizations, and other tables
 - [x] Fixed DashboardLayout to show loading skeleton during subscription check
+
+## Owner Account Setup
+- [ ] Create seed script to auto-setup owner organization
+- [ ] Populate sample customers, jobs, equipment, personnel
+- [ ] Bypass signup flow for owner account
+
+## Development Auto-Login (Current)
+- [ ] Create /api/dev-login endpoint that bypasses OAuth
+- [ ] Auto-create session cookie for owner
+- [ ] Ensure organization exists for owner
+- [ ] Redirect directly to dashboard
