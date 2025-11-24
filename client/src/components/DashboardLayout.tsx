@@ -81,7 +81,7 @@ export default function DashboardLayout({
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return <DashboardLayoutSkeleton />
   }
 

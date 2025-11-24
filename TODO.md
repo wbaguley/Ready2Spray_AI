@@ -21,3 +21,9 @@
 - [ ] Test complete user registration and login flow
 - [ ] Verify all dashboard pages load correctly
 - [ ] Test job creation and management features
+
+## Current Issues
+- [x] Post-login redirect fails - dashboard queries return 500 errors
+- [x] User automatically redirected to signup page after 12 seconds on dashboard
+- [x] Database query errors for dashboard_v2, organizations, and other tables
+- [x] Fixed DashboardLayout to show loading skeleton during subscription check
